@@ -222,6 +222,21 @@ pluggy = ">=1.5,<2"
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+name = "pytest-powerpack"
+version = "0.1.1"
+description = "A plugin containing extra batteries for pytest"
+optional = false
+python-versions = "<4.0,>=3.12"
+files = [
+    {file = "pytest_powerpack-0.1.1-py3-none-any.whl", hash = "sha256:9d8bcd2808c2c4df070b3b94e28085f505c3ab2009269e2c77beb8265a68cbb2"},
+    {file = "pytest_powerpack-0.1.1.tar.gz", hash = "sha256:2eabd8f918ee99388ac044aa59f6cf69fd404fcfb3006b3959d35cbf8487b73c"},
+]
+
+[package.dependencies]
+pyrollup = ">=0.1.0,<0.2.0"
+pytest = ">=8.1.1,<9.0.0"
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -235,4 +250,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "6e490e2d9ed45a094404ae7a6fdebae74be7e3e9bb01501f3af86fc33d9ff9f7"
+content-hash = "f9d4c6fb0b1d681dbaf3acae6e7800f5293529a6b3f2fb56fe2119b774a666bf"

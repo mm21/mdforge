@@ -3,17 +3,11 @@ import logging
 
 from pytest import FixtureRequest, Mark, fixture
 
+pytest_plugins = ["pytest_powerpack"]
+
 logging.basicConfig(level=logging.INFO)
 
 DOCUMENTS_PATH = Path("test/documents")
-
-
-@fixture(autouse=True)
-def newline(request):
-    """
-    Print a newline and underline test name.
-    """
-    print("\n" + "-" * len(request.node.nodeid))
 
 
 @fixture
