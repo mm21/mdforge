@@ -3,7 +3,7 @@ Exports common elements for use in document generation.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Generator
 
 from ._element import BaseElement
@@ -12,9 +12,14 @@ __all__ = [
     "Heading",
     "Paragraph",
     "List",
+    "ListItem",
+    "ListItemType",
 ]
 
 INDENT = " " * 2
+
+
+type ListItemType = str | ListItem
 
 
 @dataclass
@@ -42,7 +47,10 @@ class Paragraph(BaseElement):
         yield from lines
 
 
-type ListItemType = str | list[ListItemType]
+@dataclass
+class ListItem:
+    text: str
+    sub_items: list[ListItemType] = field(default_factory=list)
 
 
 @dataclass
@@ -56,10 +64,24 @@ class List(BaseElement):
             items: list[ListItemType], depth: int
         ) -> Generator[str, None, None]:
             for item in items:
-                if isinstance(item, str):
-                    yield f"{INDENT * depth}- {item}"
-                else:
-                    assert isinstance(item, list)
-                    yield from do_render(item, depth + 1)
+                assert isinstance(item, str) or isinstance(item, ListItem)
+
+                text: str
+                sub_items: list[ListItemType]
+
+                text, sub_items = (
+                    (item.text, item.sub_items)
+                    if isinstance(item, ListItem)
+                    else (item, [])
+                )
+
+                assert isinstance(text, str)
+                assert isinstance(sub_items, list)
+
+                # render item
+                yield f"{INDENT * depth}- {text}"
+
+                # render any sub-items at next indentation depth
+                yield from do_render(sub_items, depth + 1)
 
         yield from do_render(self.items, 0)

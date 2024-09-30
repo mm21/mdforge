@@ -1,6 +1,6 @@
 from pytest import mark
 
-from mdforge import Document, Heading, Paragraph, List
+from mdforge import Document, Heading, Paragraph, List, ListItem
 
 
 @mark.filename("doc-1.md")
@@ -14,11 +14,25 @@ def test_doc1(document_text: str):
     doc += List(
         [
             "a",
-            ["a1", ["a1-2"]],
-            "b",
-            ["b1", "b2"],
-            "c",
-            ["c1", "c2", "c3"],
+            ListItem(
+                "b",
+                [
+                    "b1",
+                    "b2",
+                ],
+            ),
+            ListItem(
+                "c",
+                [
+                    ListItem(
+                        "c1",
+                        [
+                            "c1-1",
+                        ],
+                    ),
+                    "c2",
+                ],
+            ),
         ]
     )
 
