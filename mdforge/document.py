@@ -5,7 +5,7 @@ Interface for Markdown document generation.
 from pathlib import Path
 from typing import Any, Iterable, Self
 
-from ._element import BaseElement
+from .element import BaseElement
 
 
 class Document:

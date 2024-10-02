@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Generator
 
-from ._element import BaseElement
+from .element import BaseElement
 
 __all__ = [
     "Heading",

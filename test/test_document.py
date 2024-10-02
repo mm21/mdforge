@@ -1,10 +1,11 @@
 from pytest import mark
+from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import Document, Heading, Paragraph, List, ListItem
 
 
-@mark.filename("doc-1.md")
-def test_doc1(document_text: str):
+@mark.powerpack_compare_file("doc-1.md")
+def test_doc1(powerpack_comparison_files: ComparisonFiles):
 
     doc = Document()
 
@@ -36,6 +37,5 @@ def test_doc1(document_text: str):
         ]
     )
 
-    text = doc.render_text()
-
-    assert document_text == text
+    doc.render(powerpack_comparison_files.build_file)
+    compare_files(powerpack_comparison_files)

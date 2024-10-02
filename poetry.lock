@@ -223,13 +223,13 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments
 
 [[package]]
 name = "pytest-powerpack"
-version = "0.1.1"
+version = "0.1.2"
 description = "A plugin containing extra batteries for pytest"
 optional = false
 python-versions = "<4.0,>=3.12"
 files = [
-    {file = "pytest_powerpack-0.1.1-py3-none-any.whl", hash = "sha256:9d8bcd2808c2c4df070b3b94e28085f505c3ab2009269e2c77beb8265a68cbb2"},
-    {file = "pytest_powerpack-0.1.1.tar.gz", hash = "sha256:2eabd8f918ee99388ac044aa59f6cf69fd404fcfb3006b3959d35cbf8487b73c"},
+    {file = "pytest_powerpack-0.1.2-py3-none-any.whl", hash = "sha256:191ffcba4fba5bb0fd78e7577e10dad1a51cc6f8133ccadcf5b40eb961ae08a7"},
+    {file = "pytest_powerpack-0.1.2.tar.gz", hash = "sha256:2d72f20c8f8498790b5613ce461f79a5f9194cc8cf84819be9bd7952b080ac86"},
 ]
 
 [package.dependencies]
@@ -250,4 +250,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f9d4c6fb0b1d681dbaf3acae6e7800f5293529a6b3f2fb56fe2119b774a666bf"
+content-hash = "5bd99cac5350de4e0f778a58e9ebaea6d208acc0623f28793c0ea14786fc401f"
