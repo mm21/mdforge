@@ -1,7 +1,7 @@
 from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
-from mdforge import Document, Heading, Paragraph, List, ListItem
+from mdforge import Document, Heading, List, ListItem, Paragraph
 
 
 @mark.powerpack_compare_file("doc-1.md")

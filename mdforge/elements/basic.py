@@ -1,11 +1,13 @@
 """
-Exports common elements for use in document generation.
+Basic Markdown elements.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Generator
 
+from ..types import FlavorType
 from .element import BaseElement
 
 __all__ = [
@@ -28,11 +30,20 @@ class Heading(BaseElement):
     Heading, e.g. `# My heading`.
     """
 
-    title: str
-    level: int = 1
+    text: str
+    """
+    Heading text.
+    """
 
-    def render(self) -> Generator[str, None, None]:
-        yield f"{'#' * self.level} {self.title}"
+    level: int | None = None
+    """
+    Heading level, or `None` to set automatically based on nesting of 
+    container.
+    """
+
+    def _render_element(self, _: FlavorType) -> Generator[str, None, None]:
+        level = self.level or self._container._level
+        yield f"{'#' * level} {self.text}"
 
 
 @dataclass
@@ -40,7 +51,7 @@ class Paragraph(BaseElement):
 
     lines: str | list[str]
 
-    def render(self) -> Generator[str, None, None]:
+    def _render_element(self, _: FlavorType) -> Generator[str, None, None]:
         lines = [self.lines] if isinstance(self.lines, str) else self.lines
         assert all(isinstance(l, str) for l in lines)
 
@@ -58,7 +69,7 @@ class List(BaseElement):
 
     items: list[ListItemType]
 
-    def render(self) -> Generator[str, None, None]:
+    def _render_element(self, _: FlavorType) -> Generator[str, None, None]:
 
         def do_render(
             items: list[ListItemType], depth: int

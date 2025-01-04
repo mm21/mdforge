@@ -2,56 +2,52 @@
 Interface for Markdown document generation.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Iterable, Self
+from typing import Any
 
-from .element import BaseElement
+from ._container import BaseContainer
+from .types import FlavorType
+
+__all__ = [
+    "Document",
+]
+
+ROOT_LEVEL: int = 1
 
 
-class Document:
+class Document(BaseContainer):
     """
-    Encapsulates a Document. Add element(s) using the `+=` operator.
+    Encapsulates a Markdown document. Add elements using the `+=` operator.
     """
 
     _frontmatter: dict[str, Any] | None
-    _elements: list[BaseElement]
 
     def __init__(self, frontmatter: dict[str, Any] | None = None):
+        super().__init__(level=ROOT_LEVEL)
         self._frontmatter = frontmatter
-        self._elements = []
 
-    def __iadd__(self, element: BaseElement | Iterable[BaseElement]) -> Self:
+    def render(self, path: Path, flavor: FlavorType = "commonmark"):
         """
-        Implements `+=` operator to add element(s).
-        """
-        elements: list[BaseElement] = (
-            list(element) if isinstance(element, Iterable) else [element]
-        )
-        assert all(isinstance(e, BaseElement) for e in elements)
-
-        self._elements += elements
-
-        return self
-
-    def render(self, path: Path):
-        """
-        Write Markdown document to the provided path.
+        Write Markdown document to the provided path using the provided flavor.
         """
         with path.open("w") as fh:
-            fh.write(self.render_text())
+            fh.write(self.render_text(flavor=flavor))
 
-    def render_text(self) -> str:
+    def render_text(self, flavor: FlavorType = "commonmark") -> str:
         """
         Return Markdown document as text.
         """
+        blocks: list[str] = self._render_frontmatter() + self._render_blocks(
+            flavor
+        )
+        return "\n\n".join(blocks) + "\n"
 
-        lines: list[str] = []
+    def _render_frontmatter(self) -> list[str]:
+        """ """
+        if self._frontmatter is None:
+            return []
 
-        if self._frontmatter is not None:
-            # TODO: write frontmatter
-            pass
-
-        for element in self._elements:
-            lines += list(element.render()) + [""]
-
-        return "\n".join(lines)
+        # TODO
+        raise Exception
