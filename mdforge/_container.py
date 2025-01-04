@@ -93,15 +93,3 @@ class BaseContainer(BaseElement):
             blocks.append("\n".join(element._render_element(flavor)))
 
         yield "\n\n".join(blocks)
-
-        # return blocks
-        # yield from self._render_blocks(flavor)
-
-    def _render_blocks(self, flavor: FlavorType) -> list[str]:
-        """ """
-        blocks: list[str] = []
-
-        for element in self._elements:
-            blocks.append("\n".join(element._render_element(flavor)))
-
-        return blocks
