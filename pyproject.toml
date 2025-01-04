@@ -1,3 +1,10 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.black]
+line-length = 80
+
 [tool.poetry]
 authors = ["mm21 <mm21.dev@gmail.com>"]
 classifiers = [
@@ -26,9 +33,12 @@ pytest = "^8.3.2"
 black = "^24.8.0"
 mypy = "^1.11.2"
 pytest-powerpack = "^0.1.2"
-
-[tool.black]
-line-length = 80
+doit = "^0.36.0"
+autoflake = "^2.3.1"
+genbadge = "^1.1.1"
+isort = "^5.13.2"
+pytest-cov = "^6.0.0"
+toml-sort = "^0.24.2"
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
@@ -37,7 +47,4 @@ markers = [
   "filename"
 ]
 powerpack_underline = true
-
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
+powerpack_build_folder = "__out__"
