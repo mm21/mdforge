@@ -1,7 +1,16 @@
 from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
-from mdforge import Document, Heading, List, ListItem, Paragraph, Section
+from mdforge import (
+    BlockTable,
+    Document,
+    Heading,
+    InlineTable,
+    List,
+    ListItem,
+    Paragraph,
+    Section,
+)
 
 
 @mark.powerpack_compare_file("doc-1.md")
@@ -72,6 +81,39 @@ def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
 
     doc = Document(frontmatter=frontmatter)
     doc += Paragraph("Hello, world!")
+
+    doc.render(powerpack_comparison_files.out_file)
+    compare_files(powerpack_comparison_files)
+
+
+@mark.powerpack_compare_file("doc-1.md")
+def test_tables(powerpack_comparison_files: ComparisonFiles):
+
+    header = ["Header 1", "Header 2", "Header 3"]
+
+    doc = Document()
+
+    doc += Section(
+        "Inline table",
+        elements=[
+            InlineTable(
+                [["Value 1", "Value 2", "Value 3"]],
+                header=header,
+                align="center",
+            )
+        ],
+    )
+
+    doc += Section(
+        "Block table",
+        elements=[
+            BlockTable(
+                [["Value 1", "Value 2", List(["Value 1-1", "Value 2-2"])]],
+                header=header,
+                align="center",
+            )
+        ],
+    )
 
     doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)
