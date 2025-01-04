@@ -30,7 +30,6 @@ class BaseContainer(BaseElement):
 
         if level is not None:
             self._set_level(level)
-        # self._level = level
 
         if elements:
             self += elements
@@ -86,7 +85,6 @@ class BaseContainer(BaseElement):
             c._set_level(level + self._level_inc)
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        """ """
         blocks: list[str] = []
 
         for element in self._elements:
