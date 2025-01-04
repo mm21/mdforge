@@ -1,0 +1,4 @@
+---
+title: Doc 1
+---
+Hello, world!

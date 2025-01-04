@@ -61,3 +61,17 @@ def test_section(powerpack_comparison_files: ComparisonFiles):
 
     doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)
+
+
+@mark.powerpack_compare_file("doc-1.md")
+def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
+
+    frontmatter = {
+        "title": "Doc 1",
+    }
+
+    doc = Document(frontmatter=frontmatter)
+    doc += Paragraph("Hello, world!")
+
+    doc.render(powerpack_comparison_files.out_file)
+    compare_files(powerpack_comparison_files)

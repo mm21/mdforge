@@ -7,6 +7,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from ._container import BaseContainer
 from .types import FlavorType
 
@@ -44,15 +46,15 @@ class Document(BaseContainer):
         """
         Return Markdown document as text.
         """
-        blocks: list[str] = self._render_frontmatter() + list(
-            self._render_element(flavor)
-        )
-        return "\n\n".join(blocks + [""])
+        frontmatter = self._render_frontmatter()
+        content: str = "\n\n".join(list(self._render_element(flavor)))
+        return f"{frontmatter or ''}{content}\n"
 
-    def _render_frontmatter(self) -> list[str]:
-        """ """
+    def _render_frontmatter(self) -> str | None:
         if self._frontmatter is None:
-            return []
+            return None
 
-        # TODO
-        raise Exception
+        content = yaml.dump(
+            self._frontmatter, default_flow_style=False, sort_keys=False
+        )
+        return f"---\n{content}---\n"
