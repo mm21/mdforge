@@ -6,4 +6,4 @@ __all__ = [
     "FlavorType",
 ]
 
-type FlavorType = Literal["commonmark", "pandoc", "github"]
+type FlavorType = Literal["pandoc", "github", "commonmark"]

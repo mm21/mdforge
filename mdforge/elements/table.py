@@ -69,6 +69,14 @@ class BaseTable(BaseElement):
     Alignment for all columns, or a list of alignments for each column.
     """
 
+    widths: list[int] | None = None
+    """
+    If provided, generated columns are sized to that number of characters
+    by padding or wrapping lines. Otherwise, widths are as small as possible.
+
+    Useful to generate consistently-sized tables for varying content length.
+    """
+
     caption: str | None = None
     """
     Table caption.
@@ -117,27 +125,19 @@ class BaseTable(BaseElement):
 class InlineTable(BaseTable):
     """
     Table which only supports inline elements. Maps to a `multiline` table
-    in pandoc.
+    for `pandoc` flavor.
     """
 
 
 class BlockTable(BaseTable):
     """
     Table which supports block elements like paragraphs in addition to inline
-    elements. Maps to a `grid` table in pandoc.
+    elements. Maps to a `grid` table for `pandoc` flavor.
     """
 
     footer: RowType | list[RowType] | None = None
     """
     Table footer, which may contain multiple rows.
-    """
-
-    widths: list[int] | None = None
-    """
-    If provided, generated columns are sized to that number of characters. 
-    Otherwise, widths are as small as possible.
-
-    Useful to generate consistently-sized tables for varying content length.
     """
 
     # TODO

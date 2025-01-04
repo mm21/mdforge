@@ -35,14 +35,14 @@ class Document(BaseContainer):
         super().__init__(level=ROOT_LEVEL)
         self._frontmatter = frontmatter
 
-    def render(self, path: Path, flavor: FlavorType = "commonmark"):
+    def render(self, path: Path, flavor: FlavorType = "pandoc"):
         """
         Write Markdown document to the provided path using the provided flavor.
         """
         with path.open("w") as fh:
             fh.write(self.render_text(flavor=flavor))
 
-    def render_text(self, flavor: FlavorType = "commonmark") -> str:
+    def render_text(self, flavor: FlavorType = "pandoc") -> str:
         """
         Return Markdown document as text.
         """
