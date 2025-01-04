@@ -19,8 +19,16 @@ class BaseElement(ABC):
 
     @abstractmethod
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        """ """
+        """
+        Render by yielding each line.
+        """
         ...
+
+    def _render_str(self, flavor: FlavorType):
+        """
+        Render as multi-line string.
+        """
+        return "\n".join(self._render_element(flavor))
 
     @property
     def _container(self) -> BaseContainer:

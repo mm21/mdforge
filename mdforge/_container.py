@@ -85,9 +85,6 @@ class BaseContainer(BaseElement):
             c._set_level(level + self._level_inc)
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        blocks: list[str] = []
-
-        for element in self._elements:
-            blocks.append("\n".join(element._render_element(flavor)))
-
-        yield "\n\n".join(blocks)
+        yield "\n\n".join(
+            [element._render_str(flavor) for element in self._elements]
+        )
