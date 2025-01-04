@@ -1,7 +1,7 @@
 from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
-from mdforge import Document, Heading, List, ListItem, Paragraph
+from mdforge import Document, Heading, List, ListItem, Paragraph  # , Section
 
 
 @mark.powerpack_compare_file("doc-1.md")
@@ -37,5 +37,27 @@ def test_doc1(powerpack_comparison_files: ComparisonFiles):
         ]
     )
 
-    doc.render(powerpack_comparison_files.build_file)
+    doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)
+
+
+"""
+@mark.powerpack_compare_file("doc-1.md")
+def test_section(powerpack_comparison_files: ComparisonFiles):
+
+    sec1 = Section("Section 1")
+    sec1 += Paragraph("Hello, world!")
+
+    sec11 = Section("Section 1-1")
+    sec11 += List(['a', 'b', 'c'])
+    sec1 += sec11
+
+    sec2 = Section("Section 2")
+    sec2 += Paragraph("Hello, world 2!")
+
+    doc = Document()
+    doc += [sec1, sec2]
+
+    doc.render(powerpack_comparison_files.out_file)
+    compare_files(powerpack_comparison_files)
+"""
