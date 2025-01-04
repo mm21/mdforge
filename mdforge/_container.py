@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Generator, Iterable, Self
 
-from .elements.element import BaseElement
+from .element import BaseElement
 from .types import FlavorType
 
 
@@ -17,16 +17,23 @@ class BaseContainer(BaseElement):
 
     _elements: list[BaseElement]
     _containers: list[BaseContainer]
-    _level: int | None
+    _level: int | None = None
+    _level_inc: int = 1
 
     def __init__(
         self,
         elements: list[BaseElement] | None = None,
         level: int | None = None,
     ):
-        self._elements = elements or []
+        self._elements = []
         self._containers = []
-        self._level = level
+
+        if level is not None:
+            self._set_level(level)
+        # self._level = level
+
+        if elements:
+            self += elements
 
     def __iadd__(self, elements: BaseElement | Iterable[BaseElement]) -> Self:
         """
@@ -66,7 +73,7 @@ class BaseContainer(BaseElement):
 
         # propagate level, if set
         if self._level is not None:
-            container._set_level(self._level + 1)
+            container._set_level(self._level + self._level_inc)
 
     def _set_level(self, level: int):
         """
@@ -76,11 +83,19 @@ class BaseContainer(BaseElement):
         self._level = level
 
         for c in self._containers:
-            c._set_level(level + 1)
+            c._set_level(level + self._level_inc)
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         """ """
-        yield from self._render_blocks(flavor)
+        blocks: list[str] = []
+
+        for element in self._elements:
+            blocks.append("\n".join(element._render_element(flavor)))
+
+        yield "\n\n".join(blocks)
+
+        # return blocks
+        # yield from self._render_blocks(flavor)
 
     def _render_blocks(self, flavor: FlavorType) -> list[str]:
         """ """

@@ -22,6 +22,11 @@ class Document(BaseContainer):
     Encapsulates a Markdown document. Add elements using the `+=` operator.
     """
 
+    _level_inc: int = 0
+    """
+    Treat all nested containers as top-level sections.
+    """
+
     _frontmatter: dict[str, Any] | None
 
     def __init__(self, frontmatter: dict[str, Any] | None = None):
@@ -39,10 +44,10 @@ class Document(BaseContainer):
         """
         Return Markdown document as text.
         """
-        blocks: list[str] = self._render_frontmatter() + self._render_blocks(
-            flavor
+        blocks: list[str] = self._render_frontmatter() + list(
+            self._render_element(flavor)
         )
-        return "\n\n".join(blocks) + "\n"
+        return "\n\n".join(blocks + [""])
 
     def _render_frontmatter(self) -> list[str]:
         """ """

@@ -7,8 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Generator
 
+from ..element import BaseElement
 from ..types import FlavorType
-from .element import BaseElement
 
 __all__ = [
     "Heading",
@@ -27,7 +27,8 @@ type ListItemType = str | ListItem
 @dataclass
 class Heading(BaseElement):
     """
-    Heading, e.g. `# My heading`.
+    Heading, e.g. `# My heading`. If `level` not provided, it is set
+    automatically based on nesting of container.
     """
 
     text: str
@@ -37,8 +38,7 @@ class Heading(BaseElement):
 
     level: int | None = None
     """
-    Heading level, or `None` to set automatically based on nesting of 
-    container.
+    Heading level, or `None` to set automatically.
     """
 
     def _render_element(self, _: FlavorType) -> Generator[str, None, None]:

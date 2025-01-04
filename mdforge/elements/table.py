@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Generator, Literal
 
+from ..element import BaseElement
 from ..types import FlavorType
-from .element import BaseElement
 
 __all__ = [
     "InlineTable",

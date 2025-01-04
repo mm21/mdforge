@@ -16,6 +16,5 @@ __all__ = [
 class Section(BaseContainer):
 
     def __init__(self, heading: str | None = None):
-        if heading:
-            # add heading as first element of this section
-            self += Heading(heading)
+        elements = [Heading(heading)] if heading else None
+        super().__init__(elements=elements)

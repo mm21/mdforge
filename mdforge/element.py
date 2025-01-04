@@ -7,10 +7,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generator
 
-from ..types import FlavorType
+from .types import FlavorType
 
 if TYPE_CHECKING:
-    from .._container import BaseContainer
+    from ._container import BaseContainer
 
 
 class BaseElement(ABC):
