@@ -15,6 +15,7 @@ __all__ = [
     "CellType",
     "AlignType",
     "InlineTable",
+    "Cell",
     "BlockTable",
     "BaseTable",
 ]
@@ -41,6 +42,12 @@ class Cell:
     """
     Column span, only valid for `BlockTable`.
     """
+
+    def __hash__(self):
+        return hash((id(self),))
+
+    def __eq__(self, other):
+        return id(self) == id(other)
 
     @classmethod
     def _normalize(cls, cell: CellType) -> Cell:
@@ -153,7 +160,7 @@ class BaseTable(BaseElement):
         """
         Get number of columns.
         """
-        return self._effective_dims([0])
+        return self._effective_dims[0]
 
     @property
     def _effective_rows(self) -> list[list[Cell]]:
@@ -192,7 +199,6 @@ class BaseTable(BaseElement):
         """
         return self.__get_dims(self._effective_rows)
 
-    @cached_property
     def _get_col_widths(self, flavor: FlavorType) -> list[int]:
         """
         Get widths of the content of each column.
@@ -206,7 +212,10 @@ class BaseTable(BaseElement):
         for row in self._effective_rows:
             assert len(row) == len(widths)
             for i, cell in enumerate(row):
-                widths[i] = max(widths[i], len(cell._get_content(flavor)))
+                widths[i] = max(
+                    widths[i],
+                    *(len(line) for line in cell._get_content(flavor)),
+                )
 
         return widths
 
