@@ -5,7 +5,8 @@ Table element.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator, Literal, cast
+from functools import cached_property, lru_cache
+from typing import Generator, Iterable, Literal, cast
 
 from ..element import BaseElement
 from ..types import FlavorType
@@ -26,7 +27,7 @@ type AlignType = Literal["left", "center", "right"]
 @dataclass
 class Cell:
 
-    content: str | BaseElement
+    content: str | list[str] | BaseElement
     """
     Cell content.
     """
@@ -48,6 +49,22 @@ class Cell:
         else:
             assert isinstance(cell, (str, BaseElement))
             return Cell(cell)
+
+    @lru_cache()
+    def _get_content(self, flavor: FlavorType) -> list[str]:
+        """
+        Get this cell's content as a list of strings.
+        """
+        content = self.content
+
+        if isinstance(content, str):
+            return content.split("\n")
+        elif isinstance(content, Iterable):
+            assert all(isinstance(line, str) for line in content)
+            return list(content)
+
+        assert isinstance(content, BaseElement)
+        return list(content._render_element(flavor))
 
 
 @dataclass
@@ -87,18 +104,30 @@ class BaseTable(BaseElement):
     """
 
     _clean: bool
-    """
+    r"""
     Whether to remove top and bottom rules for this table.
-    """
 
-    _col_count: int
-    """
-    Number of columns, including any header and footer.
-    """
+    Inserts the following before tables:
 
-    _row_count: int
-    """
-    Number of rows, including any header and footer.
+    ```
+    \let\oldtoprule\toprule
+    \renewcommand{\toprule}{}
+    \let\oldbottomrule\bottomrule
+    \renewcommand{\bottomrule}{}
+    \let\oldendfoot\endfoot
+    \renewcommand{\endfoot}{}
+    \let\oldendlastfoot\endlastfoot
+    \renewcommand{\endlastfoot}{}
+    ```
+
+    And after tables:
+
+    ```
+    \let\toprule\oldtoprule
+    \let\bottomrule\oldbottomrule
+    \let\endfoot\oldendfoot
+    \let\endlastfoot\oldendlastfoot
+    ```
     """
 
     def __init__(
@@ -119,42 +148,95 @@ class BaseTable(BaseElement):
         self._caption = caption
         self._clean = clean
 
-        self._col_count, self._row_count = self.__get_dims(
-            (self._header or []) + self._rows + (self._footer or [])
-        )
-
-        print(f"--- got size: {self._size}")
+    @property
+    def _col_count(self) -> int:
+        """
+        Get number of columns.
+        """
+        return self._effective_dims([0])
 
     @property
-    def _size(self) -> tuple[int, int]:
-        return self._col_count, self._row_count
+    def _effective_rows(self) -> list[list[Cell]]:
+        """
+        Get all rows, including any header / footer.
+        """
+        return (self._header or []) + self._rows + (self._footer or [])
 
-    def _render_header(self) -> Generator[str, None, None]:
+    @cached_property
+    def _row_count(self) -> tuple[int, int]:
+        """
+        Get number of rows.
+        """
+        return self.__get_dims(self._rows)[1]
+
+    @cached_property
+    def _header_row_count(self) -> tuple[int, int]:
+        """
+        Get number of header rows.
+        """
+        assert self._header is not None
+        return self.__get_dims(self._header)[1]
+
+    @cached_property
+    def _footer_row_count(self) -> tuple[int, int]:
+        """
+        Get number of footer rows.
+        """
+        assert self._footer is not None
+        return self.__get_dims(self._footer)
+
+    @cached_property
+    def _effective_dims(self) -> tuple[int, int]:
+        """
+        Get overall dimensions, including any header / footer.
+        """
+        return self.__get_dims(self._effective_rows)
+
+    @cached_property
+    def _get_col_widths(self, flavor: FlavorType) -> list[int]:
+        """
+        Get widths of the content of each column.
+        """
+
+        if self._widths:
+            return self._widths
+
+        widths: list[int] = [0] * self._col_count
+
+        for row in self._effective_rows:
+            assert len(row) == len(widths)
+            for i, cell in enumerate(row):
+                widths[i] = max(widths[i], len(cell._get_content(flavor)))
+
+        return widths
+
+    def _render_header(self, flavor: FlavorType) -> Generator[str, None, None]:
         """
         Yield lines for header.
         """
+        # TODO
         yield ""
 
-    def _render_rows(self) -> Generator[str, None, None]:
+    def _render_rows(self, flavor: FlavorType) -> Generator[str, None, None]:
         """
         Yield lines for rows.
         """
+        # TODO
         yield ""
 
-    def _render_footer(self) -> Generator[str, None, None]:
+    def _render_footer(self, flavor: FlavorType) -> Generator[str, None, None]:
         """
         Yield lines for footer.
         """
+        # TODO
         yield ""
 
-    # TODO
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
+        print(f"Table: {type(self).__name__}, rows: {self._rows}")
 
-        yield from self._render_header()
-        yield from self._render_rows()
-        yield from self._render_footer()
-
-        yield f"Table: {type(self).__name__}, rows: {self._rows}"
+        yield from self._render_header(flavor)
+        yield from self._render_rows(flavor)
+        yield from self._render_footer(flavor)
 
     def __normalize_rows(
         self, rows: RowType | list[RowType]
@@ -235,6 +317,15 @@ class InlineTable(BaseTable):
                                         the blank line between
                                         rows.
     -------------------------------------------------------------
+
+    ----------- ------- --------------- -------------------------
+       First    row                12.0 Example of a row that
+                                        spans multiple lines.
+
+      Second    row                 5.0 Here's another one. Note
+                                        the blank line between
+                                        rows.
+    ----------- ------- --------------- -------------------------
     ```
     """
 
@@ -245,6 +336,7 @@ class BlockTable(BaseTable):
     elements. Maps to a `grid` table for `pandoc` flavor.
 
     For example:
+
     ```
     +---------------------+-----------------------+
     | Location            | Temperature 1961-1990 |
@@ -255,6 +347,18 @@ class BlockTable(BaseTable):
     | Antarctica          | -89.2 | N/A   | 19.8  |
     +---------------------+-------+-------+-------+
     | Earth               | -89.2 | 14    | 56.7  |
-    +---------------------+-------+-------+-------+
+    +=====================+=======+=======+=======+
+    | Average             | -89.2 | N/A   | 38.25 |
+    +=====================+=======+=======+=======+
+
+    +---------------+---------------+--------------------+
+    | Right         | Left          | Centered           |
+    +==============:+:==============+:==================:+
+    | Bananas       | $1.34         | built-in wrapper   |
+    +---------------+---------------+--------------------+
+
+    +--------------:+:--------------+:------------------:+
+    | Right         | Left          | Centered           |
+    +---------------+---------------+--------------------+
     ```
     """

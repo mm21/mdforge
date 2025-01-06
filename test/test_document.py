@@ -103,8 +103,8 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
 
     def check_table(table: BaseTable):
 
-        # size includes header
-        assert table._size == (col_count, row_count + 1)
+        # includes header
+        assert table._effective_dims == (col_count, row_count + 1)
 
     doc = Document()
 
