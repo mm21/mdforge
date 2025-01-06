@@ -2,6 +2,7 @@ from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import (
+    BaseTable,
     BlockTable,
     Document,
     Heading,
@@ -89,30 +90,46 @@ def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
 @mark.powerpack_compare_file("doc-1.md")
 def test_tables(powerpack_comparison_files: ComparisonFiles):
 
-    header = ["Header 1", "Header 2", "Header 3"]
+    col_count = 3
+    row_count = 3
+
+    header = [f"Header {col_idx}" for col_idx in range(col_count)]
+    rows: list[list[str]] = []
+
+    for row_idx in range(row_count):
+        rows.append(
+            [f"Cell {row_idx}-{col_idx}" for col_idx in range(col_count)]
+        )
+
+    def check_table(table: BaseTable):
+
+        # size includes header
+        assert table._size == (col_count, row_count + 1)
 
     doc = Document()
 
+    inline_table = InlineTable(
+        rows,
+        header=header,
+        align="center",
+    )
+    check_table(inline_table)
+
     doc += Section(
         "Inline table",
-        elements=[
-            InlineTable(
-                [["Value 1", "Value 2", "Value 3"]],
-                header=header,
-                align="center",
-            )
-        ],
+        elements=[inline_table],
     )
+
+    block_table = BlockTable(
+        rows,
+        header=header,
+        align="center",
+    )
+    check_table(block_table)
 
     doc += Section(
         "Block table",
-        elements=[
-            BlockTable(
-                [["Value 1", "Value 2", List(["Value 1-1", "Value 2-2"])]],
-                header=header,
-                align="center",
-            )
-        ],
+        elements=[block_table],
     )
 
     doc.render(powerpack_comparison_files.out_file)
