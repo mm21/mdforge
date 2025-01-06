@@ -171,50 +171,49 @@ class BaseTable(BaseElement):
             rows_norm.append([Cell._normalize(cell) for cell in row])
         return rows_norm
 
-    def __transpose(self, rows: list[list[Cell]]) -> list[list[Cell | None]]:
-
-        cols_max = max(len(row) for row in rows)
-        rows_pad: list[list[Cell]] = [
-            row + [None] * (cols_max - len(row)) for row in rows
-        ]
-
-        return cast(list[list[Cell]], list(map(list, zip(*rows_pad))))
-
     def __get_dims(self, rows: list[list[Cell]]) -> tuple[int, int]:
         """
         Get effective dimensions of provided content (header or rows),
         accounting for any merged cells.
         """
-        cols = self.__transpose(rows)
-        return self.__get_col_count(
-            rows, "cspan", "column"
-        ), self.__get_col_count(cols, "rspan", "row")
 
-    def __get_col_count(
-        self, rows: list[list[Cell | None]], span_attr: str, dim: str
-    ) -> int:
-        """
-        Get effective number of columns, accounting for any merged cells.
-        """
-        col_counts: list[int] = []
-
-        for row in rows:
-            spans = [
-                getattr(cell, span_attr) or 1
-                for cell in row
-                if cell is not None
+        def transpose(rows: list[list[Cell]]) -> list[list[Cell | None]]:
+            cols_max = max(len(row) for row in rows)
+            rows_pad: list[list[Cell | None]] = [
+                row + [None] * (cols_max - len(row)) for row in rows
             ]
-            col_counts.append(sum(spans))
+            return cast(
+                list[list[Cell | None]], list(map(list, zip(*rows_pad)))
+            )
 
-        assert len(col_counts)
+        def get_col_count(
+            rows: list[list[Cell | None]], span_attr: str, dim: str
+        ) -> int:
+            """
+            Get effective number of columns, accounting for any merged cells.
+            """
+            col_counts: list[int] = []
+            for row in rows:
+                spans = [
+                    getattr(cell, span_attr) or 1
+                    for cell in row
+                    if cell is not None
+                ]
+                col_counts.append(sum(spans))
 
-        # validate
-        for i in range(len(col_counts)):
-            assert (
-                col_counts[i] == col_counts[i - 1]
-            ), f"Inconsistent {dim} counts: {col_counts}"
+            # validate
+            assert len(col_counts)
+            for i in range(len(col_counts)):
+                assert (
+                    col_counts[i] == col_counts[i - 1]
+                ), f"Inconsistent {dim} counts: {col_counts}"
 
-        return col_counts[0]
+            return col_counts[0]
+
+        cols = transpose(rows)
+        return get_col_count(rows, "cspan", "column"), get_col_count(
+            cols, "rspan", "row"
+        )
 
 
 class InlineTable(BaseTable):
