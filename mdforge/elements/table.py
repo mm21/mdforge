@@ -75,6 +75,75 @@ class Cell:
 
 
 @dataclass
+class Separator:
+    """
+    Encapsulates a table separator.
+    """
+
+    line: str = "-"
+    """
+    Base character for the line, i.e. "-" or "=".
+    """
+
+    inner_corner: str | None = None
+    """
+    Innermost corner character.
+    """
+
+    outer_corner: str | None = None
+    """
+    Outermost corner character.
+    """
+
+    def get_line(self, widths: list[int], cell_spacing: int) -> str:
+        corner = self.inner_corner or self.line
+        segs: list[str] = [self.line * (w + cell_spacing) for w in widths]
+        return corner.join(segs)
+
+
+@dataclass
+class SectionConfig:
+    sep: Separator
+    upper_sep: Separator | None = None  # defaults to sep
+    lower_sep: Separator | None = None  # defaults to sep
+
+
+@dataclass
+class TableConfig:
+    """
+    Encapsulates table construction info.
+    """
+
+    header: SectionConfig
+    content: SectionConfig
+    footer: SectionConfig
+
+    cell_spacing: int
+    """
+    Number of additional spaces in between each cell.
+    """
+
+    pipes: bool
+    """
+    Whether pipes are used around columns.
+    """
+
+    align_char: str | None = None
+    """
+    Character used to indicate alignment within a separator.
+    """
+
+    align_space: bool = False
+    """
+    Whether alignment should be indicated by using spaces in the header.
+    """
+
+    # TODO: include pipes
+    def get_width(self, widths: list[int]) -> int:
+        assert len(widths) > 0
+        return sum(widths) + (len(widths) - 1) * self.cell_spacing
+
+
 class BaseTable(BaseElement):
 
     _rows: list[list[Cell]]
@@ -136,6 +205,8 @@ class BaseTable(BaseElement):
     \let\endlastfoot\oldendlastfoot
     ```
     """
+
+    _config: TableConfig
 
     def __init__(
         self,
@@ -201,7 +272,7 @@ class BaseTable(BaseElement):
 
     def _get_col_widths(self, flavor: FlavorType) -> list[int]:
         """
-        Get widths of the content of each column.
+        Get widths of the content in each column.
         """
 
         if self._widths:
@@ -219,23 +290,23 @@ class BaseTable(BaseElement):
 
         return widths
 
-    def _render_header(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _get_char_width(self, widths: list[int]) -> int:
         """
-        Yield lines for header.
+        Get width of table in characters.
         """
-        # TODO
-        yield ""
+        return sum(widths) + len(widths) * (self._config.cell_spacing + 1) + 1
 
-    def _render_rows(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_rows(
+        self,
+        flavor: FlavorType,
+        rows: list[list[Cell]],
+        section: SectionConfig,
+        include_upper: bool = False,
+        include_lower: bool = False,
+    ) -> Generator[str, None, None]:
         """
-        Yield lines for rows.
-        """
-        # TODO
-        yield ""
-
-    def _render_footer(self, flavor: FlavorType) -> Generator[str, None, None]:
-        """
-        Yield lines for footer.
+        Yield lines for rows, separated by separator and optional upper/lower
+        separators.
         """
         # TODO
         yield ""
@@ -243,9 +314,31 @@ class BaseTable(BaseElement):
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         print(f"Table: {type(self).__name__}, rows: {self._rows}")
 
-        yield from self._render_header(flavor)
-        yield from self._render_rows(flavor)
-        yield from self._render_footer(flavor)
+        if self._header:
+            yield from self._render_rows(
+                flavor,
+                self._header,
+                self._config.header,
+                include_upper=True,
+                include_lower=True,
+            )
+
+        yield from self._render_rows(
+            flavor,
+            self._rows,
+            self._config.content,
+            include_upper=self._header is None,
+            include_lower=self._footer is None,
+        )
+
+        if self._footer:
+            yield from self._render_rows(
+                flavor,
+                self._footer,
+                self._config.footer,
+                include_upper=True,
+                include_lower=True,
+            )
 
     def __normalize_rows(
         self, rows: RowType | list[RowType]
@@ -334,9 +427,18 @@ class InlineTable(BaseTable):
       Second    row                 5.0 Here's another one. Note
                                         the blank line between
                                         rows.
-    ----------- ------- --------------- -------------------------
+    -------------------------------------------------------------
     ```
     """
+
+    _config = TableConfig(
+        header=SectionConfig(Separator()),
+        content=SectionConfig(Separator()),
+        footer=SectionConfig(Separator()),
+        cell_spacing=1,
+        pipes=False,
+        align_space=True,
+    )
 
 
 class BlockTable(BaseTable):
@@ -371,3 +473,12 @@ class BlockTable(BaseTable):
     +---------------+---------------+--------------------+
     ```
     """
+
+    _config = TableConfig(
+        header=SectionConfig(Separator()),
+        content=SectionConfig(Separator()),
+        footer=SectionConfig(Separator()),
+        cell_spacing=2,
+        pipes=True,
+        align_char=":",
+    )
