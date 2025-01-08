@@ -120,7 +120,7 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
         section = (
             inline_section if isinstance(table, InlineTable) else block_section
         )
-        section += [Heading(desc), table]
+        section += Section(desc, elements=[table])
 
     table_classes: list[type[BaseTable]] = [InlineTable, BlockTable]
 
