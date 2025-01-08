@@ -90,49 +90,64 @@ def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
 @mark.powerpack_compare_file("doc-1.md")
 def test_tables(powerpack_comparison_files: ComparisonFiles):
 
-    col_count = 3
+    col_count = 4
     row_count = 3
 
-    header = [f"Header {col_idx}" for col_idx in range(col_count)]
-    footer = [f"Footer {col_idx}" for col_idx in range(col_count)]
+    header = [f"Header\n{col_idx}" for col_idx in range(col_count)]
+    footer = [f"Footer\n{col_idx}" for col_idx in range(col_count)]
+    align = ["left", "center", "right", "default"]
     rows: list[list[str]] = []
 
     for row_idx in range(row_count):
         rows.append(
-            [f"Cell {row_idx}-{col_idx}" for col_idx in range(col_count)]
+            [f"Cell\n{row_idx}-{col_idx}" for col_idx in range(col_count)]
         )
 
-    def check_table(table: BaseTable, dims: tuple[int, int]):
+    inline_section, block_section = Section("Inline tables"), Section(
+        "Block tables"
+    )
+
+    doc = Document(elements=[inline_section, block_section])
+
+    def add_table(table: BaseTable, dims: tuple[int, int], desc: str):
 
         # includes header and footer
         assert table._effective_dims == dims
 
-    doc = Document()
+        nonlocal inline_section
+        nonlocal block_section
 
-    inline_table = InlineTable(
-        rows,
-        header=header,
-        align="center",
-    )
-    check_table(inline_table, (col_count, row_count + 1))
+        section = (
+            inline_section if isinstance(table, InlineTable) else block_section
+        )
+        section += [Heading(desc), table]
 
-    doc += Section(
-        "Inline table",
-        elements=[inline_table],
-    )
+    table_classes: list[type[BaseTable]] = [InlineTable, BlockTable]
 
-    block_table = BlockTable(
-        rows,
-        header=header,
-        footer=footer,
-        align="center",
-    )
-    check_table(block_table, (col_count, row_count + 2))
+    for table_cls in table_classes:
 
-    doc += Section(
-        "Block table",
-        elements=[block_table],
-    )
+        add_table(
+            table_cls(rows, align=align),
+            (col_count, row_count),
+            "No header or footer",
+        )
+        add_table(
+            table_cls(rows, align=align, header=header),
+            (col_count, row_count + 1),
+            "With header",
+        )
+
+        if issubclass(table_cls, BlockTable):
+            add_table(
+                table_cls(rows, align=align, footer=footer),
+                (col_count, row_count + 1),
+                "With footer",
+            )
+            add_table(
+                table_cls(rows, align=align, header=header, footer=footer),
+                (col_count, row_count + 2),
+                "With header and footer",
+            )
 
     doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)

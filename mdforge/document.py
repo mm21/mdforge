@@ -10,6 +10,7 @@ from typing import Any
 import yaml
 
 from ._container import BaseContainer
+from .element import BaseElement
 from .types import FlavorType
 
 __all__ = [
@@ -31,8 +32,12 @@ class Document(BaseContainer):
 
     _frontmatter: dict[str, Any] | None
 
-    def __init__(self, frontmatter: dict[str, Any] | None = None):
-        super().__init__(level=ROOT_LEVEL)
+    def __init__(
+        self,
+        frontmatter: dict[str, Any] | None = None,
+        elements: list[BaseElement] | None = None,
+    ):
+        super().__init__(elements=elements, level=ROOT_LEVEL)
         self._frontmatter = frontmatter
 
     def render(self, path: Path, flavor: FlavorType = "pandoc"):

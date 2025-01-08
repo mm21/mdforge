@@ -22,7 +22,7 @@ __all__ = [
 
 type CellType = str | BaseElement | Cell
 type RowType = list[CellType]
-type AlignType = Literal["left", "center", "right"]
+type AlignType = Literal["left", "center", "right", "default"]
 
 
 @dataclass
@@ -539,7 +539,9 @@ class InlineTable(BaseTable):
         header=SectionConfig(
             Separator(), lower_sep=Separator(inner_corner=" ")
         ),
-        content=SectionConfig(Separator(line=None), lower_sep=Separator()),
+        content=SectionConfig(
+            Separator(line=None), lower_sep=Separator(), upper_sep=Separator()
+        ),
         footer=SectionConfig(Separator()),
         align_space=True,
     )
