@@ -5,7 +5,7 @@ Table element.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import cached_property, lru_cache
+from functools import cache, cached_property
 from typing import Generator, Iterable, Literal, cast
 
 from ..element import BaseElement
@@ -57,7 +57,7 @@ class Cell:
             assert isinstance(cell, (str, BaseElement))
             return Cell(cell)
 
-    @lru_cache()
+    @cache
     def _get_content(self, flavor: FlavorType) -> list[str]:
         """
         Get this cell's content as a list of strings.
@@ -80,7 +80,7 @@ class Separator:
     Encapsulates a table separator.
     """
 
-    line: str = "-"
+    line: str | None = "-"
     """
     Base character for the line, i.e. "-" or "=".
     """
@@ -95,19 +95,24 @@ class Separator:
     Outermost corner character.
     """
 
-    def get_line(
-        self, widths: list[int], cell_spacing: int, pipes: bool
-    ) -> str:
-        inner_corner = (self.inner_corner or self.line) if pipes else ""
-        outer_corner = (self.outer_corner or self.line) if pipes else ""
+    def get_line(self, widths: list[int], config: TableConfig) -> str:
+        if not self.line:
+            return ""
+
+        inner_corner_char = (
+            self.inner_corner if self.inner_corner is not None else self.line
+        )
+        outer_corner_char = (
+            self.inner_corner if self.inner_corner is not None else self.line
+        )
+
+        inner_corner = inner_corner_char
+        outer_corner = outer_corner_char if config.cell_sep is not None else ""
 
         segs: list[str] = []
-        for i, width in enumerate(widths):
-            offset = 0
-            if not pipes:
-                offset = -1 if (i == len(widths) - 1) else 0
+        for width in widths:
 
-            line_width = width + cell_spacing + offset
+            line_width = width + config.cell_spacing
             segs.append(self.line * line_width)
 
         return inner_corner.join(segs).join([outer_corner, outer_corner])
@@ -130,25 +135,28 @@ class TableConfig:
     content: SectionConfig
     footer: SectionConfig
 
-    cell_spacing: int
+    cell_sep: str | None = None
     """
-    Number of additional spaces in between each cell.
-    """
-
-    pipes: bool
-    """
-    Whether pipes are used around columns.
+    Cell separator, e.g. "|".
     """
 
     align_char: str | None = None
     """
-    Character used to indicate alignment within a separator.
+    Character used to indicate alignment within a separator, e.g. ":" for
+    `pandoc`.
     """
 
     align_space: bool = False
     """
     Whether alignment should be indicated by using spaces in the header.
     """
+
+    @property
+    def cell_spacing(self) -> int:
+        """
+        Number of additional spaces in between each cell.
+        """
+        return 1 if self.cell_sep is None else 2
 
 
 class BaseTable(BaseElement):
@@ -277,6 +285,7 @@ class BaseTable(BaseElement):
         """
         return self.__get_dims(self._effective_rows)
 
+    @cache
     def _get_col_widths(self, flavor: FlavorType) -> list[int]:
         """
         Get widths of the content in each column.
@@ -297,18 +306,11 @@ class BaseTable(BaseElement):
 
         return widths
 
-    def _get_char_width(self, widths: list[int]) -> int:
-        """
-        Get width of table in characters.
-        """
-        return sum(widths) + len(widths) * (self._config.cell_spacing + 1) + 1
-
     def _render_rows(
         self,
-        flavor: FlavorType,
         rows: list[list[Cell]],
+        flavor: FlavorType,
         section: SectionConfig,
-        widths: list[str],
         include_upper: bool = False,
         include_lower: bool = False,
     ) -> Generator[str, None, None]:
@@ -317,19 +319,13 @@ class BaseTable(BaseElement):
         optional upper/lower separators.
         """
 
-        sep_line: str
-        upper_sep_line: str | None = None
-        lower_sep_line: str | None = None
+        widths = self._get_col_widths(flavor)
 
-        sep_line = section.sep.get_line(
-            widths, self._config.cell_spacing, self._config.pipes
-        )
+        sep_line = section.sep.get_line(widths, self._config)
 
         if include_upper:
             sep = section.upper_sep or section.sep
-            yield sep.get_line(
-                widths, self._config.cell_spacing, self._config.pipes
-            )
+            yield sep.get_line(widths, self._config)
 
         for row_idx, row in enumerate(rows):
 
@@ -350,14 +346,24 @@ class BaseTable(BaseElement):
 
                     # TODO: handle alignment
 
-                    leading_space = " " if self._config.pipes else ""
-                    trailing_space = " "
+                    leading_space = (
+                        " " if self._config.cell_sep is not None else ""
+                    )
+
+                    if self._config.cell_sep is None:
+                        # no cell separator
+                        trailing_space = (
+                            "  " if cell_idx != len(row_lines) - 1 else ""
+                        )
+                    else:
+                        # cell separator, e.g. "|"
+                        trailing_space = " "
 
                     segs.append(
                         f"{leading_space}{content:<{widths[cell_idx]}}{trailing_space}"
                     )
 
-                cell_sep = "|" if self._config.pipes else ""
+                cell_sep = self._config.cell_sep or ""
                 yield cell_sep + cell_sep.join(segs) + cell_sep
 
             if row_idx != len(rows) - 1:
@@ -365,40 +371,33 @@ class BaseTable(BaseElement):
 
         if include_lower:
             sep = section.lower_sep or section.sep
-            yield sep.get_line(
-                widths, self._config.cell_spacing, self._config.pipes
-            )
+            yield sep.get_line(widths, self._config)
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         print(f"Table: {type(self).__name__}, rows: {self._rows}")
 
-        widths = self._get_col_widths(flavor)
-
         if self._header:
             yield from self._render_rows(
-                flavor,
                 self._header,
+                flavor,
                 self._config.header,
-                widths,
                 include_upper=True,
                 include_lower=True,
             )
 
         yield from self._render_rows(
-            flavor,
             self._rows,
+            flavor,
             self._config.content,
-            widths,
             include_upper=self._header is None,
             include_lower=self._footer is None,
         )
 
         if self._footer:
             yield from self._render_rows(
-                flavor,
                 self._footer,
+                flavor,
                 self._config.footer,
-                widths,
                 include_upper=True,
                 include_lower=True,
             )
@@ -495,11 +494,11 @@ class InlineTable(BaseTable):
     """
 
     _config = TableConfig(
-        header=SectionConfig(Separator()),
-        content=SectionConfig(Separator()),
+        header=SectionConfig(
+            Separator(), lower_sep=Separator(inner_corner=" ")
+        ),
+        content=SectionConfig(Separator(line=None), lower_sep=Separator()),
         footer=SectionConfig(Separator()),
-        cell_spacing=1,
-        pipes=False,
         align_space=True,
     )
 
@@ -541,7 +540,6 @@ class BlockTable(BaseTable):
         header=SectionConfig(Separator(inner_corner="+", outer_corner="+")),
         content=SectionConfig(Separator(inner_corner="+", outer_corner="+")),
         footer=SectionConfig(Separator(inner_corner="+", outer_corner="+")),
-        cell_spacing=2,
-        pipes=True,
+        cell_sep="|",
         align_char=":",
     )
