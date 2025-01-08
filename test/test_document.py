@@ -94,6 +94,7 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
     row_count = 3
 
     header = [f"Header {col_idx}" for col_idx in range(col_count)]
+    footer = [f"Footer {col_idx}" for col_idx in range(col_count)]
     rows: list[list[str]] = []
 
     for row_idx in range(row_count):
@@ -101,10 +102,10 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
             [f"Cell {row_idx}-{col_idx}" for col_idx in range(col_count)]
         )
 
-    def check_table(table: BaseTable):
+    def check_table(table: BaseTable, dims: tuple[int, int]):
 
-        # includes header
-        assert table._effective_dims == (col_count, row_count + 1)
+        # includes header and footer
+        assert table._effective_dims == dims
 
     doc = Document()
 
@@ -113,7 +114,7 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
         header=header,
         align="center",
     )
-    check_table(inline_table)
+    check_table(inline_table, (col_count, row_count + 1))
 
     doc += Section(
         "Inline table",
@@ -123,9 +124,10 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
     block_table = BlockTable(
         rows,
         header=header,
+        footer=footer,
         align="center",
     )
-    check_table(block_table)
+    check_table(block_table, (col_count, row_count + 2))
 
     doc += Section(
         "Block table",

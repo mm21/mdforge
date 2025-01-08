@@ -95,20 +95,25 @@ class Separator:
     Outermost corner character.
     """
 
+    corner: str | None = None
+    """
+    Corner character for both inner and outer corners.
+    """
+
     def get_line(self, widths: list[int], config: TableConfig) -> str:
         if not self.line:
             return ""
 
         inner_corner = (
-            self.inner_corner if self.inner_corner is not None else self.line
+            self._inner_corner if self._inner_corner is not None else self.line
         )
 
         if config.cell_sep is None:
             outer_corner = ""
         else:
             outer_corner = (
-                self.outer_corner
-                if self.outer_corner is not None
+                self._outer_corner
+                if self._outer_corner is not None
                 else self.line
             )
 
@@ -119,6 +124,14 @@ class Separator:
             segs.append(self.line * line_width)
 
         return inner_corner.join(segs).join([outer_corner, outer_corner])
+
+    @property
+    def _inner_corner(self) -> str | None:
+        return self.inner_corner or self.corner
+
+    @property
+    def _outer_corner(self) -> str | None:
+        return self.outer_corner or self.corner
 
 
 @dataclass
@@ -566,9 +579,15 @@ class BlockTable(BaseTable):
     """
 
     _config = TableConfig(
-        header=SectionConfig(Separator(inner_corner="+", outer_corner="+")),
-        content=SectionConfig(Separator(inner_corner="+", outer_corner="+")),
-        footer=SectionConfig(Separator(inner_corner="+", outer_corner="+")),
+        header=SectionConfig(
+            Separator(corner="+"), lower_sep=Separator(line="=", corner="+")
+        ),
+        content=SectionConfig(Separator(corner="+")),
+        footer=SectionConfig(
+            Separator(corner="+"),
+            lower_sep=Separator(line="=", corner="+"),
+            upper_sep=Separator(line="=", corner="+"),
+        ),
         cell_sep="|",
         align_char=":",
     )
