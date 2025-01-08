@@ -99,15 +99,18 @@ class Separator:
         if not self.line:
             return ""
 
-        inner_corner_char = (
-            self.inner_corner if self.inner_corner is not None else self.line
-        )
-        outer_corner_char = (
+        inner_corner = (
             self.inner_corner if self.inner_corner is not None else self.line
         )
 
-        inner_corner = inner_corner_char
-        outer_corner = outer_corner_char if config.cell_sep is not None else ""
+        if config.cell_sep is None:
+            outer_corner = ""
+        else:
+            outer_corner = (
+                self.outer_corner
+                if self.outer_corner is not None
+                else self.line
+            )
 
         segs: list[str] = []
         for width in widths:
@@ -291,19 +294,45 @@ class BaseTable(BaseElement):
         Get widths of the content in each column.
         """
 
-        if self._widths:
-            return self._widths
+        def get_raw_widths():
+            if self._widths:
+                return self._widths
+            else:
+                return self.__get_widths(self._effective_rows, flavor)
 
+        raw_widths = get_raw_widths()
+
+        if self._config.cell_sep is not None or self._header is None:
+            # if cell separators or no header, don't need to adjust widths
+            return raw_widths
+
+        # if no cell separators, allow 1 extra char in the header to ensure
+        # widths are wide enough for content to be aligned via spaces
+        header_widths = self._get_header_widths(flavor)
+
+        return [
+            max(raw, header + 1)
+            for raw, header in zip(raw_widths, header_widths)
+        ]
+
+    @cache
+    def _get_header_widths(self, flavor: FlavorType) -> list[int]:
+
+        assert self._header is not None
+        return self.__get_widths(self._header, flavor)
+
+    def __get_widths(self, rows: list[list[Cell]], flavor: FlavorType):
+        """
+        Get widths of the provided rows.
+        """
         widths: list[int] = [0] * self._col_count
-
-        for row in self._effective_rows:
+        for row in rows:
             assert len(row) == len(widths)
             for i, cell in enumerate(row):
                 widths[i] = max(
                     widths[i],
                     *(len(line) for line in cell._get_content(flavor)),
                 )
-
         return widths
 
     def _render_rows(
@@ -356,7 +385,7 @@ class BaseTable(BaseElement):
                             "  " if cell_idx != len(row_lines) - 1 else ""
                         )
                     else:
-                        # cell separator, e.g. "|"
+                        # have cell separator, e.g. "|"
                         trailing_space = " "
 
                     segs.append(
