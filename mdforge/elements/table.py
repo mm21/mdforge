@@ -12,20 +12,29 @@ from ..element import BaseElement
 from ..types import FlavorType
 
 __all__ = [
+    "Table",
     "CellType",
     "AlignType",
-    "InlineTable",
     "Cell",
-    "BlockTable",
-    "BaseTable",
 ]
+
+CLEAN_COMMANDS = [
+    "toprule",
+    "bottomrule",
+    "endfoot",
+    "endlastfoot",
+]
+"""
+List of commands to save/restore for clean tables.
+"""
+
 
 type CellType = str | BaseElement | Cell
 type RowType = list[CellType]
 type AlignType = Literal["left", "center", "right", "default"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Cell:
 
     content: str | list[str] | BaseElement
@@ -35,19 +44,13 @@ class Cell:
 
     rspan: int | None = None
     """
-    Row span, only valid for `BlockTable`.
+    Row span, only valid for `block=True`.
     """
 
     cspan: int | None = None
     """
-    Column span, only valid for `BlockTable`.
+    Column span, only valid for `block=True`.
     """
-
-    def __hash__(self):
-        return hash((id(self),))
-
-    def __eq__(self, other):
-        return id(self) == id(other)
 
     @classmethod
     def _normalize(cls, cell: CellType) -> Cell:
@@ -74,7 +77,7 @@ class Cell:
         return list(content._render_element(flavor))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Separator:
     """
     Encapsulates a table separator.
@@ -134,14 +137,14 @@ class Separator:
         return self.outer_corner or self.corner
 
 
-@dataclass
+@dataclass(frozen=True)
 class SectionConfig:
     sep: Separator
     upper_sep: Separator | None = None  # defaults to sep
     lower_sep: Separator | None = None  # defaults to sep
 
 
-@dataclass
+@dataclass(frozen=True)
 class TableConfig:
     """
     Encapsulates table construction info.
@@ -175,7 +178,7 @@ class TableConfig:
         return 1 if self.cell_sep is None else 2
 
 
-class BaseTable(BaseElement):
+class Table(BaseElement):
 
     _rows: list[list[Cell]]
     """
@@ -210,34 +213,15 @@ class BaseTable(BaseElement):
     Table caption.
     """
 
-    _clean: bool
-    r"""
-    Whether to remove top and bottom rules for this table.
-
-    Inserts the following before tables:
-
-    ```
-    \let\oldtoprule\toprule
-    \renewcommand{\toprule}{}
-    \let\oldbottomrule\bottomrule
-    \renewcommand{\bottomrule}{}
-    \let\oldendfoot\endfoot
-    \renewcommand{\endfoot}{}
-    \let\oldendlastfoot\endlastfoot
-    \renewcommand{\endlastfoot}{}
-    ```
-
-    And after tables:
-
-    ```
-    \let\toprule\oldtoprule
-    \let\bottomrule\oldbottomrule
-    \let\endfoot\oldendfoot
-    \let\endlastfoot\oldendlastfoot
-    ```
+    _block: bool
+    """
+    Whether table should support block content such as paragraphs and lists.
     """
 
-    _config: TableConfig
+    _clean: bool
+    """
+    Whether to omit top and bottom lines for this table.
+    """
 
     def __init__(
         self,
@@ -247,6 +231,7 @@ class BaseTable(BaseElement):
         align: AlignType | list[AlignType] | None = None,
         widths: list[int] | None = None,
         caption: str | None = None,
+        block: bool = False,
         clean: bool = False,
     ):
         self._rows = self.__normalize_rows(rows)
@@ -255,6 +240,7 @@ class BaseTable(BaseElement):
         self._align = align
         self._widths = widths
         self._caption = caption
+        self._block = block
         self._clean = clean
 
     @property
@@ -302,7 +288,9 @@ class BaseTable(BaseElement):
         return self.__get_dims(self._effective_rows)
 
     @cache
-    def _get_col_widths(self, flavor: FlavorType) -> list[int]:
+    def _get_col_widths(
+        self, flavor: FlavorType, config: TableConfig
+    ) -> list[int]:
         """
         Get widths of the content in each column.
         """
@@ -315,7 +303,7 @@ class BaseTable(BaseElement):
 
         raw_widths = get_raw_widths()
 
-        if self._config.cell_sep is not None or self._header is None:
+        if config.cell_sep is not None or self._header is None:
             # if cell separators or no header, don't need to adjust widths
             return raw_widths
 
@@ -352,6 +340,7 @@ class BaseTable(BaseElement):
         self,
         rows: list[list[Cell]],
         flavor: FlavorType,
+        config: TableConfig,
         section: SectionConfig,
         include_upper: bool = False,
         include_lower: bool = False,
@@ -361,13 +350,13 @@ class BaseTable(BaseElement):
         optional upper/lower separators.
         """
 
-        widths = self._get_col_widths(flavor)
+        widths = self._get_col_widths(flavor, config)
 
-        sep_line = section.sep.get_line(widths, self._config)
+        sep_line = section.sep.get_line(widths, config)
 
         if include_upper:
             sep = section.upper_sep or section.sep
-            yield sep.get_line(widths, self._config)
+            yield sep.get_line(widths, config)
 
         for row_idx, row in enumerate(rows):
 
@@ -388,11 +377,9 @@ class BaseTable(BaseElement):
 
                     # TODO: handle alignment
 
-                    leading_space = (
-                        " " if self._config.cell_sep is not None else ""
-                    )
+                    leading_space = " " if config.cell_sep is not None else ""
 
-                    if self._config.cell_sep is None:
+                    if config.cell_sep is None:
                         # no cell separator
                         trailing_space = (
                             "  " if cell_idx != len(row_lines) - 1 else ""
@@ -405,7 +392,7 @@ class BaseTable(BaseElement):
                         f"{leading_space}{content:<{widths[cell_idx]}}{trailing_space}"
                     )
 
-                cell_sep = self._config.cell_sep or ""
+                cell_sep = config.cell_sep or ""
                 yield cell_sep + cell_sep.join(segs) + cell_sep
 
             if row_idx != len(rows) - 1:
@@ -413,16 +400,22 @@ class BaseTable(BaseElement):
 
         if include_lower:
             sep = section.lower_sep or section.sep
-            yield sep.get_line(widths, self._config)
+            yield sep.get_line(widths, config)
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         print(f"Table: {type(self).__name__}, rows: {self._rows}")
+
+        config = _lookup_config(flavor, self._block)
+
+        if self._clean:
+            yield from CLEAN_START
 
         if self._header:
             yield from self._render_rows(
                 self._header,
                 flavor,
-                self._config.header,
+                config,
+                config.header,
                 include_upper=True,
                 include_lower=True,
             )
@@ -430,7 +423,8 @@ class BaseTable(BaseElement):
         yield from self._render_rows(
             self._rows,
             flavor,
-            self._config.content,
+            config,
+            config.content,
             include_upper=self._header is None,
             include_lower=self._footer is None,
         )
@@ -439,10 +433,14 @@ class BaseTable(BaseElement):
             yield from self._render_rows(
                 self._footer,
                 flavor,
-                self._config.footer,
+                config,
+                config.footer,
                 include_upper=True,
                 include_lower=True,
             )
+
+        if self._clean:
+            yield from CLEAN_END
 
     def __normalize_rows(
         self, rows: RowType | list[RowType]
@@ -504,92 +502,134 @@ class BaseTable(BaseElement):
         )
 
 
-class InlineTable(BaseTable):
+@dataclass
+class TableFlavor:
     """
-    Table which only supports inline elements. Maps to a `multiline` table
-    for `pandoc` flavor.
-
-    For example:
-
-    ```
-    -------------------------------------------------------------
-     Centered   Default           Right Left
-      Header    Aligned         Aligned Aligned
-    ----------- ------- --------------- -------------------------
-       First    row                12.0 Example of a row that
-                                        spans multiple lines.
-
-      Second    row                 5.0 Here's another one. Note
-                                        the blank line between
-                                        rows.
-    -------------------------------------------------------------
-
-    ----------- ------- --------------- -------------------------
-       First    row                12.0 Example of a row that
-                                        spans multiple lines.
-
-      Second    row                 5.0 Here's another one. Note
-                                        the blank line between
-                                        rows.
-    -------------------------------------------------------------
-    ```
+    Encapsulates the table configs for a specific flavor.
     """
 
-    _config = TableConfig(
-        header=SectionConfig(
-            Separator(), lower_sep=Separator(inner_corner=" ")
+    inline: Table | None
+    block: Table | None
+
+
+FLAVOR_MAP: dict[FlavorType, TableFlavor] = {
+    "pandoc": TableFlavor(
+        inline=TableConfig(
+            header=SectionConfig(
+                Separator(), lower_sep=Separator(inner_corner=" ")
+            ),
+            content=SectionConfig(
+                Separator(line=None),
+                lower_sep=Separator(),
+                upper_sep=Separator(inner_corner=" "),
+            ),
+            footer=SectionConfig(Separator()),
+            align_space=True,
         ),
-        content=SectionConfig(
-            Separator(line=None), lower_sep=Separator(), upper_sep=Separator()
+        block=TableConfig(
+            header=SectionConfig(
+                Separator(corner="+"), lower_sep=Separator(line="=", corner="+")
+            ),
+            content=SectionConfig(Separator(corner="+")),
+            footer=SectionConfig(
+                Separator(corner="+"),
+                lower_sep=Separator(line="=", corner="+"),
+                upper_sep=Separator(line="=", corner="+"),
+            ),
+            cell_sep="|",
+            align_char=":",
         ),
-        footer=SectionConfig(Separator()),
-        align_space=True,
+    )
+}
+"""
+Mapping of flavors to table configs.
+
+Pandoc inline tables:
+
+```
+-------------------------------------------------------------
+ Centered   Default           Right Left
+  Header    Aligned         Aligned Aligned
+----------- ------- --------------- -------------------------
+   First    row                12.0 Example of a row that
+                                    spans multiple lines.
+
+  Second    row                 5.0 Here's another one. Note
+                                    the blank line between
+                                    rows.
+-------------------------------------------------------------
+
+----------- ------- --------------- -------------------------
+   First    row                12.0 Example of a row that
+                                    spans multiple lines.
+
+  Second    row                 5.0 Here's another one. Note
+                                    the blank line between
+                                    rows.
+-------------------------------------------------------------
+```
+
+Pandoc block tables:
+
+```
++---------------------+-----------------------+
+| Location            | Temperature 1961-1990 |
+|                     | in degree Celsius     |
+|                     +-------+-------+-------+
+|                     | min   | mean  | max   |
++=====================+=======+=======+=======+
+| Antarctica          | -89.2 | N/A   | 19.8  |
++---------------------+-------+-------+-------+
+| Earth               | -89.2 | 14    | 56.7  |
++=====================+=======+=======+=======+
+| Average             | -89.2 | N/A   | 38.25 |
++=====================+=======+=======+=======+
+
++---------------+---------------+--------------------+
+| Right         | Left          | Centered           |
++==============:+:==============+:==================:+
+| Bananas       | $1.34         | built-in wrapper   |
++---------------+---------------+--------------------+
+
++--------------:+:--------------+:------------------:+
+| Right         | Left          | Centered           |
++---------------+---------------+--------------------+
+```
+"""
+
+
+def _lookup_config(flavor: FlavorType, block: bool) -> TableConfig:
+
+    err = (
+        f"Tables for flavor {flavor} with block={block} not currently supported"
     )
 
+    table_flavor = FLAVOR_MAP.get(flavor)
+    assert table_flavor is not None, err
 
-class BlockTable(BaseTable):
-    """
-    Table which supports block elements like paragraphs in addition to inline
-    elements. Maps to a `grid` table for `pandoc` flavor.
+    config = table_flavor.block if block else table_flavor.inline
+    assert config is not None, err
 
-    For example:
+    return config
 
-    ```
-    +---------------------+-----------------------+
-    | Location            | Temperature 1961-1990 |
-    |                     | in degree Celsius     |
-    |                     +-------+-------+-------+
-    |                     | min   | mean  | max   |
-    +=====================+=======+=======+=======+
-    | Antarctica          | -89.2 | N/A   | 19.8  |
-    +---------------------+-------+-------+-------+
-    | Earth               | -89.2 | 14    | 56.7  |
-    +=====================+=======+=======+=======+
-    | Average             | -89.2 | N/A   | 38.25 |
-    +=====================+=======+=======+=======+
 
-    +---------------+---------------+--------------------+
-    | Right         | Left          | Centered           |
-    +==============:+:==============+:==================:+
-    | Bananas       | $1.34         | built-in wrapper   |
-    +---------------+---------------+--------------------+
+def _get_clean_start() -> Generator[str, None, None]:
+    for cmd in CLEAN_COMMANDS:
+        yield rf"\let\old{cmd}\{cmd}"
+        yield rf"\renewcommand{{\{cmd}}}{{}}"
 
-    +--------------:+:--------------+:------------------:+
-    | Right         | Left          | Centered           |
-    +---------------+---------------+--------------------+
-    ```
-    """
 
-    _config = TableConfig(
-        header=SectionConfig(
-            Separator(corner="+"), lower_sep=Separator(line="=", corner="+")
-        ),
-        content=SectionConfig(Separator(corner="+")),
-        footer=SectionConfig(
-            Separator(corner="+"),
-            lower_sep=Separator(line="=", corner="+"),
-            upper_sep=Separator(line="=", corner="+"),
-        ),
-        cell_sep="|",
-        align_char=":",
-    )
+def _get_clean_end() -> Generator[str, None, None]:
+    for cmd in CLEAN_COMMANDS:
+        yield rf"\let\{cmd}\old{cmd}"
+
+
+CLEAN_START = _get_clean_start()
+"""
+List of code lines to save commands.
+"""
+
+CLEAN_END = _get_clean_end()
+"""
+List of code lines to restore commands.
+"""

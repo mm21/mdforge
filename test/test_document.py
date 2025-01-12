@@ -1,17 +1,7 @@
 from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
-from mdforge import (
-    BaseTable,
-    BlockTable,
-    Document,
-    Heading,
-    InlineTable,
-    List,
-    ListItem,
-    Paragraph,
-    Section,
-)
+from mdforge import Document, Heading, List, ListItem, Paragraph, Section, Table
 
 
 @mark.powerpack_compare_file("doc-1.md")
@@ -109,7 +99,7 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
 
     doc = Document(elements=[inline_section, block_section])
 
-    def add_table(table: BaseTable, dims: tuple[int, int], desc: str):
+    def add_table(table: Table, dims: tuple[int, int], desc: str):
 
         # includes header and footer
         assert table._effective_dims == dims
@@ -117,34 +107,32 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
         nonlocal inline_section
         nonlocal block_section
 
-        section = (
-            inline_section if isinstance(table, InlineTable) else block_section
-        )
+        section = block_section if table._block else inline_section
         section += Section(desc, elements=[table])
 
-    table_classes: list[type[BaseTable]] = [InlineTable, BlockTable]
-
-    for table_cls in table_classes:
+    for block in [False, True]:
 
         add_table(
-            table_cls(rows, align=align),
+            Table(rows, align=align, block=block),
             (col_count, row_count),
             "No header or footer",
         )
         add_table(
-            table_cls(rows, align=align, header=header),
+            Table(rows, align=align, header=header, block=block),
             (col_count, row_count + 1),
             "With header",
         )
 
-        if issubclass(table_cls, BlockTable):
+        if block:
             add_table(
-                table_cls(rows, align=align, footer=footer),
+                Table(rows, align=align, footer=footer, block=block),
                 (col_count, row_count + 1),
                 "With footer",
             )
             add_table(
-                table_cls(rows, align=align, header=header, footer=footer),
+                Table(
+                    rows, align=align, header=header, footer=footer, block=block
+                ),
                 (col_count, row_count + 2),
                 "With header and footer",
             )
