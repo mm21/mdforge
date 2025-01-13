@@ -113,32 +113,40 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
         section = block_section if table._block else inline_section
         section += Section(desc, elements=[table])
 
-    for block in [False, True]:
+    for row_count_iter in [1, row_count]:
 
-        add_table(
-            Table(rows, align=align, block=block),
-            (col_count, row_count),
-            "No header or footer",
-        )
-        add_table(
-            Table(rows, align=align, header=header, block=block),
-            (col_count, row_count + 1),
-            "With header",
-        )
+        for block in [False, True]:
 
-        if block:
+            rows_iter = rows[0:row_count_iter]
+
             add_table(
-                Table(rows, align=align, footer=footer, block=block),
-                (col_count, row_count + 1),
-                "With footer",
+                Table(rows_iter, align=align, block=block),
+                (col_count, row_count_iter),
+                f"No header or footer, {row_count_iter} rows",
             )
             add_table(
-                Table(
-                    rows, align=align, header=header, footer=footer, block=block
-                ),
-                (col_count, row_count + 2),
-                "With header and footer",
+                Table(rows_iter, align=align, header=header, block=block),
+                (col_count, row_count_iter + 1),
+                f"With header, {row_count_iter} rows",
             )
+
+            if block:
+                add_table(
+                    Table(rows_iter, align=align, footer=footer, block=block),
+                    (col_count, row_count_iter + 1),
+                    f"With footer, {row_count_iter} rows",
+                )
+                add_table(
+                    Table(
+                        rows_iter,
+                        align=align,
+                        header=header,
+                        footer=footer,
+                        block=block,
+                    ),
+                    (col_count, row_count_iter + 2),
+                    f"With header and footer, {row_count_iter} rows",
+                )
 
     doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)

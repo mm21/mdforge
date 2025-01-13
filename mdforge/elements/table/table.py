@@ -215,25 +215,18 @@ class Table(BaseElement):
         Get widths of the content in each column.
         """
 
-        def get_raw_widths():
-            if self._widths:
-                return self._widths
-            else:
-                return self.__get_widths(self._effective_rows, flavor)
+        effective_widths = self.__get_widths(self._effective_rows, flavor)
+        raw_widths = self._widths if self._widths else effective_widths
 
-        raw_widths = get_raw_widths()
-
-        if config.cell_sep is not None or self._header is None:
-            # if cell separators or no header, don't need to adjust widths
+        if not config.align_space:
+            # if not aligning based on space, use raw widths
             return raw_widths
 
-        # if no cell separators, allow 1 extra char in the header to ensure
+        # if aligning based on space, allow 1 extra char to ensure
         # widths are wide enough for content to be aligned via spaces
-        header_widths = self._get_header_widths(flavor)
-
         return [
-            max(raw, header + 1)
-            for raw, header in zip(raw_widths, header_widths)
+            max(raw_width, effective_width + 1)
+            for raw_width, effective_width in zip(raw_widths, effective_widths)
         ]
 
     @cache
@@ -299,8 +292,8 @@ class Table(BaseElement):
                         else ""
                     )
 
-                    # check if this is a header row
-                    if is_header and config.align_space:
+                    # check if table is aligned using spaces
+                    if config.align_space:
 
                         # is header and align by using spaces
                         assert cell_idx < len(self._align)
@@ -327,7 +320,11 @@ class Table(BaseElement):
                 cell_sep = config.cell_sep or ""
                 yield cell_sep + cell_sep.join(segs) + cell_sep
 
-            if row_idx != len(rows) - 1:
+            # include a row separator, if not last row or have a single-row
+            # table with rows separated by spaces (line chars)
+            is_middle = row_idx != len(rows) - 1
+            has_trailing_line = section.sep.line is None and len(rows) == 1
+            if is_middle or has_trailing_line:
                 yield sep_line
 
         if include_lower:
