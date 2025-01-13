@@ -8,26 +8,30 @@ from dataclasses import dataclass
 from functools import cache, cached_property
 from typing import Generator, Iterable, Literal, cast
 
-from ..element import BaseElement
-from ..types import FlavorType
+from ...element import BaseElement
+from ...types import FlavorType
+from ._clean import get_clean_end, get_clean_start
+from ._config import SectionConfig, TableConfig
+from ._configs import lookup_config
 
 __all__ = [
     "Table",
-    "CellType",
-    "AlignType",
     "Cell",
+    "CellType",
+    "RowType",
+    "AlignType",
 ]
 
-CLEAN_COMMANDS = [
-    "toprule",
-    "bottomrule",
-    "endfoot",
-    "endlastfoot",
-]
+
+CLEAN_START = get_clean_start()
 """
-List of commands to save/restore for clean tables.
+List of code lines to backup latex commands.
 """
 
+CLEAN_END = get_clean_end()
+"""
+List of code lines to restore latex commands.
+"""
 
 type CellType = str | BaseElement | Cell
 type RowType = list[CellType]
@@ -75,107 +79,6 @@ class Cell:
 
         assert isinstance(content, BaseElement)
         return list(content._render_element(flavor))
-
-
-@dataclass(frozen=True)
-class Separator:
-    """
-    Encapsulates a table separator.
-    """
-
-    line: str | None = "-"
-    """
-    Base character for the line, i.e. "-" or "=".
-    """
-
-    inner_corner: str | None = None
-    """
-    Innermost corner character.
-    """
-
-    outer_corner: str | None = None
-    """
-    Outermost corner character.
-    """
-
-    corner: str | None = None
-    """
-    Corner character for both inner and outer corners.
-    """
-
-    def get_line(self, widths: list[int], config: TableConfig) -> str:
-        if not self.line:
-            return ""
-
-        inner_corner = (
-            self._inner_corner if self._inner_corner is not None else self.line
-        )
-
-        if config.cell_sep is None:
-            outer_corner = ""
-        else:
-            outer_corner = (
-                self._outer_corner
-                if self._outer_corner is not None
-                else self.line
-            )
-
-        segs: list[str] = []
-        for width in widths:
-
-            line_width = width + config.cell_spacing
-            segs.append(self.line * line_width)
-
-        return inner_corner.join(segs).join([outer_corner, outer_corner])
-
-    @property
-    def _inner_corner(self) -> str | None:
-        return self.inner_corner or self.corner
-
-    @property
-    def _outer_corner(self) -> str | None:
-        return self.outer_corner or self.corner
-
-
-@dataclass(frozen=True)
-class SectionConfig:
-    sep: Separator
-    upper_sep: Separator | None = None  # defaults to sep
-    lower_sep: Separator | None = None  # defaults to sep
-
-
-@dataclass(frozen=True)
-class TableConfig:
-    """
-    Encapsulates table construction info.
-    """
-
-    header: SectionConfig
-    content: SectionConfig
-    footer: SectionConfig
-
-    cell_sep: str | None = None
-    """
-    Cell separator, e.g. "|".
-    """
-
-    align_char: str | None = None
-    """
-    Character used to indicate alignment within a separator, e.g. ":" for
-    `pandoc`.
-    """
-
-    align_space: bool = False
-    """
-    Whether alignment should be indicated by using spaces in the header.
-    """
-
-    @property
-    def cell_spacing(self) -> int:
-        """
-        Number of additional spaces in between each cell.
-        """
-        return 1 if self.cell_sep is None else 2
 
 
 class Table(BaseElement):
@@ -405,7 +308,7 @@ class Table(BaseElement):
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         print(f"Table: {type(self).__name__}, rows: {self._rows}")
 
-        config = _lookup_config(flavor, self._block)
+        config = lookup_config(flavor, self._block)
 
         if self._clean:
             yield from CLEAN_START
@@ -500,136 +403,3 @@ class Table(BaseElement):
         return get_col_count(rows, "cspan", "column"), get_col_count(
             cols, "rspan", "row"
         )
-
-
-@dataclass
-class TableFlavor:
-    """
-    Encapsulates the table configs for a specific flavor.
-    """
-
-    inline: Table | None
-    block: Table | None
-
-
-FLAVOR_MAP: dict[FlavorType, TableFlavor] = {
-    "pandoc": TableFlavor(
-        inline=TableConfig(
-            header=SectionConfig(
-                Separator(), lower_sep=Separator(inner_corner=" ")
-            ),
-            content=SectionConfig(
-                Separator(line=None),
-                lower_sep=Separator(),
-                upper_sep=Separator(inner_corner=" "),
-            ),
-            footer=SectionConfig(Separator()),
-            align_space=True,
-        ),
-        block=TableConfig(
-            header=SectionConfig(
-                Separator(corner="+"), lower_sep=Separator(line="=", corner="+")
-            ),
-            content=SectionConfig(Separator(corner="+")),
-            footer=SectionConfig(
-                Separator(corner="+"),
-                lower_sep=Separator(line="=", corner="+"),
-                upper_sep=Separator(line="=", corner="+"),
-            ),
-            cell_sep="|",
-            align_char=":",
-        ),
-    )
-}
-"""
-Mapping of flavors to table configs.
-
-Pandoc inline tables:
-
-```
--------------------------------------------------------------
- Centered   Default           Right Left
-  Header    Aligned         Aligned Aligned
------------ ------- --------------- -------------------------
-   First    row                12.0 Example of a row that
-                                    spans multiple lines.
-
-  Second    row                 5.0 Here's another one. Note
-                                    the blank line between
-                                    rows.
--------------------------------------------------------------
-
------------ ------- --------------- -------------------------
-   First    row                12.0 Example of a row that
-                                    spans multiple lines.
-
-  Second    row                 5.0 Here's another one. Note
-                                    the blank line between
-                                    rows.
--------------------------------------------------------------
-```
-
-Pandoc block tables:
-
-```
-+---------------------+-----------------------+
-| Location            | Temperature 1961-1990 |
-|                     | in degree Celsius     |
-|                     +-------+-------+-------+
-|                     | min   | mean  | max   |
-+=====================+=======+=======+=======+
-| Antarctica          | -89.2 | N/A   | 19.8  |
-+---------------------+-------+-------+-------+
-| Earth               | -89.2 | 14    | 56.7  |
-+=====================+=======+=======+=======+
-| Average             | -89.2 | N/A   | 38.25 |
-+=====================+=======+=======+=======+
-
-+---------------+---------------+--------------------+
-| Right         | Left          | Centered           |
-+==============:+:==============+:==================:+
-| Bananas       | $1.34         | built-in wrapper   |
-+---------------+---------------+--------------------+
-
-+--------------:+:--------------+:------------------:+
-| Right         | Left          | Centered           |
-+---------------+---------------+--------------------+
-```
-"""
-
-
-def _lookup_config(flavor: FlavorType, block: bool) -> TableConfig:
-
-    err = (
-        f"Tables for flavor {flavor} with block={block} not currently supported"
-    )
-
-    table_flavor = FLAVOR_MAP.get(flavor)
-    assert table_flavor is not None, err
-
-    config = table_flavor.block if block else table_flavor.inline
-    assert config is not None, err
-
-    return config
-
-
-def _get_clean_start() -> Generator[str, None, None]:
-    for cmd in CLEAN_COMMANDS:
-        yield rf"\let\old{cmd}\{cmd}"
-        yield rf"\renewcommand{{\{cmd}}}{{}}"
-
-
-def _get_clean_end() -> Generator[str, None, None]:
-    for cmd in CLEAN_COMMANDS:
-        yield rf"\let\{cmd}\old{cmd}"
-
-
-CLEAN_START = _get_clean_start()
-"""
-List of code lines to save commands.
-"""
-
-CLEAN_END = _get_clean_end()
-"""
-List of code lines to restore commands.
-"""
