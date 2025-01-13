@@ -83,9 +83,12 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
     col_count = 4
     row_count = 3
 
-    header = [f"Header\n{col_idx}" for col_idx in range(col_count)]
-    footer = [f"Footer\n{col_idx}" for col_idx in range(col_count)]
     align = ["left", "center", "right", "default"]
+    header = [
+        f"Header {col_idx},\nalign: {align[col_idx]}"
+        for col_idx in range(col_count)
+    ]
+    footer = [f"Footer\n{col_idx}" for col_idx in range(col_count)]
     rows: list[list[str]] = []
 
     for row_idx in range(row_count):

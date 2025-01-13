@@ -38,6 +38,9 @@ type RowType = list[CellType]
 type AlignType = Literal["left", "center", "right", "default"]
 
 
+VALID_ALIGNS = ["left", "center", "right", "default"]
+
+
 @dataclass(frozen=True)
 class Cell:
 
@@ -98,7 +101,7 @@ class Table(BaseElement):
     Optional footer. May contain multiple rows for `BlockTable` only.
     """
 
-    _align: AlignType | list[AlignType] | None
+    _align: AlignType | list[AlignType]
     """
     Optional alignment for each column.
     """
@@ -140,11 +143,25 @@ class Table(BaseElement):
         self._rows = self.__normalize_rows(rows)
         self._header = self.__normalize_rows(header) if header else None
         self._footer = self.__normalize_rows(footer) if footer else None
-        self._align = align
         self._widths = widths
         self._caption = caption
         self._block = block
         self._clean = clean
+
+        # determine alignments of each column
+        if isinstance(align, str):
+            # single alignment given
+            assert align in VALID_ALIGNS
+            self._align = [align] * self._col_count
+        elif isinstance(align, Iterable):
+            # alignments per column given
+            assert len(align) == self._col_count
+            assert all(a in VALID_ALIGNS for a in align)
+            self._align = align
+        else:
+            # no alignment given
+            assert align is None
+            self._align = ["default"] * self._col_count
 
     @property
     def _col_count(self) -> int:
@@ -247,6 +264,7 @@ class Table(BaseElement):
         section: SectionConfig,
         include_upper: bool = False,
         include_lower: bool = False,
+        is_header: bool = False,
     ) -> Generator[str, None, None]:
         """
         Yield lines for rows, separated by separator (between rows) and
@@ -254,7 +272,6 @@ class Table(BaseElement):
         """
 
         widths = self._get_col_widths(flavor, config)
-
         sep_line = section.sep.get_line(widths, config)
 
         if include_upper:
@@ -272,28 +289,40 @@ class Table(BaseElement):
                 segs: list[str] = []
 
                 for cell_idx, cell_lines in enumerate(row_lines):
+
+                    leading_space = "" if config.cell_sep is None else " "
+                    trailing_space = " "
+
                     content = (
                         cell_lines[line_idx]
                         if line_idx < len(cell_lines)
                         else ""
                     )
 
-                    # TODO: handle alignment
+                    # check if this is a header row
+                    if is_header and config.align_space:
 
-                    leading_space = " " if config.cell_sep is not None else ""
+                        # is header and align by using spaces
+                        assert cell_idx < len(self._align)
 
-                    if config.cell_sep is None:
-                        # no cell separator
-                        trailing_space = (
-                            "  " if cell_idx != len(row_lines) - 1 else ""
-                        )
+                        match self._align[cell_idx]:
+                            case "center":
+                                align_char = "^"
+                            case "right":
+                                align_char = ">"
+                            case _:
+                                align_char = "<"
                     else:
-                        # have cell separator, e.g. "|"
-                        trailing_space = " "
+                        align_char = "<"
 
-                    segs.append(
-                        f"{leading_space}{content:<{widths[cell_idx]}}{trailing_space}"
+                    width_offset = (
+                        (len(leading_space) + len({trailing_space}))
+                        if config.cell_sep is None
+                        else 0
                     )
+                    width = widths[cell_idx] + width_offset
+                    line = f"{content:{align_char}{width}}"
+                    segs.append(f"{leading_space}{line}{trailing_space}")
 
                 cell_sep = config.cell_sep or ""
                 yield cell_sep + cell_sep.join(segs) + cell_sep
@@ -321,6 +350,7 @@ class Table(BaseElement):
                 config.header,
                 include_upper=True,
                 include_lower=True,
+                is_header=True,
             )
 
         yield from self._render_rows(
