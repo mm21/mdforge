@@ -42,28 +42,55 @@ class SeparatorConfig:
     Corner character for both inner and outer corners.
     """
 
-    def get_line(self, widths: list[int], config: FrameTableConfig) -> str:
+    def get_line(
+        self,
+        config: FrameTableConfig,
+        params: TableParams,
+        widths: list[int],
+        do_align: bool = False,
+    ) -> str:
+        """
+        Get line based on configuration and table params. If `do_align`, use
+        alignment chars as applicable.
+        """
         if not self.line:
             return ""
 
-        inner_corner = (
-            self._inner_corner if self._inner_corner is not None else self.line
+        inner_corner = self._inner_corner or self.line
+        outer_corner = (
+            (self._outer_corner or self.line) if config.cell_sep else ""
         )
 
-        if config.cell_sep is None:
-            outer_corner = ""
-        else:
-            outer_corner = (
-                self._outer_corner
-                if self._outer_corner is not None
-                else self.line
-            )
-
         segs: list[str] = []
-        for width in widths:
+
+        for col_idx in range(params.col_count):
+
+            width = widths[col_idx]
+            align = params.col_aligns[col_idx]
 
             line_width = width + config.cell_spacing
-            segs.append(self.line * line_width)
+
+            if config.align_char and do_align:
+                # align based on alignment chars on either side of line
+                assert line_width > 2
+                inner_width = line_width - 2
+                left_char = (
+                    config.align_char
+                    if align in ["left", "center"]
+                    else self.line
+                )
+                right_char = (
+                    config.align_char
+                    if align in ["right", "center"]
+                    else self.line
+                )
+            else:
+                # solid line
+                inner_width = line_width
+                left_char, right_char = "", ""
+
+            inner_line = self.line * inner_width
+            segs.append(f"{left_char}{inner_line}{right_char}")
 
         return inner_corner.join(segs).join([outer_corner, outer_corner])
 
@@ -82,7 +109,7 @@ class SectionConfig:
     Encapsulates section info, i.e. header/content/footer.
     """
 
-    sep: SeparatorConfig
+    middle_sep: SeparatorConfig
     upper_sep: SeparatorConfig | None = None  # defaults to sep
     lower_sep: SeparatorConfig | None = None  # defaults to sep
 
@@ -135,6 +162,7 @@ class FrameTableConfig(BaseTableConfig):
                 self.header_section,
                 include_upper=True,
                 include_lower=True,
+                align_lower=True,
             )
 
         yield from self._render_rows(
@@ -144,6 +172,7 @@ class FrameTableConfig(BaseTableConfig):
             self.content_section,
             include_upper=params.header is None,
             include_lower=params.footer is None,
+            align_upper=params.header is None,
         )
 
         if params.footer:
@@ -164,6 +193,8 @@ class FrameTableConfig(BaseTableConfig):
         section: SectionConfig,
         include_upper: bool = False,
         include_lower: bool = False,
+        align_upper: bool = False,
+        align_lower: bool = False,
     ) -> Generator[str, None, None]:
         """
         Yield lines for rows, separated by separator (between rows) and
@@ -171,13 +202,11 @@ class FrameTableConfig(BaseTableConfig):
         """
 
         widths = self.__get_col_widths(flavor, params)
-        sep_line = section.sep.get_line(widths, self)
+        sep_line = section.middle_sep.get_line(self, params, widths)
 
         if include_upper:
-            sep = section.upper_sep or section.sep
-            yield sep.get_line(widths, self)
-
-        print(f"--- rows: {rows}")
+            sep = section.upper_sep or section.middle_sep
+            yield sep.get_line(self, params, widths, do_align=align_upper)
 
         for row_idx, row in enumerate(rows):
 
@@ -231,13 +260,15 @@ class FrameTableConfig(BaseTableConfig):
             # include a row separator, if not last row or have a single-row
             # table with rows separated by spaces (line chars)
             is_middle = row_idx != len(rows) - 1
-            has_trailing_line = section.sep.line is None and len(rows) == 1
+            has_trailing_line = (
+                section.middle_sep.line is None and len(rows) == 1
+            )
             if is_middle or has_trailing_line:
                 yield sep_line
 
         if include_lower:
-            sep = section.lower_sep or section.sep
-            yield sep.get_line(widths, self)
+            sep = section.lower_sep or section.middle_sep
+            yield sep.get_line(self, params, widths, do_align=align_lower)
 
     @cache
     def __get_col_widths(
