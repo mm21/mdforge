@@ -105,12 +105,12 @@ def test_tables(powerpack_comparison_files: ComparisonFiles):
     def add_table(table: Table, dims: tuple[int, int], desc: str):
 
         # includes header and footer
-        assert table._effective_dims == dims
+        assert table._params.effective_dims == dims
 
         nonlocal inline_section
         nonlocal block_section
 
-        section = block_section if table._block else inline_section
+        section = block_section if table._params.block else inline_section
         section += Section(desc, elements=[table])
 
     for row_count_iter in [1, row_count]:

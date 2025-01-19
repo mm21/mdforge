@@ -1,47 +1,29 @@
-"""
-Listings of flavors and syntaxes.
-"""
-
 from __future__ import annotations
 
-from ...types import FlavorType
-from ._config import SectionConfig, Separator, TableConfig, TableFlavor
+from .frame import FrameTableConfig, SectionConfig, SeparatorConfig
 
-FLAVOR_MAP: dict[FlavorType, TableFlavor] = {
-    "pandoc": TableFlavor(
-        inline=TableConfig(
-            header=SectionConfig(
-                Separator(), lower_sep=Separator(inner_corner=" ")
-            ),
-            content=SectionConfig(
-                Separator(line=None),
-                lower_sep=Separator(),
-                upper_sep=Separator(inner_corner=" "),
-            ),
-            footer=SectionConfig(Separator()),
-            align_space=True,
-        ),
-        block=TableConfig(
-            header=SectionConfig(
-                Separator(corner="+"), lower_sep=Separator(line="=", corner="+")
-            ),
-            content=SectionConfig(Separator(corner="+")),
-            footer=SectionConfig(
-                Separator(corner="+"),
-                lower_sep=Separator(line="=", corner="+"),
-                upper_sep=Separator(line="=", corner="+"),
-            ),
-            cell_sep="|",
-            align_char=":",
-        ),
-    )
-}
+__all__ = [
+    "MULTILINE_CONFIG",
+    "GRID_CONFIG",
+]
+
+MULTILINE_CONFIG = FrameTableConfig(
+    header_section=SectionConfig(
+        SeparatorConfig(), lower_sep=SeparatorConfig(inner_corner=" ")
+    ),
+    content_section=SectionConfig(
+        SeparatorConfig(line=None),
+        lower_sep=SeparatorConfig(),
+        upper_sep=SeparatorConfig(inner_corner=" "),
+    ),
+    footer_section=SectionConfig(SeparatorConfig()),
+    align_space=True,
+)
 """
-Mapping of flavors to table configs.
+Pandoc multiline table. 
 
-Pandoc inline tables:
+For example:
 
-```
 -------------------------------------------------------------
  Centered   Default           Right Left
   Header    Aligned         Aligned Aligned
@@ -62,11 +44,27 @@ Pandoc inline tables:
                                     the blank line between
                                     rows.
 -------------------------------------------------------------
-```
+"""
 
-Pandoc block tables:
+GRID_CONFIG = block = FrameTableConfig(
+    header_section=SectionConfig(
+        SeparatorConfig(corner="+"),
+        lower_sep=SeparatorConfig(line="=", corner="+"),
+    ),
+    content_section=SectionConfig(SeparatorConfig(corner="+")),
+    footer_section=SectionConfig(
+        SeparatorConfig(corner="+"),
+        lower_sep=SeparatorConfig(line="=", corner="+"),
+        upper_sep=SeparatorConfig(line="=", corner="+"),
+    ),
+    cell_sep="|",
+    align_char=":",
+)
+"""
+Pandoc grid table.
 
-```
+For example:
+
 +---------------------+-----------------------+
 | Location            | Temperature 1961-1990 |
 |                     | in degree Celsius     |
@@ -89,20 +87,4 @@ Pandoc block tables:
 +--------------:+:--------------+:------------------:+
 | Right         | Left          | Centered           |
 +---------------+---------------+--------------------+
-```
 """
-
-
-def lookup_config(flavor: FlavorType, block: bool) -> TableConfig:
-
-    err = (
-        f"Tables for flavor {flavor} with block={block} not currently supported"
-    )
-
-    table_flavor = FLAVOR_MAP.get(flavor)
-    assert table_flavor is not None, err
-
-    config = table_flavor.block if block else table_flavor.inline
-    assert config is not None, err
-
-    return config
