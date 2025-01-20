@@ -48,12 +48,12 @@ class Table(BaseElement):
         )
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        config = lookup_variant(flavor, self._params.block)
+        variant = lookup_variant(flavor, self._params.block)
 
         if self._params.clean:
             yield from get_clean_start()
 
-        yield from config.render(flavor, self._params)
+        yield from variant.render(flavor, self._params)
 
         if self._params.clean:
             yield from get_clean_end()

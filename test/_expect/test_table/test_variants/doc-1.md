@@ -3,49 +3,49 @@
 ## No header or footer, 1 rows
 
 ------ ------ ------ ------
-Cell    Cell    Cell Cell   
-0-0     0-1      0-2 0-3    
+Cell    Cell    Cell Cell  
+0-0     0-1      0-2 0-3   
 
 ---------------------------
 
 ## With header, 1 rows
 
 -------------------------------------------------------------
-Header 0,        Header 1,         Header 2, Header 3,        
-align: left    align: center    align: right align: default   
+Header 0,        Header 1,         Header 2, Header 3,       
+align: left    align: center    align: right align: default  
 ------------- --------------- -------------- ----------------
-Cell               Cell                 Cell Cell             
-0-0                 0-1                  0-2 0-3              
+Cell               Cell                 Cell Cell            
+0-0                 0-1                  0-2 0-3             
 
 -------------------------------------------------------------
 
 ## No header or footer, 3 rows
 
 ------ ------ ------ ------
-Cell    Cell    Cell Cell   
-0-0     0-1      0-2 0-3    
+Cell    Cell    Cell Cell  
+0-0     0-1      0-2 0-3   
 
-Cell    Cell    Cell Cell   
-1-0     1-1      1-2 1-3    
+Cell    Cell    Cell Cell  
+1-0     1-1      1-2 1-3   
 
-Cell    Cell    Cell Cell   
-2-0     2-1      2-2 2-3    
+Cell    Cell    Cell Cell  
+2-0     2-1      2-2 2-3   
 ---------------------------
 
 ## With header, 3 rows
 
 -------------------------------------------------------------
-Header 0,        Header 1,         Header 2, Header 3,        
-align: left    align: center    align: right align: default   
+Header 0,        Header 1,         Header 2, Header 3,       
+align: left    align: center    align: right align: default  
 ------------- --------------- -------------- ----------------
-Cell               Cell                 Cell Cell             
-0-0                 0-1                  0-2 0-3              
+Cell               Cell                 Cell Cell            
+0-0                 0-1                  0-2 0-3             
 
-Cell               Cell                 Cell Cell             
-1-0                 1-1                  1-2 1-3              
+Cell               Cell                 Cell Cell            
+1-0                 1-1                  1-2 1-3             
 
-Cell               Cell                 Cell Cell             
-2-0                 2-1                  2-2 2-3              
+Cell               Cell                 Cell Cell            
+2-0                 2-1                  2-2 2-3             
 -------------------------------------------------------------
 
 # Block tables

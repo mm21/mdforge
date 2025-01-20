@@ -9,14 +9,15 @@ __all__ = [
 
 MULTILINE_VARIANT = FrameTableVariant(
     header_section=SectionConfig(
-        SeparatorConfig(), lower_sep=SeparatorConfig(inner_corner=" ")
+        SeparatorConfig(),
+        upper_sep=SeparatorConfig(outer_corner=""),
+        lower_sep=SeparatorConfig(inner_corner=" ", outer_corner=""),
     ),
     content_section=SectionConfig(
         SeparatorConfig(line=None),
-        lower_sep=SeparatorConfig(),
-        upper_sep=SeparatorConfig(inner_corner=" "),
+        upper_sep=SeparatorConfig(inner_corner=" ", outer_corner=""),
+        lower_sep=SeparatorConfig(outer_corner=""),
     ),
-    footer_section=SectionConfig(SeparatorConfig()),
     align_space=True,
 )
 """
