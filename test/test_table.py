@@ -3,25 +3,25 @@ from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import Document, Section, Table
 
+COL_COUNT = 4
+ROW_COUNT = 3
+ALIGN = ["left", "center", "right", "default"]
+ROWS = [
+    [f"Cell\n{row_idx}-{col_idx}" for col_idx in range(COL_COUNT)]
+    for row_idx in range(ROW_COUNT)
+]
+HEADER = [
+    f"Header {col_idx},\nalign: {ALIGN[col_idx]}"
+    for col_idx in range(COL_COUNT)
+]
+FOOTER = [f"Footer\n{col_idx}" for col_idx in range(COL_COUNT)]
+
 
 @mark.powerpack_compare_file("doc-1.md")
 def test_variants(powerpack_comparison_files: ComparisonFiles):
-
-    col_count = 4
-    row_count = 3
-
-    rows: list[list[str]] = []
-    align = ["left", "center", "right", "default"]
-    header = [
-        f"Header {col_idx},\nalign: {align[col_idx]}"
-        for col_idx in range(col_count)
-    ]
-    footer = [f"Footer\n{col_idx}" for col_idx in range(col_count)]
-
-    for row_idx in range(row_count):
-        rows.append(
-            [f"Cell\n{row_idx}-{col_idx}" for col_idx in range(col_count)]
-        )
+    """
+    Test inline and block variants.
+    """
 
     inline_section, block_section = Section("Inline tables"), Section(
         "Block tables"
@@ -29,10 +29,18 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
 
     doc = Document(elements=[inline_section, block_section])
 
-    def add_table(table: Table, dims: tuple[int, int], desc: str):
+    def add_table(table: Table, content_dims: tuple[int, int], desc: str):
+
+        col_count, row_count = content_dims
+
+        if header := table._params.header:
+            row_count += len(header)
+
+        if footer := table._params.footer:
+            row_count += len(footer)
 
         # includes header and footer
-        assert table._params.effective_dims == dims
+        assert table._params.effective_dims == (col_count, row_count)
 
         nonlocal inline_section
         nonlocal block_section
@@ -40,39 +48,39 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
         section = block_section if table._params.block else inline_section
         section += Section(desc, elements=[table])
 
-    for row_count_iter in [1, row_count]:
+    for row_count in [1, ROW_COUNT]:
 
         for block in [False, True]:
 
-            rows_iter = rows[0:row_count_iter]
+            rows = ROWS[0:row_count]
 
             add_table(
-                Table(rows_iter, align=align, block=block),
-                (col_count, row_count_iter),
-                f"No header or footer, {row_count_iter} rows",
+                Table(rows, align=ALIGN, block=block),
+                (COL_COUNT, row_count),
+                f"No header or footer, {row_count} rows",
             )
             add_table(
-                Table(rows_iter, align=align, header=header, block=block),
-                (col_count, row_count_iter + 1),
-                f"With header, {row_count_iter} rows",
+                Table(rows, align=ALIGN, header=HEADER, block=block),
+                (COL_COUNT, row_count),
+                f"With header, {row_count} rows",
             )
 
             if block:
                 add_table(
-                    Table(rows_iter, align=align, footer=footer, block=block),
-                    (col_count, row_count_iter + 1),
-                    f"With footer, {row_count_iter} rows",
+                    Table(rows, align=ALIGN, footer=FOOTER, block=block),
+                    (COL_COUNT, row_count),
+                    f"With footer, {row_count} rows",
                 )
                 add_table(
                     Table(
-                        rows_iter,
-                        align=align,
-                        header=header,
-                        footer=footer,
+                        rows,
+                        align=ALIGN,
+                        header=HEADER,
+                        footer=FOOTER,
                         block=block,
                     ),
-                    (col_count, row_count_iter + 2),
-                    f"With header and footer, {row_count_iter} rows",
+                    (COL_COUNT, row_count),
+                    f"With header and footer, {row_count} rows",
                 )
 
     doc.render(powerpack_comparison_files.out_file)
@@ -81,32 +89,22 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
 
 @mark.powerpack_compare_file("doc-1.md")
 def test_widths(powerpack_comparison_files: ComparisonFiles):
+    """
+    Test explicitly provided widths with no wrapping.
+    """
 
-    col_count = 4
-    row_count = 3
-
-    rows: list[list[str]] = []
-    align = ["left", "center", "right", "default"]
-    header = [
-        f"Header {col_idx},\nalign: {align[col_idx]}"
-        for col_idx in range(col_count)
+    widths = [15 + col_idx for col_idx in range(COL_COUNT)]
+    rows = [
+        [f"{cell}, width={width}" for cell, width in zip(row, widths)]
+        for row in ROWS
     ]
-    widths = [15 + col_idx for col_idx in range(col_count)]
-
-    for row_idx in range(row_count):
-        rows.append(
-            [
-                f"Cell {row_idx}-{col_idx},\nwidth {widths[col_idx]}"
-                for col_idx in range(col_count)
-            ]
-        )
 
     doc = Document()
 
     for block in [False, True]:
         doc += [
             Section(f"Block: {block}"),
-            Table(rows, header=header, align=align, widths=widths, block=block),
+            Table(rows, header=HEADER, align=ALIGN, widths=widths, block=block),
         ]
 
     doc.render(powerpack_comparison_files.out_file)
