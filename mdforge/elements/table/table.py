@@ -9,7 +9,7 @@ from typing import Generator, cast
 from ...element import BaseElement
 from ...types import FlavorType
 from ._clean import get_clean_end, get_clean_start
-from ._flavors.flavors import lookup_config
+from ._flavors.flavors import lookup_variant
 from ._params import TableParams
 from .cell import AlignType, Cell, RowType
 
@@ -48,7 +48,7 @@ class Table(BaseElement):
         )
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        config = lookup_config(flavor, self._params.block)
+        config = lookup_variant(flavor, self._params.block)
 
         if self._params.clean:
             yield from get_clean_start()

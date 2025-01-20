@@ -15,6 +15,9 @@ __all__ = [
 
 @dataclass(frozen=True)
 class TableParams:
+    """
+    Parameters from user, applicable to all table variants.
+    """
 
     rows: list[list[Cell]]
     """
@@ -59,7 +62,12 @@ class TableParams:
     Whether to omit top and bottom lines for this table.
     """
 
-    def __hash__(self):
+    def __hash__(self) -> int:
+        """
+        Table params are considered immutable, even though they contain
+        mutable types (lists). This method is implemented to enable caching of
+        values derived from the user inputs.
+        """
         return id(self)
 
     @cached_property

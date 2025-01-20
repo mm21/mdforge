@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from .frame import FrameTableConfig, SectionConfig, SeparatorConfig
+from .frame import FrameTableVariant, SectionConfig, SeparatorConfig
 
 __all__ = [
-    "MULTILINE_CONFIG",
-    "GRID_CONFIG",
+    "MULTILINE_VARIANT",
+    "GRID_VARIANT",
 ]
 
-MULTILINE_CONFIG = FrameTableConfig(
+MULTILINE_VARIANT = FrameTableVariant(
     header_section=SectionConfig(
         SeparatorConfig(), lower_sep=SeparatorConfig(inner_corner=" ")
     ),
@@ -46,7 +46,7 @@ For example:
 -------------------------------------------------------------
 """
 
-GRID_CONFIG = block = FrameTableConfig(
+GRID_VARIANT = block = FrameTableVariant(
     header_section=SectionConfig(
         SeparatorConfig(corner="+"),
         lower_sep=SeparatorConfig(line="=", corner="+"),

@@ -7,12 +7,12 @@ from typing import Generator
 from .....types import FlavorType
 from ..._params import TableParams
 from ...cell import Cell
-from ..flavor import BaseTableConfig
+from ..flavor import BaseTableVariant
 
 __all__ = [
     "SeparatorConfig",
     "SectionConfig",
-    "FrameTableConfig",
+    "FrameTableVariant",
 ]
 
 
@@ -44,7 +44,7 @@ class SeparatorConfig:
 
     def get_line(
         self,
-        config: FrameTableConfig,
+        config: FrameTableVariant,
         params: TableParams,
         widths: list[int],
         do_align: bool = False,
@@ -115,7 +115,7 @@ class SectionConfig:
 
 
 @dataclass(frozen=True)
-class FrameTableConfig(BaseTableConfig):
+class FrameTableVariant(BaseTableVariant):
     """
     Encapsulates frame table construction info.
     """

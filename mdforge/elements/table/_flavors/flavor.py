@@ -14,10 +14,26 @@ from typing import Generator
 
 from .._params import TableParams
 
+__all__ = [
+    "TableFlavor",
+    "BaseTableVariant",
+]
 
-class BaseTableConfig(ABC):
+
+@dataclass
+class TableFlavor:
     """
-    Base class to represent configuration for a given table flavor.
+    Encapsulates table configs for a specific Markdown flavor,
+    distinguishing between tables supporting block elements vs inline-only.
+    """
+
+    inline: BaseTableVariant
+    block: BaseTableVariant | None
+
+
+class BaseTableVariant(ABC):
+    """
+    Base class to encapsulate a table variant.
     """
 
     @abstractmethod
@@ -26,14 +42,3 @@ class BaseTableConfig(ABC):
         Render this table using the provided params.
         """
         ...
-
-
-@dataclass
-class TableFlavor:
-    """
-    Encapsulates table configs for a specific flavor, distinguishing between
-    tables supporting block elements vs inline-only.
-    """
-
-    inline: BaseTableConfig
-    block: BaseTableConfig | None
