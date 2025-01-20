@@ -15,6 +15,7 @@ HEADER = [
     for col_idx in range(COL_COUNT)
 ]
 FOOTER = [f"Footer\n{col_idx}" for col_idx in range(COL_COUNT)]
+WIDTHS = [15 + col_idx for col_idx in range(COL_COUNT)]
 
 
 @mark.powerpack_compare_file("doc-1.md")
@@ -93,9 +94,8 @@ def test_widths(powerpack_comparison_files: ComparisonFiles):
     Test explicitly provided widths with no wrapping.
     """
 
-    widths = [15 + col_idx for col_idx in range(COL_COUNT)]
     rows = [
-        [f"{cell}, width={width}" for cell, width in zip(row, widths)]
+        [f"{cell}, width={width}" for cell, width in zip(row, WIDTHS)]
         for row in ROWS
     ]
 
@@ -104,7 +104,33 @@ def test_widths(powerpack_comparison_files: ComparisonFiles):
     for block in [False, True]:
         doc += [
             Section(f"Block: {block}"),
-            Table(rows, header=HEADER, align=ALIGN, widths=widths, block=block),
+            Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
+        ]
+
+    doc.render(powerpack_comparison_files.out_file)
+    compare_files(powerpack_comparison_files)
+
+
+@mark.powerpack_compare_file("doc-1.md")
+def test_wrap(powerpack_comparison_files: ComparisonFiles):
+    """
+    Test cell content wrapping when explicit widths are given.
+    """
+
+    rows = [
+        [
+            f"{cell}\nLorem ipsum dolor sit amet, width={width}"
+            for cell, width in zip(row, WIDTHS)
+        ]
+        for row in ROWS
+    ]
+
+    doc = Document()
+
+    for block in [False, True]:
+        doc += [
+            Section(f"Block: {block}"),
+            Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
         ]
 
     doc.render(powerpack_comparison_files.out_file)

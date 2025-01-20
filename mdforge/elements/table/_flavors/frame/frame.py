@@ -147,6 +147,12 @@ class FrameTableVariant(BaseTableVariant):
     Whether alignment should be indicated by using spaces in the header.
     """
 
+    wrap: bool = True
+    """
+    Whether to wrap words when cell contents exceed fixed column
+    width.
+    """
+
     def render(
         self, flavor: FlavorType, params: TableParams
     ) -> Generator[str, None, None]:
@@ -235,7 +241,10 @@ class FrameTableVariant(BaseTableVariant):
         Render a single row.
         """
         widths = self.__get_col_widths(flavor, params)
-        row_lines = [cell._get_content(flavor) for cell in row]
+        row_lines = [
+            self.__get_cell_content(flavor, params, cell, col_idx)
+            for col_idx, cell in enumerate(row)
+        ]
         max_lines = max(len(lines) for lines in row_lines)
 
         assert len(widths) == params.col_count
@@ -294,9 +303,7 @@ class FrameTableVariant(BaseTableVariant):
             # ensure content fits in provided widths
             assert len(params.widths) == len(calc_widths)
             for width, calc_width in zip(params.widths, calc_widths):
-                assert (
-                    width >= calc_width
-                ), f"Provided width {width} less than content width {calc_width}"
+                assert width >= calc_width
             return params.widths
         else:
             return calc_widths
@@ -309,9 +316,26 @@ class FrameTableVariant(BaseTableVariant):
         widths: list[int] = [0] * params.col_count
         for row in params.effective_rows:
             assert len(row) == len(widths)
-            for i, cell in enumerate(row):
-                widths[i] = max(
-                    widths[i],
-                    *(len(line) for line in cell._get_content(flavor)),
+            for col_idx, cell in enumerate(row):
+                widths[col_idx] = max(
+                    widths[col_idx],
+                    *(
+                        len(line)
+                        for line in self.__get_cell_content(
+                            flavor, params, cell, col_idx
+                        )
+                    ),
                 )
         return widths
+
+    @cache
+    def __get_cell_content(
+        self, flavor: FlavorType, params: TableParams, cell: Cell, col_idx: int
+    ) -> list[str]:
+        """
+        Get cell content, wrapping words if applicable.
+        """
+        return cell._get_content(
+            flavor,
+            params.widths[col_idx] if params.widths and self.wrap else None,
+        )
