@@ -4,7 +4,7 @@ from pytest_powerpack import ComparisonFiles, compare_files
 from mdforge import Document, Heading, List, ListItem, Paragraph, Section
 
 
-@mark.powerpack_compare_file("doc-1.md")
+@mark.powerpack_compare_file("doc.md")
 def test_doc1(powerpack_comparison_files: ComparisonFiles):
 
     doc = Document()
@@ -41,7 +41,7 @@ def test_doc1(powerpack_comparison_files: ComparisonFiles):
     compare_files(powerpack_comparison_files)
 
 
-@mark.powerpack_compare_file("doc-1.md")
+@mark.powerpack_compare_file("doc.md")
 def test_section(powerpack_comparison_files: ComparisonFiles):
 
     sec1 = Section("Section 1")
@@ -63,7 +63,7 @@ def test_section(powerpack_comparison_files: ComparisonFiles):
     compare_files(powerpack_comparison_files)
 
 
-@mark.powerpack_compare_file("doc-1.md")
+@mark.powerpack_compare_file("doc.md")
 def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
 
     frontmatter = {

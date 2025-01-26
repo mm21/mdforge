@@ -18,7 +18,7 @@ FOOTER = [f"Footer\n{col_idx}" for col_idx in range(COL_COUNT)]
 WIDTHS = [15 + col_idx for col_idx in range(COL_COUNT)]
 
 
-@mark.powerpack_compare_file("doc-1.md")
+@mark.powerpack_compare_file("doc.md")
 def test_variants(powerpack_comparison_files: ComparisonFiles):
     """
     Test inline and block variants.
@@ -88,7 +88,7 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
     compare_files(powerpack_comparison_files)
 
 
-@mark.powerpack_compare_file("doc-1.md")
+@mark.powerpack_compare_file("doc.md")
 def test_widths(powerpack_comparison_files: ComparisonFiles):
     """
     Test explicitly provided widths with no wrapping.
@@ -115,7 +115,7 @@ def test_widths(powerpack_comparison_files: ComparisonFiles):
     compare_files(powerpack_comparison_files)
 
 
-@mark.powerpack_compare_file("doc-1.md")
+@mark.powerpack_compare_file("doc.md")
 def test_wrap(powerpack_comparison_files: ComparisonFiles):
     """
     Test cell content wrapping when explicit widths are given.
