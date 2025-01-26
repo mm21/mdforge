@@ -52,11 +52,14 @@ class Cell:
             return Cell(cell)
 
     @cache
-    def _get_content(self, flavor: FlavorType, width: int | None) -> list[str]:
+    def _get_content(
+        self, flavor: FlavorType, width: int | None = None
+    ) -> list[str]:
         """
         Get this cell's content as a list of strings, wrapping words if
-        applicable.
+        width provided.
         """
+
         raw_content = self.content
         content: list[str]
 

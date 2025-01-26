@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
-from .._params import TableParams
+if TYPE_CHECKING:
+    from .._context import RenderContext
 
 __all__ = [
     "TableFlavor",
@@ -20,7 +21,7 @@ __all__ = [
 ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TableFlavor:
     """
     Encapsulates table configs for a specific Markdown flavor,
@@ -31,14 +32,21 @@ class TableFlavor:
     block: BaseTableVariant | None
 
 
+@dataclass(frozen=True, kw_only=True)
 class BaseTableVariant(ABC):
     """
     Base class to encapsulate a table variant.
     """
 
+    wrap: bool = True
+    """
+    Whether to wrap words when cell contents exceed fixed column
+    width.
+    """
+
     @abstractmethod
-    def render(self, params: TableParams) -> Generator[str, None, None]:
+    def render(self, context: RenderContext) -> Generator[str, None, None]:
         """
-        Render this table using the provided params.
+        Render this table using the provided context.
         """
         ...

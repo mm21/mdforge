@@ -4,9 +4,9 @@ Encapsulates table params, universal for all flavors.
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Iterable, cast
+from typing import cast
 
-from .cell import VALID_ALIGNS, AlignType, Cell
+from .cell import AlignType, Cell
 
 __all__ = [
     "TableParams",
@@ -39,7 +39,7 @@ class TableParams:
     Optional alignment for each column, single alignmen to apply to all columns.
     """
 
-    widths: list[int] | None
+    widths: list[int | None] | None
     """
     If provided, generated cells are sized to that number of characters
     by padding or wrapping lines. Otherwise, widths are as small as possible.
@@ -71,13 +71,6 @@ class TableParams:
         return id(self)
 
     @cached_property
-    def col_count(self) -> int:
-        """
-        Get number of columns.
-        """
-        return self.effective_dims[0]
-
-    @cached_property
     def effective_rows(self) -> list[list[Cell]]:
         """
         Get all rows, including any header / footer.
@@ -90,27 +83,6 @@ class TableParams:
         Get overall dimensions, including any header / footer.
         """
         return self.__get_dims(self.effective_rows)
-
-    @cached_property
-    def col_aligns(self) -> list[AlignType]:
-        """
-        Get column alignments.
-        """
-        match self.align:
-            case str() as align:
-                # single alignment given
-                assert align in VALID_ALIGNS
-                aligns = [align] * self.col_count
-            case iterable if isinstance(iterable, Iterable):
-                # alignments per column given
-                assert len(iterable) == self.col_count
-                assert all(a in VALID_ALIGNS for a in iterable)
-                aligns = iterable
-            case _:
-                # no alignment given
-                assert self.align is None
-                aligns = ["default"] * self.col_count
-        return aligns
 
     def __get_dims(self, rows: list[list[Cell]]) -> tuple[int, int]:
         """

@@ -9,6 +9,7 @@ from typing import Generator, cast
 from ...element import BaseElement
 from ...types import FlavorType
 from ._clean import get_clean_end, get_clean_start
+from ._context import RenderContext
 from ._flavors.flavors import lookup_variant
 from ._params import TableParams
 from .cell import AlignType, Cell, RowType
@@ -31,7 +32,7 @@ class Table(BaseElement):
         header: RowType | list[RowType] | None = None,
         footer: RowType | list[RowType] | None = None,
         align: AlignType | list[AlignType] | None = None,
-        widths: list[int] | None = None,
+        widths: list[int | None] | None = None,
         caption: str | None = None,
         block: bool = False,
         clean: bool = False,
@@ -48,15 +49,17 @@ class Table(BaseElement):
         )
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
+
+        # get variant
         variant = lookup_variant(flavor, self._params.block)
 
-        if self._params.clean:
-            yield from get_clean_start()
+        # create context to encapsulate render info
+        context = RenderContext(flavor, variant, self._params)
 
-        yield from variant.render(flavor, self._params)
-
-        if self._params.clean:
-            yield from get_clean_end()
+        # render based on variant, with optional clean directives
+        yield from get_clean_start() if self._params.clean else []
+        yield from variant.render(context)
+        yield from get_clean_end() if self._params.clean else []
 
     def __normalize_rows(
         self, rows: RowType | list[RowType]

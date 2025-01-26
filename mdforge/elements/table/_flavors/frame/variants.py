@@ -47,7 +47,7 @@ For example:
 -------------------------------------------------------------
 """
 
-GRID_VARIANT = block = FrameTableVariant(
+GRID_VARIANT = FrameTableVariant(
     header_section=SectionConfig(
         SeparatorConfig(corner="+"),
         lower_sep=SeparatorConfig(line="=", corner="+"),
