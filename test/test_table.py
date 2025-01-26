@@ -94,8 +94,12 @@ def test_widths(powerpack_comparison_files: ComparisonFiles):
     Test explicitly provided widths with no wrapping.
     """
 
+    # omit width of last column to verify optional width
+    widths = WIDTHS.copy()
+    widths[-1] = None
+
     rows = [
-        [f"{cell}, width={width}" for cell, width in zip(row, WIDTHS)]
+        [f"{cell}, width={width}" for cell, width in zip(row, widths)]
         for row in ROWS
     ]
 
@@ -104,7 +108,7 @@ def test_widths(powerpack_comparison_files: ComparisonFiles):
     for block in [False, True]:
         doc += [
             Section(f"Block: {block}"),
-            Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
+            Table(rows, header=HEADER, align=ALIGN, widths=widths, block=block),
         ]
 
     doc.render(powerpack_comparison_files.out_file)
