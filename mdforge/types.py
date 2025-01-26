@@ -6,4 +6,10 @@ __all__ = [
     "FlavorType",
 ]
 
-type FlavorType = Literal["pandoc", "github", "commonmark"]
+type FlavorType = Literal["pandoc"]
+"""
+Markdown flavors supported. The following additional flavors are planned:
+
+- `github`
+- `myst`
+"""
