@@ -4,7 +4,6 @@ Encapsulates table params, universal for all flavors.
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import cast
 
 from .cell import AlignType, Cell
 
@@ -90,40 +89,57 @@ class TableParams:
         accounting for any merged cells.
         """
 
-        def transpose(rows: list[list[Cell]]) -> list[list[Cell | None]]:
-            cols_max = max(len(row) for row in rows)
-            rows_pad: list[list[Cell | None]] = [
-                row + [None] * (cols_max - len(row)) for row in rows
-            ]
-            return cast(
-                list[list[Cell | None]], list(map(list, zip(*rows_pad)))
-            )
+        assert len(rows)
+        for row in rows:
+            assert len(row)
 
-        def get_col_count(
-            rows: list[list[Cell | None]], span_attr: str, dim: str
-        ) -> int:
-            """
-            Get effective number of columns, accounting for any merged cells.
-            """
-            col_counts: list[int] = []
-            for row in rows:
-                spans = [
-                    getattr(cell, span_attr) or 1
-                    for cell in row
-                    if cell is not None
-                ]
-                col_counts.append(sum(spans))
+        col_count: int
+        row_count: int
 
-            # validate
-            assert len(col_counts)
-            for i in range(len(col_counts)):
-                assert (
-                    col_counts[i] == col_counts[i - 1]
-                ), f"Inconsistent {dim} counts: {col_counts}"
+        col_counts: list[int] = []  # counts per row
+        row_counts: list[int] = []  # counts per column
 
-            return col_counts[0]
+        def add_at(counts: list[int], index: int, val: int):
+            if index >= len(counts):
+                counts += [0] * (index - len(counts) + 1)
 
-        cols = transpose(rows)
-        return get_col_count(rows, "cspan", "column"), get_col_count(
-            cols, "rspan", "row"
+            counts[index] += val
+
+        # get col counts
+        for row_idx, row in enumerate(rows):
+
+            # add columns for this row, accounting for spanned columns
+            add_at(col_counts, row_idx, sum(cell.cspan or 1 for cell in row))
+
+            # look ahead to account for spanned rows
+            for cell in row:
+                if cell.rspan:
+                    for i in range(1, cell.rspan):
+                        add_at(col_counts, row_idx + i, cell.cspan or 1)
+
+        # verify consistency
+        assert len(col_counts)
+        assert all(
+            col_count == col_counts[i - 1]
+            for i, col_count in enumerate(col_counts)
         )
+        col_count = col_counts[0]
+
+        # get row counts
+        # TODO: handle spanned columns
+        for col_idx in range(col_count):
+            row_count = 0
+            for row in rows:
+                if col_idx < len(row):
+                    row_count += row[col_idx].rspan or 1
+            row_counts.append(row_count)
+
+        # verify consistency
+        assert len(row_counts)
+        assert all(
+            row_count == row_counts[i - 1]
+            for i, row_count in enumerate(row_counts)
+        )
+        row_count = row_counts[0]
+
+        return col_count, row_count

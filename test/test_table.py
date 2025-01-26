@@ -1,7 +1,7 @@
 from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
-from mdforge import Document, Section, Table
+from mdforge import Cell, Document, Section, Table
 
 COL_COUNT = 4
 ROW_COUNT = 3
@@ -137,5 +137,32 @@ def test_wrap(powerpack_comparison_files: ComparisonFiles):
             Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
         ]
 
+    doc.render(powerpack_comparison_files.out_file)
+    compare_files(powerpack_comparison_files)
+
+
+@mark.powerpack_compare_file("doc.md")
+def test_span(powerpack_comparison_files: ComparisonFiles):
+    """
+    Test cell spanning.
+    """
+
+    COL_COUNT = 3
+    ROW_COUNT = 6
+
+    rows = [
+        [Cell(content="Test cspan", cspan=2), "Test 0-2"],
+        [Cell(content="Test rspan", rspan=2), "Test 1-1", "Test 1-2"],
+        ["Test 2-1", "Test 2-2"],
+        [Cell("Test cspan + rspan", cspan=2, rspan=2), "Test 3-2"],
+        ["Test 4-2"],
+        ["Test 5-0", "Test 5-1", "Test 5-2"],
+    ]
+
+    table = Table(rows, block=True)
+
+    assert table._params.effective_dims == (COL_COUNT, ROW_COUNT)
+
+    doc = Document(elements=[table])
     doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)

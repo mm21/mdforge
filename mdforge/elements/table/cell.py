@@ -105,3 +105,30 @@ class Cell:
             return wrapped_content
         else:
             return content
+
+
+@dataclass(frozen=True)
+class NormalizedCell:
+    """
+    Cell which may be created from a `Cell` spanning multiple rows or columns.
+    """
+
+    content: list[str]
+    """
+    Rendered content.
+    """
+
+    omit_right_sep: bool = False
+    """
+    Whether to omit the cell separator on the right.
+    """
+
+    omit_left_sep: bool = False
+    """
+    Whether to omit the cell separator on the left.
+    """
+
+    lower_segment: str | None = None
+    """
+    Segment to use underneath this cell, if any.
+    """

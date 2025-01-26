@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Generator
 
 from ..._context import RenderContext
-from ...cell import Cell
+from ...cell import Cell, NormalizedCell
 from ..flavor import BaseTableVariant
 
 __all__ = [
@@ -192,6 +192,11 @@ class FrameTableVariant(BaseTableVariant):
         optional upper/lower separators.
         """
 
+        # get normalized rows
+        normalized_rows: list[list[NormalizedCell]] = self.__normalize_rows(
+            rows
+        )
+
         # render upper separator if applicable
         if include_upper_sep:
             yield section._upper_sep.get_line(
@@ -220,6 +225,15 @@ class FrameTableVariant(BaseTableVariant):
             yield section._lower_sep.get_line(
                 context, align_char=self.align_char, do_align=align_lower_sep
             )
+
+    def __normalize_rows(
+        self, rows: list[list[Cell]]
+    ) -> list[list[NormalizedCell]]:
+        """
+        Normalize cells, handling any spanned cells.
+        """
+
+        normalized_rows: list[list[NormalizedCell]] = []
 
     def __render_row(
         self,
