@@ -90,7 +90,7 @@ class RenderContext:
 
         wrapped_rows: list[list[WrappedCell]] = [
             [
-                WrappedCell(self, (row_idx, col_idx))
+                WrappedCell(self, row_idx, col_idx)
                 for col_idx in range(col_count)
             ]
             for row_idx in range(row_count)
@@ -116,7 +116,7 @@ class RenderContext:
                     ]
                     assert not wrapped_cell.is_set
 
-                    wrapped_cell.set(cell, row_offset, col_offset)
+                    wrapped_cell.set_cell(cell, row_offset, col_offset)
 
                 col_idx += cell.cspan
 
@@ -142,10 +142,9 @@ class RenderContext:
             assert len(row) == self.col_count
 
             for col_idx, cell in enumerate(row):
+                content = list(cell.get_content())
+                content_widths = [len(line) for line in content]
 
-                widths[col_idx] = max(
-                    widths[col_idx],
-                    *(len(line) for line in cell.get_content()),
-                )
+                widths[col_idx] = max([widths[col_idx]] + content_widths)
 
         return widths

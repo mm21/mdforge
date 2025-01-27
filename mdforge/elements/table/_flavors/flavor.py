@@ -44,6 +44,11 @@ class BaseTableVariant(ABC):
     width.
     """
 
+    cell_sep: str | None = None
+    """
+    Cell separator, e.g. "|".
+    """
+
     @abstractmethod
     def render(self, context: RenderContext) -> Generator[str, None, None]:
         """

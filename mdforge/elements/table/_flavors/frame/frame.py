@@ -58,9 +58,6 @@ class SeparatorConfig:
 
         for width, align in zip(context.col_widths, context.col_aligns):
 
-            # adjust to include spacing between cells
-            line_width = width + 2
-
             if align_char and do_align:
                 # align based on alignment chars on either side of line
                 inner_width = width
@@ -72,7 +69,7 @@ class SeparatorConfig:
                 )
             else:
                 # solid line
-                inner_width = line_width
+                inner_width = width + 2
                 left_char, right_char = "", ""
 
             inner_line = self.line * inner_width
@@ -127,11 +124,6 @@ class FrameTableVariant(BaseTableVariant):
     header_section: SectionConfig
     content_section: SectionConfig
     footer_section: SectionConfig | None = None
-
-    cell_sep: str | None = None
-    """
-    Cell separator, e.g. "|".
-    """
 
     align_char: str | None = None
     """
@@ -238,8 +230,16 @@ class FrameTableVariant(BaseTableVariant):
 
         # get list of lines per column
         row_lines = [
-            list(wrapped_cell.get_content(width=width))
-            for wrapped_cell, width in zip(row, context.col_widths)
+            list(
+                cell.get_content(
+                    width=col_width,
+                    align=col_align,
+                    align_space=self.align_space,
+                )
+            )
+            for cell, col_width, col_align in zip(
+                row, context.col_widths, context.col_aligns
+            )
         ]
 
         # get max lines per column
@@ -250,38 +250,27 @@ class FrameTableVariant(BaseTableVariant):
             # segments for this row line
             segs: list[str] = []
 
-            for cell_lines, col_width, col_align in zip(
-                row_lines, context.col_widths, context.col_aligns
+            # traverse each cell and get the next segment
+            for cell, cell_lines, col_width, col_align in zip(
+                row, row_lines, context.col_widths, context.col_aligns
             ):
-
-                pad_space = "" if self.cell_sep is None else " "
-                width_offset = 2 if self.cell_sep is None else 0
-
-                content = (
-                    cell_lines[line_idx] if line_idx < len(cell_lines) else ""
+                seg = (
+                    cell_lines[line_idx]
+                    if line_idx < len(cell_lines)
+                    else cell.format_line(
+                        "",
+                        width=col_width,
+                        align=col_align,
+                        align_space=self.align_space,
+                    )
                 )
 
                 # validate width of this line
+                effective_width = col_width + cell.width_offset
                 assert (
-                    len(content) <= col_width
-                ), f"Cell line of width {len(content)} does not fit in column of width {col_width}"
+                    len(seg) == effective_width
+                ), f"Cell line of width {len(seg)} does not match column of width {effective_width}"
 
-                # align using spaces if applicable
-                if self.align_space:
-                    match col_align:
-                        case "center":
-                            align_char = "^"
-                        case "right":
-                            align_char = ">"
-                        case _:
-                            align_char = "<"
-                else:
-                    align_char = "<"
+                segs.append(seg)
 
-                width = col_width + width_offset
-                line = f"{content:{align_char}{width}}"
-                segs.append(f"{pad_space}{line}{pad_space}")
-
-            outer_sep = self.cell_sep or ""
-            inner_sep = self.cell_sep or " "
-            yield f"{outer_sep}{inner_sep.join(segs)}{outer_sep}"
+            yield "".join(segs)

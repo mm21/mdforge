@@ -120,9 +120,14 @@ class WrappedCell:
     Render context.
     """
 
-    coords: tuple[int, int]
+    row_idx: int
     """
-    Coordinates of this cell as (row index, col index).
+    Row index.
+    """
+
+    col_idx: int
+    """
+    Column index.
     """
 
     _cell: Cell | None = None
@@ -140,9 +145,10 @@ class WrappedCell:
     Column offset from the original cell.
     """
 
-    def __init__(self, context: RenderContext, coords: tuple[int, int]):
+    def __init__(self, context: RenderContext, row_idx: int, col_idx: int):
         self.context = context
-        self.coords = coords
+        self.row_idx = row_idx
+        self.col_idx = col_idx
 
     @property
     def is_set(self) -> bool:
@@ -172,7 +178,18 @@ class WrappedCell:
         assert self._col_offset is not None
         return self._col_offset
 
-    def set(self, cell: Cell, row_offset: int, col_offset: int):
+    @property
+    def width_offset(self) -> int:
+        """
+        Get total additional width offset.
+        """
+        return (
+            len(self._leading_str)
+            + len(self._trailing_str)
+            + self._width_offset_sep
+        )
+
+    def set_cell(self, cell: Cell, row_offset: int, col_offset: int):
         """
         Populate with cell and any offset, if spanning multiple rows/columns.
         """
@@ -181,16 +198,105 @@ class WrappedCell:
         self._col_offset = col_offset
 
     def get_content(
-        self, width: int | None = None
+        self,
+        width: int | None = None,
+        align: AlignType | None = None,
+        align_space: bool = False,
     ) -> Generator[str, None, None]:
         """
         Get content of this cell, which may be a fragment of the orignal
         cell's content based on width/height offsets.
         """
 
-        # TODO: get width/height offset based on widths of preceding rows/cols
-
+        # get full content
+        # TODO:
+        # - get width/height offset, size based on widths of preceding rows/cols
+        # - trim content based on offsets, size
         if self.row_offset == 0 and self.col_offset == 0:
-            yield from self.cell._get_content(self.context.flavor, width=width)
+            raw_lines = list(
+                self.cell._get_content(self.context.flavor, width=width)
+            )
         else:
-            yield ""
+            raw_lines = [""]
+
+        for raw_line in raw_lines:
+            yield self.format_line(
+                raw_line, width=width, align=align, align_space=align_space
+            )
+
+    def format_line(
+        self,
+        raw_line: str,
+        width: int | None = None,
+        align: AlignType | None = None,
+        align_space: bool = False,
+    ) -> str:
+        """
+        Take raw content line and format based on table configuration.
+        """
+
+        if width:
+            # align and pad to width
+            leading_str, trailing_str = self._leading_str, self._trailing_str
+            effective_width = width + self._width_offset_sep
+
+            align_char = self._get_align_char(align, align_space)
+            padded_line = f"{raw_line:{align_char}{effective_width}}"
+
+            return f"{leading_str}{padded_line}{trailing_str}"
+        else:
+            return raw_line
+
+    @property
+    def _cell_sep(self) -> str | None:
+        return self.context.variant.cell_sep
+
+    @property
+    def _width_offset_sep(self) -> int:
+        """
+        Get additional width offset due to separator.
+        """
+        return 2 if self._cell_sep is None else 0
+
+    @property
+    def _is_first_col(self) -> bool:
+        return self.col_idx == 0
+
+    @property
+    def _is_last_col(self) -> bool:
+        return self.col_idx == self.context.col_count - 1
+
+    @property
+    def _is_first_col_span(self) -> bool:
+        return self.col_offset == 0
+
+    @property
+    def _is_last_col_span(self) -> bool:
+        return self.col_offset == self.cell.cspan - 1
+
+    @property
+    def _leading_str(self) -> str:
+        if self._is_first_col:
+            return f"{self._cell_sep} " if self._cell_sep else ""
+        elif self._is_first_col_span:
+            return " " if self._cell_sep else ""
+        else:
+            return ""
+
+    @property
+    def _trailing_str(self) -> str:
+        if self._is_last_col:
+            return f" {self._cell_sep}" if self._cell_sep else ""
+        elif self._is_last_col_span:
+            return f" {self._cell_sep}" if self._cell_sep else " "
+        else:
+            return ""
+
+    def _get_align_char(self, align: AlignType | None, align_space: bool):
+        match align if align_space else None:
+            case "center":
+                return "^"
+            case "right":
+                return ">"
+            case _:
+                return "<"

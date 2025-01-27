@@ -58,8 +58,8 @@ GRID_VARIANT = FrameTableVariant(
         lower_sep=SeparatorConfig(line="=", corner="+"),
         upper_sep=SeparatorConfig(line="=", corner="+"),
     ),
-    cell_sep="|",
     align_char=":",
+    cell_sep="|",
 )
 """
 Pandoc grid table.
