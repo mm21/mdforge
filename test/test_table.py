@@ -3,8 +3,8 @@ from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import Cell, Document, Section, Table
 
-COL_COUNT = 4
 ROW_COUNT = 3
+COL_COUNT = 4
 ALIGN = ["left", "center", "right", "default"]
 ROWS = [
     [f"Cell\n{row_idx}-{col_idx}" for col_idx in range(COL_COUNT)]
@@ -32,7 +32,7 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
 
     def add_table(table: Table, content_dims: tuple[int, int], desc: str):
 
-        col_count, row_count = content_dims
+        row_count, col_count = content_dims
 
         if header := table._params.header:
             row_count += len(header)
@@ -41,7 +41,7 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
             row_count += len(footer)
 
         # includes header and footer
-        assert table._params.effective_dims == (col_count, row_count)
+        assert table._params.effective_dims == (row_count, col_count)
 
         nonlocal inline_section
         nonlocal block_section
@@ -57,19 +57,19 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
 
             add_table(
                 Table(rows, align=ALIGN, block=block),
-                (COL_COUNT, row_count),
+                (row_count, COL_COUNT),
                 f"No header or footer, {row_count} rows",
             )
             add_table(
                 Table(rows, align=ALIGN, header=HEADER, block=block),
-                (COL_COUNT, row_count),
+                (row_count, COL_COUNT),
                 f"With header, {row_count} rows",
             )
 
             if block:
                 add_table(
                     Table(rows, align=ALIGN, footer=FOOTER, block=block),
-                    (COL_COUNT, row_count),
+                    (row_count, COL_COUNT),
                     f"With footer, {row_count} rows",
                 )
                 add_table(
@@ -80,7 +80,7 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
                         footer=FOOTER,
                         block=block,
                     ),
-                    (COL_COUNT, row_count),
+                    (row_count, COL_COUNT),
                     f"With header and footer, {row_count} rows",
                 )
 
@@ -147,8 +147,8 @@ def test_span(powerpack_comparison_files: ComparisonFiles):
     Test cell spanning.
     """
 
-    COL_COUNT = 3
     ROW_COUNT = 6
+    COL_COUNT = 3
 
     rows = [
         [Cell(content="Test cspan", cspan=2), "Test 0-2"],
@@ -161,7 +161,7 @@ def test_span(powerpack_comparison_files: ComparisonFiles):
 
     table = Table(rows, block=True)
 
-    assert table._params.effective_dims == (COL_COUNT, ROW_COUNT)
+    assert table._params.effective_dims == (ROW_COUNT, COL_COUNT)
 
     doc = Document(elements=[table])
     doc.render(powerpack_comparison_files.out_file)

@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Generator
 
 from ..._context import RenderContext
-from ...cell import Cell, NormalizedCell
+from ..._utils import get_dims
+from ...cell import Cell, WrappedCell
 from ..flavor import BaseTableVariant
 
 __all__ = [
@@ -192,10 +193,8 @@ class FrameTableVariant(BaseTableVariant):
         optional upper/lower separators.
         """
 
-        # get normalized rows
-        normalized_rows: list[list[NormalizedCell]] = self.__normalize_rows(
-            rows
-        )
+        row_count, col_count = get_dims(rows)
+        wrapped_rows = context.wrap_rows(rows, row_count, col_count)
 
         # render upper separator if applicable
         if include_upper_sep:
@@ -205,16 +204,16 @@ class FrameTableVariant(BaseTableVariant):
 
         # render rows
         sep_line = section.middle_sep.get_line(context)
-        for row_idx, row in enumerate(rows):
+        for row_idx, row in enumerate(wrapped_rows):
 
             # render this row
             yield from self.__render_row(context, row)
 
             # render middle separator, if not last row or have a single row
             # with rows separated by spaces
-            is_middle = row_idx != len(rows) - 1
+            is_middle = row_idx != len(wrapped_rows) - 1
             has_trailing_line = (
-                section.middle_sep.line is None and len(rows) == 1
+                section.middle_sep.line is None and len(wrapped_rows) == 1
             )
 
             if is_middle or has_trailing_line:
@@ -226,19 +225,10 @@ class FrameTableVariant(BaseTableVariant):
                 context, align_char=self.align_char, do_align=align_lower_sep
             )
 
-    def __normalize_rows(
-        self, rows: list[list[Cell]]
-    ) -> list[list[NormalizedCell]]:
-        """
-        Normalize cells, handling any spanned cells.
-        """
-
-        normalized_rows: list[list[NormalizedCell]] = []
-
     def __render_row(
         self,
         context: RenderContext,
-        row: list[Cell],
+        row: list[WrappedCell],
     ) -> Generator[str, None, None]:
         """
         Render a single row without any separator.
@@ -248,11 +238,8 @@ class FrameTableVariant(BaseTableVariant):
 
         # get list of lines per column
         row_lines = [
-            cell._get_content(
-                context.flavor,
-                width=col_width if context.variant.wrap else None,
-            )
-            for cell, col_width in zip(row, context.col_widths)
+            list(wrapped_cell.get_content(width=width))
+            for wrapped_cell, width in zip(row, context.col_widths)
         ]
 
         # get max lines per column

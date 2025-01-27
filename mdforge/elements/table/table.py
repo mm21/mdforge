@@ -38,9 +38,9 @@ class Table(BaseElement):
         clean: bool = False,
     ):
         self._params = TableParams(
-            rows=self.__normalize_rows(rows),
-            header=self.__normalize_rows(header) if header else None,
-            footer=self.__normalize_rows(footer) if footer else None,
+            rows=self.__normalize_cells(rows),
+            header=self.__normalize_cells(header) if header else None,
+            footer=self.__normalize_cells(footer) if footer else None,
             align=align,
             widths=widths,
             caption=caption,
@@ -61,7 +61,7 @@ class Table(BaseElement):
         yield from variant.render(context)
         yield from get_clean_end() if self._params.clean else []
 
-    def __normalize_rows(
+    def __normalize_cells(
         self, rows: RowType | list[RowType]
     ) -> list[list[Cell]]:
         """

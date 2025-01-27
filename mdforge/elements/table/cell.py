@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cache
-from typing import Iterable, Literal
+from typing import TYPE_CHECKING, Generator, Iterable, Literal
 
 from ...element import BaseElement
 from ...types import FlavorType
+
+if TYPE_CHECKING:
+    from ._context import RenderContext
 
 __all__ = [
     "Cell",
@@ -30,14 +33,14 @@ class Cell:
     Cell content.
     """
 
-    rspan: int | None = None
+    rspan: int = 1
     """
-    Row span, only valid for `block=True`.
+    Row span, can only be greater than 1 for tables with `block=True`.
     """
 
-    cspan: int | None = None
+    cspan: int = 1
     """
-    Column span, only valid for `block=True`.
+    Column span, can only be greater than 1 for tables with `block=True`.
     """
 
     def __hash__(self):
@@ -107,28 +110,87 @@ class Cell:
             return content
 
 
-@dataclass(frozen=True)
-class NormalizedCell:
+class WrappedCell:
     """
-    Cell which may be created from a `Cell` spanning multiple rows or columns.
-    """
-
-    content: list[str]
-    """
-    Rendered content.
+    Cell which wraps a `Cell`, representing any spanned cells.
     """
 
-    omit_right_sep: bool = False
+    context: RenderContext
     """
-    Whether to omit the cell separator on the right.
-    """
-
-    omit_left_sep: bool = False
-    """
-    Whether to omit the cell separator on the left.
+    Render context.
     """
 
-    lower_segment: str | None = None
+    coords: tuple[int, int]
     """
-    Segment to use underneath this cell, if any.
+    Coordinates of this cell as (row index, col index).
     """
+
+    _cell: Cell | None = None
+    """
+    Original cell, which may span multiple rows/columns.
+    """
+
+    _row_offset: int | None = None
+    """
+    Row offset from the original cell.
+    """
+
+    _col_offset: int | None = None
+    """
+    Column offset from the original cell.
+    """
+
+    def __init__(self, context: RenderContext, coords: tuple[int, int]):
+        self.context = context
+        self.coords = coords
+
+    @property
+    def is_set(self) -> bool:
+        return self._cell is not None
+
+    @property
+    def cell(self) -> Cell:
+        """
+        Get original cell.
+        """
+        assert self._cell is not None
+        return self._cell
+
+    @property
+    def row_offset(self) -> int:
+        """
+        Get row offset from the original cell.
+        """
+        assert self._row_offset is not None
+        return self._row_offset
+
+    @property
+    def col_offset(self) -> int:
+        """
+        Get column offset from the original cell.
+        """
+        assert self._col_offset is not None
+        return self._col_offset
+
+    def set(self, cell: Cell, row_offset: int, col_offset: int):
+        """
+        Populate with cell and any offset, if spanning multiple rows/columns.
+        """
+        self._cell = cell
+        self._row_offset = row_offset
+        self._col_offset = col_offset
+
+    def get_content(
+        self, width: int | None = None
+    ) -> Generator[str, None, None]:
+        """
+        Get content of this cell, which may be a fragment of the orignal
+        cell's content based on width/height offsets.
+        """
+
+        # TODO: get width/height offset based on widths of preceding rows/cols
+
+        if self.row_offset == 0 and self.col_offset == 0:
+            yield from self.cell._get_content(self.context.flavor, width=width)
+        else:
+            yield ""
