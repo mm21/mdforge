@@ -10,7 +10,7 @@ from typing import Iterable
 from ...types import FlavorType
 from ._flavors.flavor import BaseTableVariant
 from ._params import TableParams
-from .cell import VALID_ALIGNS, AlignType, Cell, WrappedCell
+from .cell import VALID_ALIGNS, AlignType, Cell, VirtualCell
 
 
 @dataclass(frozen=True)
@@ -82,15 +82,15 @@ class RenderContext:
 
     def wrap_rows(
         self, rows: list[list[Cell]], row_count: int, col_count: int
-    ) -> list[list[WrappedCell]]:
+    ) -> list[list[VirtualCell]]:
         """
         Normalize cells to wrapped cells, creating a consistently-sized
         matrix accounting for spanned cells.
         """
 
-        wrapped_rows: list[list[WrappedCell]] = [
+        wrapped_rows: list[list[VirtualCell]] = [
             [
-                WrappedCell(self, row_idx, col_idx)
+                VirtualCell(self, row_idx, col_idx)
                 for col_idx in range(col_count)
             ]
             for row_idx in range(row_count)

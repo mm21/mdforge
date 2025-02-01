@@ -27,6 +27,9 @@ VALID_ALIGNS = ["left", "center", "right", "default"]
 
 @dataclass(frozen=True)
 class Cell:
+    """
+    Represents a table cell which can span multiple rows/columns.
+    """
 
     content: str | list[str] | BaseElement
     """
@@ -64,55 +67,72 @@ class Cell:
         """
 
         raw_content = self.content
-        content: list[str]
+        lines: list[str]
 
+        # normalize into list of lines
         if isinstance(raw_content, str):
-            content = raw_content.split("\n")
+            lines = raw_content.split("\n")
         elif isinstance(raw_content, Iterable):
             assert all(isinstance(line, str) for line in raw_content)
-            content = list(raw_content)
+            lines = list(raw_content)
         else:
             assert isinstance(raw_content, BaseElement)
-            content = list(raw_content._render_element(flavor))
+            lines = list(raw_content._render_element(flavor))
 
         if width:
             # wrap words
-            wrapped_content: list[str] = []
+            wrapped_lines: list[str] = []
 
-            for line in content:
-                if len(line) <= width:
-                    # already within required width
-                    wrapped_content.append(line)
-                else:
-                    # split line into words
-                    words = line.split()
-                    line_new = ""
+            for line in lines:
+                wrapped_lines += self._wrap_line(line, width)
 
-                    for word in words:
-                        if len(line_new) + len(word) + 1 <= width:
-                            # word fits in current line
-                            space = " " if len(line_new) else ""
-                            line_new += f"{space}{word}"
-                        else:
-                            # word doesn't fit in current line
-                            assert (
-                                len(word) <= width
-                            ), f"Unable to wrap line: len({word})={len(word)} > {width}"
-                            wrapped_content.append(line_new)
-                            line_new = word
-
-                    # done processing words, add last line if not empty
-                    if len(line_new):
-                        wrapped_content.append(line_new)
-
-            return wrapped_content
+            return wrapped_lines
         else:
-            return content
+            return lines
+
+    def _wrap_line(self, line: str, width: int) -> list[str]:
+        """
+        Wrap the provided line if necessary and return a list of resulting
+        lines.
+        """
+
+        if len(line) <= width:
+            # already within required width
+            return [line]
+
+        # not within required width, need to wrap
+        lines: list[str] = []
+
+        # split line into words
+        words = line.split()
+        line_new = ""
+
+        for word in words:
+            offset = 1 if len(line_new) else 0
+            if len(line_new) + len(word) + offset <= width:
+                # word fits in current line, with a space in between
+                # if the current line is empty
+                space = " " if len(line_new) else ""
+                line_new += f"{space}{word}"
+            else:
+                # word doesn't fit in current line, append current line
+                # and start new one
+                assert (
+                    len(word) <= width
+                ), f"Unable to wrap line: len({word})={len(word)} > {width}"
+                lines.append(line_new)
+                line_new = word
+
+        # done processing words, add last line if not empty
+        if len(line_new):
+            lines.append(line_new)
+
+        return lines
 
 
-class WrappedCell:
+class VirtualCell:
     """
-    Cell which wraps a `Cell`, representing any spanned cells.
+    Cell which encapsulates a `Cell` or a spanned cell thereof.
     """
 
     context: RenderContext
@@ -122,12 +142,12 @@ class WrappedCell:
 
     row_idx: int
     """
-    Row index.
+    Row index in table.
     """
 
     col_idx: int
     """
-    Column index.
+    Column index in table.
     """
 
     _cell: Cell | None = None

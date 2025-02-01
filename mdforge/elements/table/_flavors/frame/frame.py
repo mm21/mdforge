@@ -5,7 +5,7 @@ from typing import Generator
 
 from ..._context import RenderContext
 from ..._utils import get_dims
-from ...cell import Cell, WrappedCell
+from ...cell import Cell, VirtualCell
 from ..flavor import BaseTableVariant
 
 __all__ = [
@@ -220,7 +220,7 @@ class FrameTableVariant(BaseTableVariant):
     def __render_row(
         self,
         context: RenderContext,
-        row: list[WrappedCell],
+        row: list[VirtualCell],
     ) -> Generator[str, None, None]:
         """
         Render a single row without any separator.
