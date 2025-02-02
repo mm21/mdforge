@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, cached_property
 from typing import TYPE_CHECKING, Generator, Iterable, Literal
 
 from ...element import BaseElement
@@ -129,6 +130,12 @@ class Cell:
 
         return lines
 
+    def _get_raw_width(self, flavor: FlavorType) -> int:
+        """
+        Get width of this cell with no wrapping or explicit width from user.
+        """
+        return max(len(line) for line in self._get_content(flavor))
+
 
 class VirtualCell:
     """
@@ -182,6 +189,50 @@ class VirtualCell:
         assert self._cell is not None
         return self._cell
 
+    @cached_property
+    def raw_width(self) -> int:
+        """
+        Width of this cell with no wrapping or explicit width from user,
+        handling any column spanning.
+        """
+
+        # get raw width of original cell
+        cell_width = self.cell._get_raw_width(self.context.flavor)
+
+        # get padding between cells
+        # TODO: use self.context.variant.cell_sep after refactor
+        cell_sep = self.context.variant.cell_sep or " "
+        padding_width = (self.cell.cspan - 1) * len(cell_sep)
+
+        # get effective total width
+        total_width = max(cell_width - padding_width, cell_width)
+
+        # divide width amongst all the columns spanned
+        width_div = math.ceil(total_width / self.cell.cspan)
+
+        if not self._is_last_col_span:
+            # not the last spanned column, this should be its width
+            return width_div
+        else:
+            # the last spanned column, so it may be unnecessarily long - just
+            # use the remaining width
+            current_width = width_div * (self.cell.cspan - 1)
+            return cell_width - current_width
+
+    @cached_property
+    def final_width(self) -> int:
+        """
+        Width of this cell, accounting for any explicit widths from user.
+        """
+        return self.context.col_widths[self.col_idx]
+
+    @property
+    def align(self) -> AlignType:
+        """
+        Get alignment of this cell.
+        """
+        return self.context.params.col_aligns[self.col_idx]
+
     @property
     def row_offset(self) -> int:
         """
@@ -219,9 +270,6 @@ class VirtualCell:
 
     def get_content(
         self,
-        width: int | None = None,
-        align: AlignType | None = None,
-        align_space: bool = False,
     ) -> Generator[str, None, None]:
         """
         Get content of this cell, which may be a fragment of the orignal
@@ -234,38 +282,31 @@ class VirtualCell:
         # - trim content based on offsets, size
         if self.row_offset == 0 and self.col_offset == 0:
             raw_lines = list(
-                self.cell._get_content(self.context.flavor, width=width)
+                self.cell._get_content(
+                    self.context.flavor, width=self.final_width
+                )
             )
         else:
             raw_lines = [""]
 
         for raw_line in raw_lines:
-            yield self.format_line(
-                raw_line, width=width, align=align, align_space=align_space
-            )
+            yield self.format_line(raw_line)
 
     def format_line(
         self,
         raw_line: str,
-        width: int | None = None,
-        align: AlignType | None = None,
-        align_space: bool = False,
     ) -> str:
         """
         Take raw content line and format based on table configuration.
         """
+        # align and pad to width
+        leading_str, trailing_str = self._leading_str, self._trailing_str
+        effective_width = self.final_width + self._width_offset_sep
 
-        if width:
-            # align and pad to width
-            leading_str, trailing_str = self._leading_str, self._trailing_str
-            effective_width = width + self._width_offset_sep
+        align_char = self._get_align_char()
+        padded_line = f"{raw_line:{align_char}{effective_width}}"
 
-            align_char = self._get_align_char(align, align_space)
-            padded_line = f"{raw_line:{align_char}{effective_width}}"
-
-            return f"{leading_str}{padded_line}{trailing_str}"
-        else:
-            return raw_line
+        return f"{leading_str}{padded_line}{trailing_str}"
 
     @property
     def _cell_sep(self) -> str | None:
@@ -284,7 +325,7 @@ class VirtualCell:
 
     @property
     def _is_last_col(self) -> bool:
-        return self.col_idx == self.context.col_count - 1
+        return self.col_idx == self.context.params.col_count - 1
 
     @property
     def _is_first_col_span(self) -> bool:
@@ -312,8 +353,8 @@ class VirtualCell:
         else:
             return ""
 
-    def _get_align_char(self, align: AlignType | None, align_space: bool):
-        match align if align_space else None:
+    def _get_align_char(self):
+        match self.align if self.context.variant.align_space else "left":
             case "center":
                 return "^"
             case "right":

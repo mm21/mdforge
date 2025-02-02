@@ -4,9 +4,9 @@ Encapsulates table params, universal for all flavors.
 
 from dataclasses import dataclass
 from functools import cached_property
+from typing import Iterable
 
-from ._utils import get_dims
-from .cell import AlignType, Cell
+from .cell import VALID_ALIGNS, AlignType, Cell
 
 __all__ = [
     "TableParams",
@@ -19,17 +19,17 @@ class TableParams:
     Parameters from user, applicable to all table variants.
     """
 
-    rows: list[list[Cell]]
+    content_rows: list[list[Cell]]
     """
     List of rows, each of which is a list of cells.
     """
 
-    header: list[list[Cell]] | None
+    header_rows: list[list[Cell]] | None
     """
     Optional header. May contain multiple rows for `BlockTable` only.
     """
 
-    footer: list[list[Cell]] | None
+    footer_rows: list[list[Cell]] | None
     """
     Optional footer. May contain multiple rows for `BlockTable` only.
     """
@@ -70,16 +70,100 @@ class TableParams:
         """
         return id(self)
 
-    @cached_property
-    def effective_dims(self) -> tuple[int, int]:
+    @property
+    def content_row_count(self) -> int:
         """
-        Get overall dimensions, including any header / footer.
+        Get number of content rows.
         """
-        return get_dims(self.effective_rows)
+        return len(self.content_rows)
 
     @cached_property
-    def effective_rows(self) -> list[list[Cell]]:
+    def header_row_count(self) -> int:
+        """
+        Get number of header rows.
+        """
+        return len(self.header_rows) if self.header_rows else 0
+
+    @cached_property
+    def footer_row_count(self) -> int:
+        """
+        Get number of footer rows.
+        """
+        return len(self.footer_rows) if self.footer_rows else 0
+
+    @cached_property
+    def col_count(self) -> int:
+        """
+        Get number of columns.
+        """
+        return _get_col_count(self.__effective_rows)
+
+    @cached_property
+    def col_aligns(self) -> list[AlignType]:
+        """
+        Get column alignments.
+        """
+        match self.align:
+            case str() as align:
+                # single alignment given
+                assert align in VALID_ALIGNS
+                aligns = [align] * self.col_count
+            case iterable if isinstance(iterable, Iterable):
+                # alignments per column given
+                assert len(iterable) == self.col_count
+                assert all(a in VALID_ALIGNS for a in iterable)
+                aligns = iterable
+            case _:
+                # no alignment given
+                assert self.align is None
+                aligns = ["default"] * self.col_count
+        return aligns
+
+    @cached_property
+    def __effective_rows(self) -> list[list[Cell]]:
         """
         Get overall rows, including any header / footer.
         """
-        return (self.header or []) + self.rows + (self.footer or [])
+        return (
+            (self.header_rows or [])
+            + self.content_rows
+            + (self.footer_rows or [])
+        )
+
+
+def _get_col_count(rows: list[list[Cell]]) -> tuple[int, int]:
+    """
+    Get effective columns of the provided matrix, accounting for any
+    merged cells.
+    """
+
+    if not rows:
+        return 0
+
+    # column counts per row
+    col_counts: list[int] = []
+
+    def add_col_count(index: int, val: int):
+        """
+        Add value at the given row index, inserting elements as needed.
+        """
+        nonlocal col_counts
+        if index >= len(col_counts):
+            col_counts += [0] * (index - len(col_counts) + 1)
+        col_counts[index] += val
+
+    # get col counts
+    for row_idx, row in enumerate(rows):
+        for cell in row:
+            # add columns for each row, including spanned ones
+            for row_offset in range(cell.rspan):
+                add_col_count(row_idx + row_offset, cell.cspan)
+
+    # verify consistency
+    assert len(rows) == len(col_counts)
+    for row_idx, col_count in enumerate(col_counts):
+        assert (
+            col_count == col_counts[row_idx - 1]
+        ), f"Inconsistent column counts: row {row_idx}={col_count}, row {row_idx-1}={col_counts[row_idx-1]}"
+
+    return col_counts[0]

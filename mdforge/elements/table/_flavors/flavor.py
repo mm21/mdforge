@@ -49,6 +49,17 @@ class BaseTableVariant(ABC):
     Cell separator, e.g. "|".
     """
 
+    align_space: bool = False
+    """
+    Whether alignment should be indicated by using spaces in the header.
+    """
+
+    align_char: str | None = None
+    """
+    Character used to indicate alignment within a separator, e.g. ":" for
+    `pandoc`.
+    """
+
     @abstractmethod
     def render(self, context: RenderContext) -> Generator[str, None, None]:
         """

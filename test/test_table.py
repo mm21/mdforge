@@ -32,16 +32,18 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
 
     def add_table(table: Table, content_dims: tuple[int, int], desc: str):
 
-        row_count, col_count = content_dims
+        content_row_count, col_count = content_dims
+        header_row_count = (
+            len(table._params.header_rows) if table._params.header_rows else 0
+        )
+        footer_row_count = (
+            len(table._params.footer_rows) if table._params.footer_rows else 0
+        )
 
-        if header := table._params.header:
-            row_count += len(header)
-
-        if footer := table._params.footer:
-            row_count += len(footer)
-
-        # includes header and footer
-        assert table._params.effective_dims == (row_count, col_count)
+        assert table._params.content_row_count == content_row_count
+        assert table._params.col_count == col_count
+        assert table._params.header_row_count == header_row_count
+        assert table._params.footer_row_count == footer_row_count
 
         nonlocal inline_section
         nonlocal block_section
@@ -161,7 +163,8 @@ def test_span(powerpack_comparison_files: ComparisonFiles):
 
     table = Table(rows, block=True)
 
-    assert table._params.effective_dims == (ROW_COUNT, COL_COUNT)
+    assert table._params.content_row_count == ROW_COUNT
+    assert table._params.col_count == COL_COUNT
 
     doc = Document(elements=[table])
     doc.render(powerpack_comparison_files.out_file)

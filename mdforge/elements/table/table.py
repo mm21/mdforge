@@ -38,9 +38,9 @@ class Table(BaseElement):
         clean: bool = False,
     ):
         self._params = TableParams(
-            rows=self.__normalize_cells(rows),
-            header=self.__normalize_cells(header) if header else None,
-            footer=self.__normalize_cells(footer) if footer else None,
+            content_rows=self.__normalize_cells(rows),
+            header_rows=self.__normalize_cells(header) if header else None,
+            footer_rows=self.__normalize_cells(footer) if footer else None,
             align=align,
             widths=widths,
             caption=caption,

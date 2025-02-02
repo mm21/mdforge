@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from typing import Generator
 
 from ..._context import RenderContext
-from ..._utils import get_dims
-from ...cell import Cell, VirtualCell
+from ...cell import VirtualCell
 from ..flavor import BaseTableVariant
 
 __all__ = [
@@ -44,7 +43,6 @@ class SeparatorConfig:
     def get_line(
         self,
         context: RenderContext,
-        align_char: str | None = None,
         do_align: bool = False,
     ) -> str:
         """
@@ -55,8 +53,9 @@ class SeparatorConfig:
             return ""
 
         segs: list[str] = []
+        align_char = context.variant.align_char
 
-        for width, align in zip(context.col_widths, context.col_aligns):
+        for width, align in zip(context.col_widths, context.params.col_aligns):
 
             if align_char and do_align:
                 # align based on alignment chars on either side of line
@@ -103,8 +102,8 @@ class SectionConfig:
     """
 
     middle_sep: SeparatorConfig
-    upper_sep: SeparatorConfig | None = None  # defaults to sep
-    lower_sep: SeparatorConfig | None = None  # defaults to sep
+    upper_sep: SeparatorConfig | None = None
+    lower_sep: SeparatorConfig | None = None
 
     @property
     def _upper_sep(self) -> SeparatorConfig:
@@ -125,26 +124,15 @@ class FrameTableVariant(BaseTableVariant):
     content_section: SectionConfig
     footer_section: SectionConfig | None = None
 
-    align_char: str | None = None
-    """
-    Character used to indicate alignment within a separator, e.g. ":" for
-    `pandoc`.
-    """
-
-    align_space: bool = False
-    """
-    Whether alignment should be indicated by using spaces in the header.
-    """
-
     def render(self, context: RenderContext) -> Generator[str, None, None]:
         """
         Render this table using the provided params.
         """
 
-        if context.params.header:
+        if context.virtual_header_rows:
             yield from self.__render_rows(
                 context,
-                context.params.header,
+                context.virtual_header_rows,
                 self.header_section,
                 include_upper_sep=True,
                 include_lower_sep=True,
@@ -153,18 +141,18 @@ class FrameTableVariant(BaseTableVariant):
 
         yield from self.__render_rows(
             context,
-            context.params.rows,
+            context.virtual_content_rows,
             self.content_section,
-            include_upper_sep=context.params.header is None,
-            include_lower_sep=context.params.footer is None,
-            align_upper_sep=context.params.header is None,
+            include_upper_sep=context.virtual_header_rows is None,
+            include_lower_sep=context.virtual_footer_rows is None,
+            align_upper_sep=context.virtual_header_rows is None,
         )
 
-        if context.params.footer:
+        if context.virtual_footer_rows:
             assert self.footer_section is not None
             yield from self.__render_rows(
                 context,
-                context.params.footer,
+                context.virtual_footer_rows,
                 self.footer_section,
                 include_upper_sep=True,
                 include_lower_sep=True,
@@ -173,7 +161,7 @@ class FrameTableVariant(BaseTableVariant):
     def __render_rows(
         self,
         context: RenderContext,
-        rows: list[list[Cell]],
+        virtual_rows: list[list[VirtualCell]],
         section: SectionConfig,
         include_upper_sep: bool = False,
         include_lower_sep: bool = False,
@@ -185,27 +173,24 @@ class FrameTableVariant(BaseTableVariant):
         optional upper/lower separators.
         """
 
-        row_count, col_count = get_dims(rows)
-        wrapped_rows = context.wrap_rows(rows, row_count, col_count)
+        row_count = len(virtual_rows)
 
         # render upper separator if applicable
         if include_upper_sep:
-            yield section._upper_sep.get_line(
-                context, align_char=self.align_char, do_align=align_upper_sep
-            )
+            yield section._upper_sep.get_line(context, do_align=align_upper_sep)
 
         # render rows
         sep_line = section.middle_sep.get_line(context)
-        for row_idx, row in enumerate(wrapped_rows):
+        for row_idx, row in enumerate(virtual_rows):
 
             # render this row
             yield from self.__render_row(context, row)
 
             # render middle separator, if not last row or have a single row
             # with rows separated by spaces
-            is_middle = row_idx != len(wrapped_rows) - 1
+            is_middle = row_idx != row_count - 1
             has_trailing_line = (
-                section.middle_sep.line is None and len(wrapped_rows) == 1
+                section.middle_sep.line is None and len(virtual_rows) == 1
             )
 
             if is_middle or has_trailing_line:
@@ -213,9 +198,7 @@ class FrameTableVariant(BaseTableVariant):
 
         # render lower separator if applicable
         if include_lower_sep:
-            yield section._lower_sep.get_line(
-                context, align_char=self.align_char, do_align=align_lower_sep
-            )
+            yield section._lower_sep.get_line(context, do_align=align_lower_sep)
 
     def __render_row(
         self,
@@ -229,18 +212,7 @@ class FrameTableVariant(BaseTableVariant):
         assert len(row) == len(context.col_widths)
 
         # get list of lines per column
-        row_lines = [
-            list(
-                cell.get_content(
-                    width=col_width,
-                    align=col_align,
-                    align_space=self.align_space,
-                )
-            )
-            for cell, col_width, col_align in zip(
-                row, context.col_widths, context.col_aligns
-            )
-        ]
+        row_lines = [list(cell.get_content()) for cell in row]
 
         # get max lines per column
         max_lines = max(len(lines) for lines in row_lines)
@@ -251,22 +223,15 @@ class FrameTableVariant(BaseTableVariant):
             segs: list[str] = []
 
             # traverse each cell and get the next segment
-            for cell, cell_lines, col_width, col_align in zip(
-                row, row_lines, context.col_widths, context.col_aligns
-            ):
+            for cell, cell_lines in zip(row, row_lines):
                 seg = (
                     cell_lines[line_idx]
                     if line_idx < len(cell_lines)
-                    else cell.format_line(
-                        "",
-                        width=col_width,
-                        align=col_align,
-                        align_space=self.align_space,
-                    )
+                    else cell.format_line("")
                 )
 
                 # validate width of this line
-                effective_width = col_width + cell.width_offset
+                effective_width = cell.final_width + cell.width_offset
                 assert (
                     len(seg) == effective_width
                 ), f"Cell line of width {len(seg)} does not match column of width {effective_width}"
