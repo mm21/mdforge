@@ -210,7 +210,7 @@ class VirtualCell:
         # divide width amongst all the columns spanned
         width_div = math.ceil(total_width / self.cell.cspan)
 
-        if not self._is_last_col_span:
+        if not self.is_last_col_span:
             # not the last spanned column, this should be its width
             return width_div
         else:
@@ -249,6 +249,20 @@ class VirtualCell:
         assert self._col_offset is not None
         return self._col_offset
 
+    @property
+    def is_last_col(self) -> bool:
+        """
+        Whether this is the last column in the row.
+        """
+        return self.col_idx == self.context.params.col_count - 1
+
+    @property
+    def is_last_col_span(self) -> bool:
+        """
+        Whether this is the last spanned column.
+        """
+        return self.col_offset == self.cell.cspan - 1
+
     def set_cell(self, cell: Cell, row_offset: int, col_offset: int):
         """
         Populate with cell and any offset, if spanning multiple rows/columns.
@@ -277,11 +291,3 @@ class VirtualCell:
             raw_lines = [""]
 
         yield from raw_lines
-
-    @property
-    def _is_last_col(self) -> bool:
-        return self.col_idx == self.context.params.col_count - 1
-
-    @property
-    def _is_last_col_span(self) -> bool:
-        return self.col_offset == self.cell.cspan - 1
