@@ -36,17 +36,29 @@ class TableFlavor:
 class BaseTableVariant(ABC):
     """
     Base class to encapsulate a table variant.
+
+    TODO: scope to subclass; parameterize RenderContext with subclass
+    """
+
+    cell_sep: str
+    """
+    Separator between cells.
+    """
+
+    row_leading_sep: str
+    """
+    Separator at beginning of row.
+    """
+
+    row_trailing_sep: str
+    """
+    Separator at end of row.
     """
 
     wrap: bool = True
     """
     Whether to wrap words when cell contents exceed fixed column
     width.
-    """
-
-    cell_sep: str | None = None
-    """
-    Cell separator, e.g. "|".
     """
 
     align_space: bool = False

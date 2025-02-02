@@ -219,23 +219,54 @@ class FrameTableVariant(BaseTableVariant):
 
         for line_idx in range(max_lines):
 
-            # segments for this row line
-            segs: list[str] = []
+            line = self.row_leading_sep
 
             # traverse each cell and get the next segment
             for cell, cell_lines in zip(row, row_lines):
-                seg = (
-                    cell_lines[line_idx]
-                    if line_idx < len(cell_lines)
-                    else cell.format_line("")
-                )
 
-                # validate width of this line
-                effective_width = cell.final_width + cell.width_offset
-                assert (
-                    len(seg) == effective_width
-                ), f"Cell line of width {len(seg)} does not match column of width {effective_width}"
+                # get segment
+                seg = cell_lines[line_idx] if line_idx < len(cell_lines) else ""
 
-                segs.append(seg)
+                pad_offset = 2 if self.align_space else 0
 
-            yield "".join(segs)
+                if cell.cell.cspan > 1:
+                    # include the cell separator if cell is being spanned
+                    span_offset = (
+                        0 if cell._is_last_col_span else len(self.cell_sep)
+                    )
+                else:
+                    span_offset = 0
+
+                # get final width
+                width = cell.final_width + pad_offset + span_offset
+
+                # pad segment using appropriate alignment
+                align_char = self.__get_align_char(cell)
+                padded_seg = f"{seg:{align_char}{width}}"
+
+                # determine which separator to use after this cell
+                if cell._is_last_col:
+                    # last cell in row
+                    sep = self.row_trailing_sep
+                elif cell.cell.cspan == 1 or cell._is_last_col_span:
+                    # non-spanned cell or last cell in spanned cells
+                    sep = self.cell_sep
+                else:
+                    # spanned cell which isn't last, don't add separator
+                    sep = ""
+
+                line += padded_seg + sep
+
+            yield line
+
+    def __get_align_char(self, cell: VirtualCell):
+        """
+        Get character to use to align this cell.
+        """
+        match cell.align if self.align_space else "left":
+            case "center":
+                return "^"
+            case "right":
+                return ">"
+            case _:
+                return "<"

@@ -200,9 +200,9 @@ class VirtualCell:
         cell_width = self.cell._get_raw_width(self.context.flavor)
 
         # get padding between cells
-        # TODO: use self.context.variant.cell_sep after refactor
-        cell_sep = self.context.variant.cell_sep or " "
-        padding_width = (self.cell.cspan - 1) * len(cell_sep)
+        padding_width = (self.cell.cspan - 1) * len(
+            self.context.variant.cell_sep
+        )
 
         # get effective total width
         total_width = max(cell_width - padding_width, cell_width)
@@ -249,17 +249,6 @@ class VirtualCell:
         assert self._col_offset is not None
         return self._col_offset
 
-    @property
-    def width_offset(self) -> int:
-        """
-        Get total additional width offset.
-        """
-        return (
-            len(self._leading_str)
-            + len(self._trailing_str)
-            + self._width_offset_sep
-        )
-
     def set_cell(self, cell: Cell, row_offset: int, col_offset: int):
         """
         Populate with cell and any offset, if spanning multiple rows/columns.
@@ -268,9 +257,7 @@ class VirtualCell:
         self._row_offset = row_offset
         self._col_offset = col_offset
 
-    def get_content(
-        self,
-    ) -> Generator[str, None, None]:
+    def get_content(self) -> Generator[str, None, None]:
         """
         Get content of this cell, which may be a fragment of the orignal
         cell's content based on width/height offsets.
@@ -289,75 +276,12 @@ class VirtualCell:
         else:
             raw_lines = [""]
 
-        for raw_line in raw_lines:
-            yield self.format_line(raw_line)
-
-    def format_line(
-        self,
-        raw_line: str,
-    ) -> str:
-        """
-        Take raw content line and format based on table configuration.
-        """
-        # align and pad to width
-        leading_str, trailing_str = self._leading_str, self._trailing_str
-        effective_width = self.final_width + self._width_offset_sep
-
-        align_char = self._get_align_char()
-        padded_line = f"{raw_line:{align_char}{effective_width}}"
-
-        return f"{leading_str}{padded_line}{trailing_str}"
-
-    @property
-    def _cell_sep(self) -> str | None:
-        return self.context.variant.cell_sep
-
-    @property
-    def _width_offset_sep(self) -> int:
-        """
-        Get additional width offset due to separator.
-        """
-        return 2 if self._cell_sep is None else 0
-
-    @property
-    def _is_first_col(self) -> bool:
-        return self.col_idx == 0
+        yield from raw_lines
 
     @property
     def _is_last_col(self) -> bool:
         return self.col_idx == self.context.params.col_count - 1
 
     @property
-    def _is_first_col_span(self) -> bool:
-        return self.col_offset == 0
-
-    @property
     def _is_last_col_span(self) -> bool:
         return self.col_offset == self.cell.cspan - 1
-
-    @property
-    def _leading_str(self) -> str:
-        if self._is_first_col:
-            return f"{self._cell_sep} " if self._cell_sep else ""
-        elif self._is_first_col_span:
-            return " " if self._cell_sep else ""
-        else:
-            return ""
-
-    @property
-    def _trailing_str(self) -> str:
-        if self._is_last_col:
-            return f" {self._cell_sep}" if self._cell_sep else ""
-        elif self._is_last_col_span:
-            return f" {self._cell_sep}" if self._cell_sep else " "
-        else:
-            return ""
-
-    def _get_align_char(self):
-        match self.align if self.context.variant.align_space else "left":
-            case "center":
-                return "^"
-            case "right":
-                return ">"
-            case _:
-                return "<"

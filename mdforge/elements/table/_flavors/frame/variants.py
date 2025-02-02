@@ -19,6 +19,9 @@ MULTILINE_VARIANT = FrameTableVariant(
         lower_sep=SeparatorConfig(outer_corner=""),
     ),
     align_space=True,
+    cell_sep=" ",
+    row_leading_sep="",
+    row_trailing_sep="",
 )
 """
 Pandoc multiline table. 
@@ -59,7 +62,9 @@ GRID_VARIANT = FrameTableVariant(
         upper_sep=SeparatorConfig(line="=", corner="+"),
     ),
     align_char=":",
-    cell_sep="|",
+    cell_sep=" | ",
+    row_leading_sep="| ",
+    row_trailing_sep=" |",
 )
 """
 Pandoc grid table.
