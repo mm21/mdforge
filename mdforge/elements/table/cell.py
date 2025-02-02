@@ -220,11 +220,19 @@ class VirtualCell:
             return cell_width - current_width
 
     @cached_property
-    def final_width(self) -> int:
+    def effective_width(self) -> int:
         """
-        Width of this cell, accounting for any explicit widths from user.
+        Actual width of this cell, accounting for offset due to cell spanning.
         """
-        return self.context.col_widths[self.col_idx]
+        width = self.context.col_widths[self.col_idx]
+
+        # get offset if spanning multiple cells
+        span_offset = (
+            len(self.context.variant.cell_sep)
+            if self.cell.cspan > 1 and not self.is_last_col_span
+            else 0
+        )
+        return width + span_offset
 
     @property
     def align(self) -> AlignType:
@@ -284,7 +292,7 @@ class VirtualCell:
         if self.row_offset == 0 and self.col_offset == 0:
             raw_lines = list(
                 self.cell._get_content(
-                    self.context.flavor, width=self.final_width
+                    self.context.flavor, width=self.effective_width
                 )
             )
         else:

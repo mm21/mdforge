@@ -233,20 +233,11 @@ class FrameTableVariant(BaseTableVariant):
             # get base segment
             seg = cell_lines[line_idx] if line_idx < len(cell_lines) else ""
 
-            # include offset for padding if aligning using spaces
+            # get width, including padding if aligning using spaces
             pad_offset = 2 if self.align_space else 0
+            width = cell.effective_width + pad_offset
 
-            # include offset if spanning multiple cells
-            span_offset = (
-                len(self.cell_sep)
-                if cell.cell.cspan > 1 and not cell.is_last_col_span
-                else 0
-            )
-
-            # get line width including offsets
-            width = cell.final_width + pad_offset + span_offset
-
-            # pad segment to width using appropriate alignment
+            # pad segment to effective width using appropriate alignment
             align_char = self.__get_align_char(cell)
             padded_seg = f"{seg:{align_char}{width}}"
 
