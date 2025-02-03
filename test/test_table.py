@@ -149,16 +149,29 @@ def test_span(powerpack_comparison_files: ComparisonFiles):
     Test cell spanning.
     """
 
-    ROW_COUNT = 6
+    ROW_COUNT = 7
     COL_COUNT = 3
 
     rows = [
         [Cell(content="Test cspan", cspan=2), "Test 0-2"],
-        [Cell(content="Test rspan", rspan=2), "Test 1-1", "Test 1-2"],
+        [
+            Cell(
+                content="Test rspan\nTest abc\nTest def\nTest ghi\nTest jkl",
+                rspan=2,
+            ),
+            "Test 1-1\nabc",
+            "Test 1-2",
+        ],
         ["Test 2-1", "Test 2-2"],
-        [Cell("Test cspan and rspan abc", cspan=2, rspan=2), "Test 3-2"],
-        ["Test 4-2"],
-        ["Test 5-0", "Test 5-1", "Test 5-2"],
+        [
+            Cell(
+                "Test cspan and rspan abc\n0123456789abcdef", cspan=2, rspan=2
+            ),
+            "Test 3-2",
+        ],
+        [Cell("Test 4-2\nand\nTest 5-2", rspan=2)],
+        [Cell("Test 5-0 and Test 5-1\nabc", cspan=2)],
+        ["Test 6-0", "Test 6-1", "Test 6-2"],
     ]
 
     table = Table(rows, block=True)

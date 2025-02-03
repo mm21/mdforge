@@ -44,6 +44,7 @@ class SeparatorConfig:
         self,
         context: RenderContext,
         do_align: bool = False,
+        override_segs: list[str | None] | None = None,
     ) -> str:
         """
         Get line based on configuration and table params. If `do_align`, use
@@ -52,31 +53,93 @@ class SeparatorConfig:
         if not self.line:
             return ""
 
-        segs: list[str] = []
         align_char = context.variant.align_char
 
-        for width, align in zip(context.col_widths, context.params.col_aligns):
+        override_segs_ = override_segs or [None] * context.params.col_count
+
+        assert len(context.col_widths) == context.params.col_count
+        assert len(context.params.col_aligns) == context.params.col_count
+        assert len(override_segs_) == context.params.col_count
+
+        # get first and last segments
+        first_seg, last_seg = override_segs_[0], override_segs_[-1]
+
+        # set corners
+        left_corner = (
+            self._outer_corner
+            if first_seg is None
+            else context.variant.row_leading_sep
+        )
+        right_corner = (
+            self._outer_corner
+            if last_seg is None
+            else context.variant.row_trailing_sep
+        )
+        inner_corner = self._inner_corner or ""
+
+        # start with left corner
+        line = left_corner
+
+        for col_idx, width, align, override_seg in zip(
+            range(context.params.col_count),
+            context.col_widths,
+            context.params.col_aligns,
+            override_segs_,
+        ):
+            is_last_col = col_idx == context.params.col_count - 1
 
             if align_char and do_align:
+
                 # align based on alignment chars on either side of line
-                inner_width = width
+                # - can only be a solid line
+                assert override_seg is None
+
                 left_char = (
                     align_char if align in ["left", "center"] else self.line
                 )
                 right_char = (
                     align_char if align in ["right", "center"] else self.line
                 )
+
+                line += f"{left_char}{self.line * width}{right_char}"
+
+                if not is_last_col:
+                    line += inner_corner
             else:
-                # solid line
-                inner_width = width + 2
-                left_char, right_char = "", ""
+                # solid or dangling line
 
-            inner_line = self.line * inner_width
-            segs.append(f"{left_char}{inner_line}{right_char}")
+                # get next override segment, if any
+                next_override_seg = (
+                    override_segs_[col_idx + 1] if not is_last_col else None
+                )
 
-        return self._inner_corner.join(segs).join(
-            [self._outer_corner, self._outer_corner]
-        )
+                # check if this segment spans to the next one
+                span_next = all(
+                    seg is not None for seg in [override_seg, next_override_seg]
+                )
+
+                # adjust width if necessary
+                if override_seg is not None and is_last_col:
+                    width_offset = 0
+                else:
+                    width_offset = 2 if span_next or override_seg is None else 1
+
+                width += width_offset
+
+                if override_seg is not None:
+                    line += override_seg.ljust(width)
+                else:
+                    line += self.line * width
+
+                if not is_last_col and not span_next:
+                    line += inner_corner
+                    if next_override_seg is not None:
+                        line += " "
+
+        # end with right corner
+        line += right_corner
+
+        return line
 
     @property
     def _inner_corner(self) -> str | None:
@@ -180,7 +243,6 @@ class FrameTableVariant(BaseTableVariant):
             yield section._upper_sep.get_line(context, do_align=align_upper_sep)
 
         # render rows
-        sep_line = section.middle_sep.get_line(context)
         for row_idx, row in enumerate(virtual_rows):
 
             # render this row
@@ -194,7 +256,9 @@ class FrameTableVariant(BaseTableVariant):
             )
 
             if is_middle or has_trailing_line:
-                yield sep_line
+                # get segments from dangling lines
+                segs = [cell.dangling_line for cell in row]
+                yield section.middle_sep.get_line(context, override_segs=segs)
 
         # render lower separator if applicable
         if include_lower_sep:

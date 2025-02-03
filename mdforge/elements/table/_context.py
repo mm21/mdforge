@@ -239,7 +239,7 @@ class RenderContext:
 
     def __get_row_height(self, row: list[VirtualCell]) -> int | None:
         """
-        Get height (number of lines) of this row, based only on cells which
+        Get max height (number of lines) of this row, based only on cells which
         don't span multiple rows. Returns `None` if there are no such cells
         constraining the height.
         """
@@ -283,7 +283,9 @@ class RenderContext:
         Allocate the content for this cell across all the rows/columns it
         spans, wrapping content at the given width.
         """
-        assert virtual_cell.row_idx + virtual_cell.cell.rspan < len(rows)
+        assert virtual_cell.row_idx + virtual_cell.cell.rspan <= len(
+            rows
+        ), f"virtual_cell.row_idx + virtual_cell.cell.rspan={virtual_cell.row_idx + virtual_cell.cell.rspan}, len(rows)={len(rows)}"
 
         # get content, possibly wrapping at width of all spanned cells
         # - content is cached, so need to make copy
@@ -301,8 +303,8 @@ class RenderContext:
             # select this row
             row = rows[virtual_cell.row_idx + row_offset]
 
-            # get height of this row
-            height = self.__get_row_height(row)
+            # get max height of this row
+            min_height = self.__get_row_height(row)
 
             # select subset of row which is spanned
             cells = row[
@@ -319,7 +321,11 @@ class RenderContext:
             ]
 
             # loop over lines until expected height, if there is one
-            for _ in range(height or max_lines):
+            line_idx = 0
+            last_row = row_offset == virtual_cell.cell.rspan - 1
+
+            while (line_idx < (min_height or 1)) or (len(content) and last_row):
+                line_idx += 1
 
                 # consume next line of content
                 line = content.pop(0) if len(content) else ""
