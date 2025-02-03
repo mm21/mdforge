@@ -20,39 +20,30 @@ class RenderContext:
     variant: BaseTableVariant
     params: TableParams
 
-    # TODO: use params.norm_*_rows
     @cached_property
     def virtual_content_rows(self) -> list[list[VirtualCell]]:
         """
         Get content rows as virtual cells.
         """
-        return self.__get_virtual_rows(self.params.content_rows)
+        return self.__get_virtual_rows(self.params.norm_content_rows)
 
     @cached_property
     def virtual_header_rows(self) -> list[list[VirtualCell]] | None:
         """
         Get header rows as virtual cells.
         """
-        if self.params.header_rows is None:
+        if self.params.norm_header_rows is None:
             return None
-        return self.__get_virtual_rows(self.params.header_rows)
+        return self.__get_virtual_rows(self.params.norm_header_rows)
 
     @cached_property
     def virtual_footer_rows(self) -> list[list[VirtualCell]]:
         """
         Get footer rows as virtual cells.
         """
-        if self.params.footer_rows is None:
+        if self.params.norm_footer_rows is None:
             return None
-        return self.__get_virtual_rows(self.params.footer_rows)
-
-    @cached_property
-    def virtual_effective_rows(self) -> list[list[VirtualCell]]:
-        return (
-            (self.virtual_header_rows or [])
-            + self.virtual_content_rows
-            + (self.virtual_footer_rows or [])
-        )
+        return self.__get_virtual_rows(self.params.norm_footer_rows)
 
     @cached_property
     def col_widths(self) -> list[int]:
@@ -145,8 +136,7 @@ class RenderContext:
         self, rows: list[list[Cell]]
     ) -> list[list[VirtualCell]]:
         """
-        Normalize cells to virtual cells, creating a consistently-sized
-        matrix accounting for spanned cells.
+        Get virtual cells from cells.
         """
 
         row_count, col_count = len(rows), self.params.col_count
@@ -160,38 +150,32 @@ class RenderContext:
             for row_idx in range(row_count)
         ]
 
-        # traverse rows and populate virtual rows
-        for row_idx, row in enumerate(rows):
-            for cell in row:
+        for row_idx, col_idx in itertools.product(
+            range(row_count), range(col_count)
+        ):
+            cell = rows[row_idx][col_idx]
 
-                # advance to column with next available cell
-                col_idx = 0
-                for col_idx in range(col_count):
-                    if not virtual_rows[row_idx][col_idx].cell_is_set:
-                        break
-                assert col_idx < col_count
+            if virtual_rows[row_idx][col_idx].cell_is_set:
+                assert virtual_rows[row_idx][col_idx].cell is cell
+                continue
 
-                # traverse this cell along with all spanned ones
-                for row_offset, col_offset in itertools.product(
-                    range(cell.rspan), range(cell.cspan)
-                ):
+            # traverse this cell along with all spanned ones
+            for row_offset, col_offset in itertools.product(
+                range(cell.rspan), range(cell.cspan)
+            ):
 
-                    # get virtual cell at this location, which should not have
-                    # a cell yet
-                    virtual_cell = virtual_rows[row_idx + row_offset][
-                        col_idx + col_offset
-                    ]
-                    assert not virtual_cell.cell_is_set
+                # get virtual cell at this location, which should not have
+                # a cell yet
+                virtual_cell = virtual_rows[row_idx + row_offset][
+                    col_idx + col_offset
+                ]
+                assert not virtual_cell.cell_is_set
 
-                    # get origin virtual cell
-                    origin_cell = virtual_rows[row_idx][col_idx]
+                # get origin virtual cell
+                origin_cell = virtual_rows[row_idx][col_idx]
 
-                    # set this cell
-                    virtual_cell.set_cell(
-                        cell, row_offset, col_offset, origin_cell
-                    )
-
-                col_idx += cell.cspan
+                # set this cell
+                virtual_cell.set_cell(cell, row_offset, col_offset, origin_cell)
 
         # validate: ensure each virtual cell got set
         for row_idx, col_idx in itertools.product(
@@ -283,9 +267,7 @@ class RenderContext:
         Allocate the content for this cell across all the rows/columns it
         spans, wrapping content at the given width.
         """
-        assert virtual_cell.row_idx + virtual_cell.cell.rspan <= len(
-            rows
-        ), f"virtual_cell.row_idx + virtual_cell.cell.rspan={virtual_cell.row_idx + virtual_cell.cell.rspan}, len(rows)={len(rows)}"
+        assert virtual_cell.row_idx + virtual_cell.cell.rspan <= len(rows)
 
         # get content, possibly wrapping at width of all spanned cells
         # - content is cached, so need to make copy
@@ -293,18 +275,11 @@ class RenderContext:
             self.flavor, width=width
         ).copy()
 
-        # set an upper bound for line traversal, should be at least one line
-        max_lines = len(content)
-        assert max_lines > 0
-
         # traverse each virtual row
         for row_offset in range(virtual_cell.cell.rspan):
 
             # select this row
             row = rows[virtual_cell.row_idx + row_offset]
-
-            # get max height of this row
-            min_height = self.__get_row_height(row)
 
             # select subset of row which is spanned
             cells = row[
@@ -320,11 +295,14 @@ class RenderContext:
                 [] for _ in range(virtual_cell.cell.cspan)
             ]
 
+            # get max height of this row
+            max_height = self.__get_row_height(row)
+
             # loop over lines until expected height, if there is one
             line_idx = 0
             last_row = row_offset == virtual_cell.cell.rspan - 1
 
-            while (line_idx < (min_height or 1)) or (len(content) and last_row):
+            while (line_idx < (max_height or 1)) or (len(content) and last_row):
                 line_idx += 1
 
                 # consume next line of content
