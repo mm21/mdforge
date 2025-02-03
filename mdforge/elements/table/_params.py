@@ -2,9 +2,10 @@
 Encapsulates table params, universal for all flavors.
 """
 
+import itertools
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Iterable
+from typing import Iterable, cast
 
 from .cell import VALID_ALIGNS, AlignType, Cell
 
@@ -96,7 +97,7 @@ class TableParams:
         """
         Get number of columns.
         """
-        return _get_col_count(self.__effective_rows)
+        return _get_col_count(self.effective_rows)
 
     @cached_property
     def col_aligns(self) -> list[AlignType]:
@@ -120,7 +121,7 @@ class TableParams:
         return aligns
 
     @cached_property
-    def __effective_rows(self) -> list[list[Cell]]:
+    def effective_rows(self) -> list[list[Cell]]:
         """
         Get overall rows, including any header / footer.
         """
@@ -129,6 +130,91 @@ class TableParams:
             + self.content_rows
             + (self.footer_rows or [])
         )
+
+    @cached_property
+    def norm_content_rows(self) -> list[list[Cell]]:
+        """
+        Get normalized content rows.
+        """
+        return self.__normalize_rows(self.content_rows)
+
+    @cached_property
+    def norm_header_rows(self) -> list[list[Cell]]:
+        """
+        Get normalized header rows.
+        """
+        return (
+            self.__normalize_rows(self.header_rows)
+            if self.header_rows
+            else None
+        )
+
+    @cached_property
+    def norm_footer_rows(self) -> list[list[Cell]]:
+        """
+        Get normalized footer rows.
+        """
+        return (
+            self.__normalize_rows(self.footer_rows)
+            if self.footer_rows
+            else None
+        )
+
+    @cached_property
+    def norm_effective_rows(self) -> list[list[Cell]]:
+        """
+        Get normalized overall rows, including any header / footer.
+        """
+        return (
+            (self.norm_header_rows or [])
+            + self.norm_content_rows
+            + (self.norm_footer_rows or [])
+        )
+
+    def __normalize_rows(self, rows: list[list[Cell]]) -> list[list[Cell]]:
+        """
+        Normalize input, accounting for cell spans to create evenly sized rows.
+        """
+
+        row_count, col_count = len(rows), self.col_count
+
+        # pre-allocate rows
+        norm_rows: list[list[Cell | None]] = [
+            [None for _ in range(col_count)] for _ in range(row_count)
+        ]
+
+        for row_idx, row in enumerate(rows):
+            for cell in row:
+
+                # advance to column with next available cell
+                col_idx = 0
+                for col_idx in range(col_count):
+                    if norm_rows[row_idx][col_idx] is None:
+                        break
+                assert col_idx < col_count
+
+                # traverse this cell along with all spanned ones
+                for row_offset, col_offset in itertools.product(
+                    range(cell.rspan), range(cell.cspan)
+                ):
+                    # should not be set yet
+                    assert (
+                        norm_rows[row_idx + row_offset][col_idx + col_offset]
+                        is None
+                    )
+
+                    # set this cell
+                    norm_rows[row_idx + row_offset][col_idx + col_offset] = cell
+
+                col_idx += cell.cspan
+
+        # validate: ensure each cell got set
+        for row_idx, col_idx in itertools.product(
+            range(row_count), range(col_count)
+        ):
+            assert isinstance(norm_rows[row_idx][col_idx], Cell)
+
+        return cast(list[list[Cell]], norm_rows)
 
 
 def _get_col_count(rows: list[list[Cell]]) -> tuple[int, int]:

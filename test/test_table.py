@@ -156,7 +156,7 @@ def test_span(powerpack_comparison_files: ComparisonFiles):
         [Cell(content="Test cspan", cspan=2), "Test 0-2"],
         [Cell(content="Test rspan", rspan=2), "Test 1-1", "Test 1-2"],
         ["Test 2-1", "Test 2-2"],
-        [Cell("Test cspan + rspan", cspan=2, rspan=2), "Test 3-2"],
+        [Cell("Test cspan and rspan abc", cspan=2, rspan=2), "Test 3-2"],
         ["Test 4-2"],
         ["Test 5-0", "Test 5-1", "Test 5-2"],
     ]

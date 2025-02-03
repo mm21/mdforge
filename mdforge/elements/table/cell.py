@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, Generator, Iterable, Literal
@@ -172,14 +171,48 @@ class VirtualCell:
     Column offset from the original cell.
     """
 
+    _origin_cell: VirtualCell | None = None
+    """
+    Original cell from which this cell is derived, only applicable to spanned
+    cells.
+    """
+
+    _lines: list[str] | None = None
+    """
+    Content of this cell as list of strings.
+    """
+
+    _dangling_line: str | None = None
+    """
+    Content line inserted in place of line separator for spanned rows.
+    """
+
+    _raw_lines: list[str] | None = None
+    """
+    List of raw lines, only applicable to origin cell of spanned cells.
+    """
+
     def __init__(self, context: RenderContext, row_idx: int, col_idx: int):
         self.context = context
         self.row_idx = row_idx
         self.col_idx = col_idx
 
     @property
-    def is_set(self) -> bool:
+    def cell_is_set(self) -> bool:
         return self._cell is not None
+
+    @property
+    def content_is_set(self) -> bool:
+        return self._lines is not None
+
+    @property
+    def is_origin(self) -> bool:
+        assert self._origin_cell is not None
+        return self is self._origin_cell
+
+    @property
+    def is_spanned(self) -> bool:
+        return self.cell.rspan > 1 or self.cell.cspan > 1
 
     @property
     def cell(self) -> Cell:
@@ -188,36 +221,6 @@ class VirtualCell:
         """
         assert self._cell is not None
         return self._cell
-
-    @cached_property
-    def raw_width(self) -> int:
-        """
-        Width of this cell with no wrapping or explicit width from user,
-        handling any column spanning.
-        """
-
-        # get raw width of original cell
-        cell_width = self.cell._get_raw_width(self.context.flavor)
-
-        # get padding between cells
-        padding_width = (self.cell.cspan - 1) * len(
-            self.context.variant.cell_sep
-        )
-
-        # get effective total width
-        total_width = max(cell_width - padding_width, cell_width)
-
-        # divide width amongst all the columns spanned
-        width_div = math.ceil(total_width / self.cell.cspan)
-
-        if not self.is_last_col_span:
-            # not the last spanned column, this should be its width
-            return width_div
-        else:
-            # the last spanned column, so it may be unnecessarily long - just
-            # use the remaining width
-            current_width = width_div * (self.cell.cspan - 1)
-            return cell_width - current_width
 
     @cached_property
     def effective_width(self) -> int:
@@ -258,6 +261,14 @@ class VirtualCell:
         return self._col_offset
 
     @property
+    def origin_cell(self) -> VirtualCell:
+        """
+        Get origin virtual cell.
+        """
+        assert self._origin_cell is not None
+        return self._origin_cell
+
+    @property
     def is_last_col(self) -> bool:
         """
         Whether this is the last column in the row.
@@ -271,31 +282,51 @@ class VirtualCell:
         """
         return self.col_offset == self.cell.cspan - 1
 
-    def set_cell(self, cell: Cell, row_offset: int, col_offset: int):
+    @property
+    def lines(self) -> list[str]:
+        """
+        Get this cell's content as list of lines, ensuring it has been set.
+        """
+        assert self._lines is not None
+        return self._lines
+
+    @property
+    def dangling_line(self) -> str | None:
+        """
+        Get this cell's dangling line, if any; only applicable for cells with
+        spanned rows.
+        """
+        return self._dangling_line
+
+    @property
+    def raw_lines(self) -> list[str]:
+        assert self._raw_lines is not None
+        return self._raw_lines
+
+    def set_cell(
+        self,
+        cell: Cell,
+        row_offset: int,
+        col_offset: int,
+        origin_cell: VirtualCell,
+    ):
         """
         Populate with cell and any offset, if spanning multiple rows/columns.
         """
         self._cell = cell
         self._row_offset = row_offset
         self._col_offset = col_offset
+        self._origin_cell = origin_cell
+
+    def set_content(self, lines: list[str]):
+        self._lines = lines
+
+    def set_dangling_line(self, line: str):
+        self._dangling_line = line
 
     def get_content(self) -> Generator[str, None, None]:
         """
-        Get content of this cell, which may be a fragment of the orignal
+        Get content of this cell, which may be a fragment of the original
         cell's content based on width/height offsets.
         """
-
-        # get full content
-        # TODO:
-        # - get width/height offset, size based on widths of preceding rows/cols
-        # - trim content based on offsets, size
-        if self.row_offset == 0 and self.col_offset == 0:
-            raw_lines = list(
-                self.cell._get_content(
-                    self.context.flavor, width=self.effective_width
-                )
-            )
-        else:
-            raw_lines = [""]
-
-        yield from raw_lines
+        yield from self._lines
