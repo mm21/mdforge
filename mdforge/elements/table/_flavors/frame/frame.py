@@ -44,55 +44,67 @@ class SeparatorConfig:
         self,
         context: RenderContext,
         do_align: bool = False,
-        override_segs: list[str | None] | None = None,
+        seg_overrides: list[str | None] | None = None,
+        corner_overrides: list[bool] | None = None,
     ) -> str:
         """
         Get line based on configuration and table params. If `do_align`, use
         alignment chars as applicable.
+
+        - `seg_overrides`: Used to override line segments with content for
+          cells spanning multiple rows ("dangling lines")
+        - `corner_overrides`: Used to override corners with normal line for
+          cells spanning multiple columns
         """
         if not self.line:
             return ""
 
         align_char = context.variant.align_char
 
-        override_segs_ = override_segs or [None] * context.params.col_count
+        seg_overrides_ = seg_overrides or [None] * context.params.col_count
+        corner_overrides_ = (
+            corner_overrides or [False] * context.params.col_count
+        )
 
         assert len(context.col_widths) == context.params.col_count
         assert len(context.params.col_aligns) == context.params.col_count
-        assert len(override_segs_) == context.params.col_count
+        assert len(seg_overrides_) == context.params.col_count
+        assert len(corner_overrides_) == context.params.col_count
 
         # get first and last segments
-        first_seg, last_seg = override_segs_[0], override_segs_[-1]
+        first_seg, last_seg = seg_overrides_[0], seg_overrides_[-1]
 
         # set corners
         left_corner = (
-            self._outer_corner
+            self.__outer_corner
             if first_seg is None
             else context.variant.row_leading_sep
         )
         right_corner = (
-            self._outer_corner
+            self.__outer_corner
             if last_seg is None
             else context.variant.row_trailing_sep
         )
-        inner_corner = self._inner_corner or ""
 
         # start with left corner
         line = left_corner
 
-        for col_idx, width, align, override_seg in zip(
+        for col_idx, width, align, seg_override, corner_override in zip(
             range(context.params.col_count),
             context.col_widths,
             context.params.col_aligns,
-            override_segs_,
+            seg_overrides_,
+            corner_overrides_,
         ):
             is_last_col = col_idx == context.params.col_count - 1
+
+            inner_corner = self.line if corner_override else self.__inner_corner
 
             if align_char and do_align:
 
                 # align based on alignment chars on either side of line
                 # - can only be a solid line
-                assert override_seg is None
+                assert seg_override is None
 
                 left_char = (
                     align_char if align in ["left", "center"] else self.line
@@ -110,24 +122,24 @@ class SeparatorConfig:
 
                 # get next override segment, if any
                 next_override_seg = (
-                    override_segs_[col_idx + 1] if not is_last_col else None
+                    seg_overrides_[col_idx + 1] if not is_last_col else None
                 )
 
                 # check if this segment spans to the next one
                 span_next = all(
-                    seg is not None for seg in [override_seg, next_override_seg]
+                    seg is not None for seg in [seg_override, next_override_seg]
                 )
 
                 # adjust width if necessary
-                if override_seg is not None and is_last_col:
+                if seg_override is not None and is_last_col:
                     width_offset = 0
                 else:
-                    width_offset = 2 if span_next or override_seg is None else 1
+                    width_offset = 2 if span_next or seg_override is None else 1
 
                 width += width_offset
 
-                if override_seg is not None:
-                    line += override_seg.ljust(width)
+                if seg_override is not None:
+                    line += seg_override.ljust(width)
                 else:
                     line += self.line * width
 
@@ -142,20 +154,24 @@ class SeparatorConfig:
         return line
 
     @property
-    def _inner_corner(self) -> str | None:
+    def __inner_corner(self) -> str:
         return (
             self.inner_corner
             if self.inner_corner is not None
-            else (self.corner if self.corner is not None else self.line)
+            else self.__default_corner
         )
 
     @property
-    def _outer_corner(self) -> str | None:
+    def __outer_corner(self) -> str:
         return (
             self.outer_corner
             if self.outer_corner is not None
-            else (self.corner if self.corner is not None else self.line)
+            else self.__default_corner
         )
+
+    @property
+    def __default_corner(self) -> str:
+        return (self.corner if self.corner is not None else self.line) or ""
 
 
 @dataclass(frozen=True)
@@ -192,20 +208,38 @@ class FrameTableVariant(BaseTableVariant):
         Render this table using the provided params.
         """
 
+        assert len(context.virtual_content_rows)
+
         if context.virtual_header_rows:
             yield from self.__render_rows(
                 context,
-                context.virtual_header_rows,
                 self.header_section,
+                context.virtual_header_rows,
+                next_row=context.virtual_content_rows[0],
                 include_upper_sep=True,
                 include_lower_sep=True,
                 align_lower_sep=True,
             )
 
+        # get last row from header and first row from footer in case any
+        # corners need to be overridden due to column spanning
+        prev_row = (
+            context.virtual_header_rows[-1]
+            if context.virtual_header_rows
+            else None
+        )
+        next_row = (
+            context.virtual_footer_rows[0]
+            if context.virtual_footer_rows
+            else None
+        )
+
         yield from self.__render_rows(
             context,
-            context.virtual_content_rows,
             self.content_section,
+            context.virtual_content_rows,
+            prev_row=prev_row,
+            next_row=next_row,
             include_upper_sep=context.virtual_header_rows is None,
             include_lower_sep=context.virtual_footer_rows is None,
             align_upper_sep=context.virtual_header_rows is None,
@@ -215,8 +249,9 @@ class FrameTableVariant(BaseTableVariant):
             assert self.footer_section is not None
             yield from self.__render_rows(
                 context,
-                context.virtual_footer_rows,
                 self.footer_section,
+                context.virtual_footer_rows,
+                prev_row=context.virtual_content_rows[-1],
                 include_upper_sep=True,
                 include_lower_sep=True,
             )
@@ -224,8 +259,10 @@ class FrameTableVariant(BaseTableVariant):
     def __render_rows(
         self,
         context: RenderContext,
-        virtual_rows: list[list[VirtualCell]],
         section: SectionConfig,
+        virtual_rows: list[list[VirtualCell]],
+        prev_row: list[VirtualCell] | None = None,
+        next_row: list[VirtualCell] | None = None,
         include_upper_sep: bool = False,
         include_lower_sep: bool = False,
         align_upper_sep: bool = False,
@@ -237,10 +274,18 @@ class FrameTableVariant(BaseTableVariant):
         """
 
         row_count = len(virtual_rows)
+        assert row_count > 0
 
         # render upper separator if applicable
         if include_upper_sep:
-            yield section._upper_sep.get_line(context, do_align=align_upper_sep)
+            corner_overrides = self.__get_corner_overrides(
+                context, prev_row=prev_row, next_row=virtual_rows[0]
+            )
+            yield section._upper_sep.get_line(
+                context,
+                do_align=align_upper_sep,
+                corner_overrides=corner_overrides,
+            )
 
         # render rows
         for row_idx, row in enumerate(virtual_rows):
@@ -252,17 +297,37 @@ class FrameTableVariant(BaseTableVariant):
             # with rows separated by spaces
             is_middle = row_idx != row_count - 1
             has_trailing_line = (
-                section.middle_sep.line is None and len(virtual_rows) == 1
+                section.middle_sep.line is None and row_count == 1
             )
 
             if is_middle or has_trailing_line:
-                # get segments from dangling lines
-                segs = [cell.dangling_line for cell in row]
-                yield section.middle_sep.get_line(context, override_segs=segs)
+
+                # get segment overrides from dangling lines
+                seg_overrides = [cell.dangling_line for cell in row]
+
+                # get corner overrides from row spans for this/next rows
+                corner_overrides = self.__get_corner_overrides(
+                    context,
+                    prev_row=row,
+                    next_row=virtual_rows[row_idx + 1] if is_middle else None,
+                )
+
+                yield section.middle_sep.get_line(
+                    context,
+                    seg_overrides=seg_overrides,
+                    corner_overrides=corner_overrides,
+                )
 
         # render lower separator if applicable
         if include_lower_sep:
-            yield section._lower_sep.get_line(context, do_align=align_lower_sep)
+            corner_overrides = self.__get_corner_overrides(
+                context, prev_row=virtual_rows[-1], next_row=next_row
+            )
+            yield section._lower_sep.get_line(
+                context,
+                do_align=align_lower_sep,
+                corner_overrides=corner_overrides,
+            )
 
     def __render_row(
         self, row: list[VirtualCell]
@@ -331,3 +396,55 @@ class FrameTableVariant(BaseTableVariant):
                 return ">"
             case _:
                 return "<"
+
+    def __get_corner_overrides(
+        self,
+        context: RenderContext,
+        *,
+        prev_row: list[VirtualCell] | None,
+        next_row: list[VirtualCell] | None,
+    ) -> list[bool]:
+        """
+        Get list of which inner corners to override with a normal line in
+        case of the same columns being spanned before/after the line, or
+        the first/last row having any spanned columns.
+
+        For example, required to go from this:
+
+                        (Inner corners here need to be replaced)
+                                      |       |
+                                      V       V
+        +---------------------+-------+-------+-------+
+        | Location            | Temperature 1961-1990 |
+        |                     | in degree Celsius     |
+        |                     +-------+-------+-------+
+        |                     | min   | mean  | max   |
+        +=====================+=======+=======+=======+
+
+        To this:
+
+        +---------------------+-----------------------+
+        | Location            | Temperature 1961-1990 |
+        |                     | in degree Celsius     |
+        |                     +-------+-------+-------+
+        |                     | min   | mean  | max   |
+        +=====================+=======+=======+=======+
+        """
+
+        def get_overrides(row: list[VirtualCell] | None) -> list[bool]:
+            return (
+                [
+                    cell.cell.cspan > 1 and not cell.is_last_col_span
+                    for cell in row
+                ]
+                if row
+                else [True] * context.params.col_count
+            )
+
+        prev_corner_overrides = get_overrides(prev_row)
+        next_corner_overrides = get_overrides(next_row)
+
+        return [
+            prev and next
+            for prev, next in zip(prev_corner_overrides, next_corner_overrides)
+        ]
