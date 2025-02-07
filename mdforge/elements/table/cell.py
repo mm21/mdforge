@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Generator, Iterable, Literal
+from typing import TYPE_CHECKING, Iterable, Literal
 
 from ...element import BaseElement
 from ...types import FlavorType
@@ -156,40 +156,35 @@ class VirtualCell:
     Column index in table.
     """
 
-    _cell: Cell | None = None
+    __cell: Cell | None = None
     """
     Original cell, which may span multiple rows/columns.
     """
 
-    _row_offset: int | None = None
+    __row_offset: int | None = None
     """
     Row offset from the original cell.
     """
 
-    _col_offset: int | None = None
+    __col_offset: int | None = None
     """
     Column offset from the original cell.
     """
 
-    _origin_cell: VirtualCell | None = None
+    __origin_vcell: VirtualCell | None = None
     """
     Original cell from which this cell is derived, only applicable to spanned
     cells.
     """
 
-    _lines: list[str] | None = None
+    __lines: list[str] | None = None
     """
     Content of this cell as list of strings.
     """
 
-    _dangling_line: str | None = None
+    __dangling_line: str | None = None
     """
     Content line inserted in place of line separator for spanned rows.
-    """
-
-    _raw_lines: list[str] | None = None
-    """
-    List of raw lines, only applicable to origin cell of spanned cells.
     """
 
     def __init__(self, context: RenderContext, row_idx: int, col_idx: int):
@@ -199,16 +194,16 @@ class VirtualCell:
 
     @property
     def cell_is_set(self) -> bool:
-        return self._cell is not None
+        return self.__cell is not None
 
     @property
     def content_is_set(self) -> bool:
-        return self._lines is not None
+        return self.__lines is not None
 
     @property
     def is_origin(self) -> bool:
-        assert self._origin_cell is not None
-        return self is self._origin_cell
+        assert self.__origin_vcell is not None
+        return self is self.__origin_vcell
 
     @property
     def is_spanned(self) -> bool:
@@ -217,10 +212,10 @@ class VirtualCell:
     @property
     def cell(self) -> Cell:
         """
-        Get original cell.
+        Get origin cell.
         """
-        assert self._cell is not None
-        return self._cell
+        assert self.__cell is not None
+        return self.__cell
 
     @cached_property
     def effective_width(self) -> int:
@@ -249,24 +244,24 @@ class VirtualCell:
         """
         Get row offset from the original cell.
         """
-        assert self._row_offset is not None
-        return self._row_offset
+        assert self.__row_offset is not None
+        return self.__row_offset
 
     @property
     def col_offset(self) -> int:
         """
         Get column offset from the original cell.
         """
-        assert self._col_offset is not None
-        return self._col_offset
+        assert self.__col_offset is not None
+        return self.__col_offset
 
     @property
     def origin_cell(self) -> VirtualCell:
         """
         Get origin virtual cell.
         """
-        assert self._origin_cell is not None
-        return self._origin_cell
+        assert self.__origin_vcell is not None
+        return self.__origin_vcell
 
     @property
     def is_last_col(self) -> bool:
@@ -286,9 +281,11 @@ class VirtualCell:
     def lines(self) -> list[str]:
         """
         Get this cell's content as list of lines, ensuring it has been set.
+        If cell spans multiple rows/columns, this is a fragment of the content
+        in the origin cell.
         """
-        assert self._lines is not None
-        return self._lines
+        assert self.__lines is not None
+        return self.__lines
 
     @property
     def dangling_line(self) -> str | None:
@@ -296,37 +293,32 @@ class VirtualCell:
         Get this cell's dangling line, if any; only applicable for cells with
         spanned rows.
         """
-        return self._dangling_line
-
-    @property
-    def raw_lines(self) -> list[str]:
-        assert self._raw_lines is not None
-        return self._raw_lines
+        return self.__dangling_line
 
     def set_cell(
         self,
         cell: Cell,
         row_offset: int,
         col_offset: int,
-        origin_cell: VirtualCell,
+        origin_vcell: VirtualCell,
     ):
         """
         Populate with cell and any offset, if spanning multiple rows/columns.
         """
-        self._cell = cell
-        self._row_offset = row_offset
-        self._col_offset = col_offset
-        self._origin_cell = origin_cell
+        self.__cell = cell
+        self.__row_offset = row_offset
+        self.__col_offset = col_offset
+        self.__origin_vcell = origin_vcell
 
-    def set_content(self, lines: list[str]):
-        self._lines = lines
+    def set_lines(self, lines: list[str]):
+        """
+        Set content for this cell.
+        """
+        self.__lines = lines
 
     def set_dangling_line(self, line: str):
-        self._dangling_line = line
-
-    def get_content(self) -> Generator[str, None, None]:
         """
-        Get content of this cell, which may be a fragment of the original
-        cell's content based on width/height offsets.
+        Set cell content line to occupy a segment of a separator line. Only
+        applicable to cells which span multiple rows.
         """
-        yield from self._lines
+        self.__dangling_line = line

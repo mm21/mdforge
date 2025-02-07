@@ -208,14 +208,14 @@ class FrameTableVariant(BaseTableVariant):
         Render this table using the provided params.
         """
 
-        assert len(context.virtual_content_rows)
+        assert len(context.content_vrows)
 
-        if context.virtual_header_rows:
-            yield from self.__render_rows(
+        if context.header_vrows:
+            yield from self.__render_vrows(
                 context,
                 self.header_section,
-                context.virtual_header_rows,
-                next_row=context.virtual_content_rows[0],
+                context.header_vrows,
+                next_vrow=context.content_vrows[0],
                 include_upper_sep=True,
                 include_lower_sep=True,
                 align_lower_sep=True,
@@ -223,46 +223,38 @@ class FrameTableVariant(BaseTableVariant):
 
         # get last row from header and first row from footer in case any
         # corners need to be overridden due to column spanning
-        prev_row = (
-            context.virtual_header_rows[-1]
-            if context.virtual_header_rows
-            else None
-        )
-        next_row = (
-            context.virtual_footer_rows[0]
-            if context.virtual_footer_rows
-            else None
-        )
+        prev_vrow = context.header_vrows[-1] if context.header_vrows else None
+        next_vrow = context.footer_vrows[0] if context.footer_vrows else None
 
-        yield from self.__render_rows(
+        yield from self.__render_vrows(
             context,
             self.content_section,
-            context.virtual_content_rows,
-            prev_row=prev_row,
-            next_row=next_row,
-            include_upper_sep=context.virtual_header_rows is None,
-            include_lower_sep=context.virtual_footer_rows is None,
-            align_upper_sep=context.virtual_header_rows is None,
+            context.content_vrows,
+            prev_vrow=prev_vrow,
+            next_vrow=next_vrow,
+            include_upper_sep=context.header_vrows is None,
+            include_lower_sep=context.footer_vrows is None,
+            align_upper_sep=context.header_vrows is None,
         )
 
-        if context.virtual_footer_rows:
+        if context.footer_vrows:
             assert self.footer_section is not None
-            yield from self.__render_rows(
+            yield from self.__render_vrows(
                 context,
                 self.footer_section,
-                context.virtual_footer_rows,
-                prev_row=context.virtual_content_rows[-1],
+                context.footer_vrows,
+                prev_vrow=context.content_vrows[-1],
                 include_upper_sep=True,
                 include_lower_sep=True,
             )
 
-    def __render_rows(
+    def __render_vrows(
         self,
         context: RenderContext,
         section: SectionConfig,
-        virtual_rows: list[list[VirtualCell]],
-        prev_row: list[VirtualCell] | None = None,
-        next_row: list[VirtualCell] | None = None,
+        vrows: list[list[VirtualCell]],
+        prev_vrow: list[VirtualCell] | None = None,
+        next_vrow: list[VirtualCell] | None = None,
         include_upper_sep: bool = False,
         include_lower_sep: bool = False,
         align_upper_sep: bool = False,
@@ -273,13 +265,13 @@ class FrameTableVariant(BaseTableVariant):
         optional upper/lower separators.
         """
 
-        row_count = len(virtual_rows)
+        row_count = len(vrows)
         assert row_count > 0
 
         # render upper separator if applicable
         if include_upper_sep:
             corner_overrides = self.__get_corner_overrides(
-                context, prev_row=prev_row, next_row=virtual_rows[0]
+                context, prev_vrow=prev_vrow, next_vrow=vrows[0]
             )
             yield section._upper_sep.get_line(
                 context,
@@ -288,10 +280,10 @@ class FrameTableVariant(BaseTableVariant):
             )
 
         # render rows
-        for row_idx, row in enumerate(virtual_rows):
+        for row_idx, vrow in enumerate(vrows):
 
             # render this row
-            yield from self.__render_row(row)
+            yield from self.__render_vrow(vrow)
 
             # render middle separator, if not last row or have a single row
             # with rows separated by spaces
@@ -303,13 +295,13 @@ class FrameTableVariant(BaseTableVariant):
             if is_middle or has_trailing_line:
 
                 # get segment overrides from dangling lines
-                seg_overrides = [cell.dangling_line for cell in row]
+                seg_overrides = [cell.dangling_line for cell in vrow]
 
                 # get corner overrides from row spans for this/next rows
                 corner_overrides = self.__get_corner_overrides(
                     context,
-                    prev_row=row,
-                    next_row=virtual_rows[row_idx + 1] if is_middle else None,
+                    prev_vrow=vrow,
+                    next_vrow=vrows[row_idx + 1] if is_middle else None,
                 )
 
                 yield section.middle_sep.get_line(
@@ -321,7 +313,7 @@ class FrameTableVariant(BaseTableVariant):
         # render lower separator if applicable
         if include_lower_sep:
             corner_overrides = self.__get_corner_overrides(
-                context, prev_row=virtual_rows[-1], next_row=next_row
+                context, prev_vrow=vrows[-1], next_vrow=next_vrow
             )
             yield section._lower_sep.get_line(
                 context,
@@ -329,25 +321,25 @@ class FrameTableVariant(BaseTableVariant):
                 corner_overrides=corner_overrides,
             )
 
-    def __render_row(
-        self, row: list[VirtualCell]
+    def __render_vrow(
+        self, vrow: list[VirtualCell]
     ) -> Generator[str, None, None]:
         """
         Render a single row without any inter-row separator.
         """
 
         # get list of lines per column
-        row_lines = [list(cell.get_content()) for cell in row]
+        row_lines = [vcell.lines for vcell in vrow]
 
         # get max lines per column
         max_lines = max(len(lines) for lines in row_lines)
 
         # render each line
         for line_idx in range(max_lines):
-            yield self.__render_line(row, row_lines, line_idx)
+            yield self.__render_line(vrow, row_lines, line_idx)
 
     def __render_line(
-        self, row: list[VirtualCell], row_lines: list[list[str]], line_idx: int
+        self, vrow: list[VirtualCell], row_lines: list[list[str]], line_idx: int
     ):
         """
         Render a single line of a row.
@@ -357,24 +349,24 @@ class FrameTableVariant(BaseTableVariant):
         line = self.row_leading_sep
 
         # traverse each cell and get the next segment
-        for cell, cell_lines in zip(row, row_lines):
+        for vcell, cell_lines in zip(vrow, row_lines):
 
             # get base segment
             seg = cell_lines[line_idx] if line_idx < len(cell_lines) else ""
 
             # get width, including padding if aligning using spaces
             pad_offset = 2 if self.align_space else 0
-            width = cell.effective_width + pad_offset
+            width = vcell.effective_width + pad_offset
 
             # pad segment to effective width using appropriate alignment
-            align_char = self.__get_align_char(cell)
+            align_char = self.__get_align_char(vcell)
             padded_seg = f"{seg:{align_char}{width}}"
 
             # determine which separator to use after this cell
-            if cell.is_last_col:
+            if vcell.is_last_col:
                 # last cell in row
                 sep = self.row_trailing_sep
-            elif cell.cell.cspan == 1 or cell.is_last_col_span:
+            elif vcell.cell.cspan == 1 or vcell.is_last_col_span:
                 # non-spanned cell or last cell in spanned cells
                 sep = self.cell_sep
             else:
@@ -401,8 +393,8 @@ class FrameTableVariant(BaseTableVariant):
         self,
         context: RenderContext,
         *,
-        prev_row: list[VirtualCell] | None,
-        next_row: list[VirtualCell] | None,
+        prev_vrow: list[VirtualCell] | None,
+        next_vrow: list[VirtualCell] | None,
     ) -> list[bool]:
         """
         Get list of which inner corners to override with a normal line in
@@ -431,18 +423,18 @@ class FrameTableVariant(BaseTableVariant):
         +=====================+=======+=======+=======+
         """
 
-        def get_overrides(row: list[VirtualCell] | None) -> list[bool]:
+        def get_overrides(vrow: list[VirtualCell] | None) -> list[bool]:
             return (
                 [
-                    cell.cell.cspan > 1 and not cell.is_last_col_span
-                    for cell in row
+                    vcell.cell.cspan > 1 and not vcell.is_last_col_span
+                    for vcell in vrow
                 ]
-                if row
+                if vrow
                 else [True] * context.params.col_count
             )
 
-        prev_corner_overrides = get_overrides(prev_row)
-        next_corner_overrides = get_overrides(next_row)
+        prev_corner_overrides = get_overrides(prev_vrow)
+        next_corner_overrides = get_overrides(next_vrow)
 
         return [
             prev and next

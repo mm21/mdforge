@@ -21,29 +21,29 @@ class RenderContext:
     params: TableParams
 
     @cached_property
-    def virtual_content_rows(self) -> list[list[VirtualCell]]:
+    def content_vrows(self) -> list[list[VirtualCell]]:
         """
         Get content rows as virtual cells.
         """
-        return self.__get_virtual_rows(self.params.norm_content_rows)
+        return self.__get_vrows(self.params.norm_content_rows)
 
     @cached_property
-    def virtual_header_rows(self) -> list[list[VirtualCell]] | None:
+    def header_vrows(self) -> list[list[VirtualCell]] | None:
         """
         Get header rows as virtual cells.
         """
         if self.params.norm_header_rows is None:
             return None
-        return self.__get_virtual_rows(self.params.norm_header_rows)
+        return self.__get_vrows(self.params.norm_header_rows)
 
     @cached_property
-    def virtual_footer_rows(self) -> list[list[VirtualCell]]:
+    def footer_vrows(self) -> list[list[VirtualCell]]:
         """
         Get footer rows as virtual cells.
         """
         if self.params.norm_footer_rows is None:
             return None
-        return self.__get_virtual_rows(self.params.norm_footer_rows)
+        return self.__get_vrows(self.params.norm_footer_rows)
 
     @cached_property
     def col_widths(self) -> list[int]:
@@ -132,9 +132,7 @@ class RenderContext:
             # not the last spanned column, this should be its width
             return div_width
 
-    def __get_virtual_rows(
-        self, rows: list[list[Cell]]
-    ) -> list[list[VirtualCell]]:
+    def __get_vrows(self, rows: list[list[Cell]]) -> list[list[VirtualCell]]:
         """
         Get virtual cells from cells.
         """
@@ -142,7 +140,7 @@ class RenderContext:
         row_count, col_count = len(rows), self.params.col_count
 
         # pre-allocate virtual rows with required dimensions
-        virtual_rows: list[list[VirtualCell]] = [
+        vrows: list[list[VirtualCell]] = [
             [
                 VirtualCell(self, row_idx, col_idx)
                 for col_idx in range(col_count)
@@ -155,8 +153,8 @@ class RenderContext:
         ):
             cell = rows[row_idx][col_idx]
 
-            if virtual_rows[row_idx][col_idx].cell_is_set:
-                assert virtual_rows[row_idx][col_idx].cell is cell
+            if vrows[row_idx][col_idx].cell_is_set:
+                assert vrows[row_idx][col_idx].cell is cell
                 continue
 
             # traverse this cell along with all spanned ones
@@ -166,62 +164,60 @@ class RenderContext:
 
                 # get virtual cell at this location, which should not have
                 # a cell yet
-                virtual_cell = virtual_rows[row_idx + row_offset][
-                    col_idx + col_offset
-                ]
-                assert not virtual_cell.cell_is_set
+                vcell = vrows[row_idx + row_offset][col_idx + col_offset]
+                assert not vcell.cell_is_set
 
                 # get origin virtual cell
-                origin_cell = virtual_rows[row_idx][col_idx]
+                origin_vcell = vrows[row_idx][col_idx]
 
                 # set this cell
-                virtual_cell.set_cell(cell, row_offset, col_offset, origin_cell)
+                vcell.set_cell(cell, row_offset, col_offset, origin_vcell)
 
         # validate: ensure each virtual cell got set
         for row_idx, col_idx in itertools.product(
             range(row_count), range(col_count)
         ):
-            assert virtual_rows[row_idx][col_idx].cell_is_set
+            assert vrows[row_idx][col_idx].cell_is_set
 
         # set content lines
-        for row in virtual_rows:
-            for virtual_cell in row:
+        for vrow in vrows:
+            for vcell in vrow:
 
-                if not virtual_cell.is_spanned:
+                if not vcell.is_spanned:
                     # no spanned cells, just set content
-                    virtual_cell.set_content(
-                        virtual_cell.cell._get_content(
-                            self.flavor, width=virtual_cell.effective_width
+                    vcell.set_lines(
+                        vcell.cell._get_content(
+                            self.flavor, width=vcell.effective_width
                         )
                     )
                     continue
 
-                elif not virtual_cell.is_origin:
+                elif not vcell.is_origin:
                     # spanned cells, but this is not origin cell
                     continue
 
                 # allocate content for cell and all spanned cells
-                width = self.__get_spanned_width(row, virtual_cell)
-                self.__allocate_content(virtual_rows, virtual_cell, width)
+                width = self.__get_spanned_width(vrow, vcell)
+                self.__allocate_content(vrows, vcell, width)
 
         # validate: ensure contents got set
         for row_idx, col_idx in itertools.product(
             range(row_count), range(col_count)
         ):
-            assert virtual_rows[row_idx][col_idx].content_is_set
+            assert vrows[row_idx][
+                col_idx
+            ].content_is_set, f"Not set at {row_idx}, {col_idx}"
 
-        return virtual_rows
+        return vrows
 
-    def __get_spanned_width(
-        self, row: list[VirtualCell], virtual_cell: VirtualCell
-    ):
+    def __get_spanned_width(self, row: list[VirtualCell], vcell: VirtualCell):
         # add up raw widths from all spanned columns
         width: int = 0
-        for col_offset in range(virtual_cell.cell.cspan):
-            width += row[virtual_cell.col_idx + col_offset].effective_width
+        for col_offset in range(vcell.cell.cspan):
+            width += row[vcell.col_idx + col_offset].effective_width
         return width
 
-    def __get_row_height(self, row: list[VirtualCell]) -> int | None:
+    def __get_vrow_height(self, vrow: list[VirtualCell]) -> int | None:
         """
         Get max height (number of lines) of this row, based only on cells which
         don't span multiple rows. Returns `None` if there are no such cells
@@ -229,118 +225,125 @@ class RenderContext:
         """
 
         # collect cells which don't span rows
-        non_rspan_cells = [cell for cell in row if cell.cell.rspan == 1]
+        non_rspan_vcells = [vcell for vcell in vrow if vcell.cell.rspan == 1]
 
-        if not len(non_rspan_cells):
+        if not len(non_rspan_vcells):
             # all cells have spanned rows
             return None
 
         # list of row heights
         heights: list[int] = []
 
-        for cell in non_rspan_cells:
+        for vcell in non_rspan_vcells:
 
-            if not cell.is_origin:
+            if not vcell.is_origin:
                 # skip if not origin cell, we would have already counted it
                 continue
-            elif cell.content_is_set:
+            elif vcell.content_is_set:
                 # if already have content, get height
-                heights.append(len(cell.lines))
+                heights.append(len(vcell.lines))
                 continue
 
             # get total width of this cell and add height of resulting content
             # - content for spanned cells has not been set yet
-            width = self.__get_spanned_width(row, cell)
+            width = self.__get_spanned_width(vrow, vcell)
             heights.append(
-                len(cell.cell._get_content(self.flavor, width=width))
+                len(vcell.cell._get_content(self.flavor, width=width))
             )
 
         return max(heights) if len(heights) else None
 
     def __allocate_content(
         self,
-        rows: list[list[VirtualCell]],
-        virtual_cell: VirtualCell,
+        vrows: list[list[VirtualCell]],
+        vcell: VirtualCell,
         width: int,
     ):
         """
         Allocate the content for this cell across all the rows/columns it
         spans, wrapping content at the given width.
         """
-        assert virtual_cell.row_idx + virtual_cell.cell.rspan <= len(rows)
+        assert vcell.row_idx + vcell.cell.rspan <= len(vrows)
 
         # get content, possibly wrapping at width of all spanned cells
         # - content is cached, so need to make copy
-        content = virtual_cell.cell._get_content(
-            self.flavor, width=width
-        ).copy()
+        content = vcell.cell._get_content(self.flavor, width=width).copy()
 
         # traverse each virtual row
-        for row_offset in range(virtual_cell.cell.rspan):
+        for row_offset in range(vcell.cell.rspan):
 
             # select this row
-            row = rows[virtual_cell.row_idx + row_offset]
+            vrow = vrows[vcell.row_idx + row_offset]
 
-            # select subset of row which is spanned
-            cells = row[
-                virtual_cell.col_idx : virtual_cell.col_idx
-                + virtual_cell.cell.cspan
-            ]
+            # allocate content for this row
+            self.__allocate_row_content(vrow, vcell, row_offset, content)
 
-            # get list of widths for each spanned cell
-            cell_widths = [cell.effective_width for cell in cells]
+    def __allocate_row_content(
+        self,
+        vrow: list[VirtualCell],
+        vcell: VirtualCell,
+        row_offset: int,
+        content: list[str],
+    ):
+        """
+        Allocate content from the vcell amongst its spanned cells for this row.
+        """
 
-            # create list of lines per cell in this spanned row
-            cell_lines: list[list[str]] = [
-                [] for _ in range(virtual_cell.cell.cspan)
-            ]
+        # select subset of row which is spanned
+        vcells = vrow[vcell.col_idx : vcell.col_idx + vcell.cell.cspan]
 
-            # get max height of this row
-            max_height = self.__get_row_height(row)
+        # get list of widths for each spanned cell
+        vcell_widths = [vcell.effective_width for vcell in vcells]
 
-            # loop over lines until expected height, if there is one
-            line_idx = 0
-            last_row = row_offset == virtual_cell.cell.rspan - 1
+        # create list of lines per cell in this spanned row
+        vcell_lines: list[list[str]] = [[] for _ in range(vcell.cell.cspan)]
 
-            while (line_idx < (max_height or 1)) or (len(content) and last_row):
-                line_idx += 1
+        # get max height of this row
+        max_height = self.__get_vrow_height(vrow)
 
-                # consume next line of content
-                line = content.pop(0) if len(content) else ""
+        # loop over lines until expected height, if there is one
+        line_idx = 0
+        last_row = row_offset == vcell.cell.rspan - 1
 
-                # divide this line among each cell in row
-                segs = _split_line(line, cell_widths)
+        while (line_idx < (max_height or 1)) or (len(content) and last_row):
+            line_idx += 1
 
-                # append segments to each list of lines
-                assert len(cell_lines) == len(segs)
-                for lines, seg in zip(cell_lines, segs):
-                    lines.append(seg)
+            # consume next line of content
+            line = content.pop(0) if len(content) else ""
 
-                if len(content) == 0:
-                    # consumed all content
-                    break
+            # divide this line among each cell in row
+            segs = _split_line(line, vcell_widths)
 
-            # set content for each cell in row
-            assert len(cells) == len(cell_lines)
-            for cell, lines in zip(cells, cell_lines):
-                cell.set_content(lines)
+            # append segments to each list of lines
+            assert len(vcell_lines) == len(segs)
+            for lines, seg in zip(vcell_lines, segs):
+                lines.append(seg)
 
-            # if this is isn't the last row, set dangling line
-            if row_offset < (virtual_cell.cell.rspan - 1):
+            if len(content) == 0:
+                # consumed all content
+                break
 
-                segs: list[str]
+        # set content for each cell in row
+        assert len(vcells) == len(vcell_lines)
+        for vcell_iter, lines in zip(vcells, vcell_lines):
+            vcell_iter.set_lines(lines)
 
-                if len(content):
-                    # still content, so consume the next line
-                    segs = _split_line(content.pop(0), cell_widths)
-                else:
-                    # reached end of content, use empty strings for segments
-                    segs = [""] * len(cell_widths)
+        # if this is isn't the last row, set dangling line
+        if not last_row:
 
-                # set dangling lines
-                assert len(cells) == len(segs)
-                for cell, seg in zip(cells, segs):
-                    cell.set_dangling_line(seg)
+            segs: list[str]
+
+            if len(content):
+                # still content, so consume the next line
+                segs = _split_line(content.pop(0), vcell_widths)
+            else:
+                # reached end of content, use empty strings for segments
+                segs = [""] * len(vcell_widths)
+
+            # set dangling lines
+            assert len(vcells) == len(segs)
+            for vcell_iter, seg in zip(vcells, segs):
+                vcell_iter.set_dangling_line(seg)
 
 
 def _split_line(line: str, widths: list[int]) -> list[str]:
