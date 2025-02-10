@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Generator
 
 from ..._context import RenderContext
-from ...cell import VirtualCell
+from ...cell import AlignType, VirtualCell
 from ..flavor import BaseTableVariant
 
 __all__ = [
@@ -89,64 +89,28 @@ class SeparatorConfig:
         # start with left corner
         line = left_corner
 
-        for col_idx, width, align, seg_override, corner_override in zip(
-            range(context.params.col_count),
+        # traverse each column and get segments
+        for width, col_idx, align, corner_override in zip(
             context.col_widths,
+            range(context.params.col_count),
             context.params.col_aligns,
-            seg_overrides_,
             corner_overrides_,
         ):
             is_last_col = col_idx == context.params.col_count - 1
-
             inner_corner = self.line if corner_override else self.__inner_corner
 
             if align_char and do_align:
-
                 # align based on alignment chars on either side of line
                 # - can only be a solid line
-                assert seg_override is None
-
-                left_char = (
-                    align_char if align in ["left", "center"] else self.line
+                assert seg_overrides_[col_idx] is None
+                line += self.__get_aligned_seg(
+                    width, is_last_col, inner_corner, align, align_char
                 )
-                right_char = (
-                    align_char if align in ["right", "center"] else self.line
-                )
-
-                line += f"{left_char}{self.line * width}{right_char}"
-
-                if not is_last_col:
-                    line += inner_corner
             else:
                 # solid or dangling line
-
-                # get next override segment, if any
-                next_override_seg = (
-                    seg_overrides_[col_idx + 1] if not is_last_col else None
+                line += self.__get_seg(
+                    width, is_last_col, inner_corner, col_idx, seg_overrides_
                 )
-
-                # check if this segment spans to the next one
-                span_next = all(
-                    seg is not None for seg in [seg_override, next_override_seg]
-                )
-
-                # adjust width if necessary
-                if seg_override is not None and is_last_col:
-                    width_offset = 0
-                else:
-                    width_offset = 2 if span_next or seg_override is None else 1
-
-                width += width_offset
-
-                if seg_override is not None:
-                    line += seg_override.ljust(width)
-                else:
-                    line += self.line * width
-
-                if not is_last_col and not span_next:
-                    line += inner_corner
-                    if next_override_seg is not None:
-                        line += " "
 
         # end with right corner
         line += right_corner
@@ -172,6 +136,78 @@ class SeparatorConfig:
     @property
     def __default_corner(self) -> str:
         return (self.corner if self.corner is not None else self.line) or ""
+
+    def __get_aligned_seg(
+        self,
+        width: int,
+        is_last_col: bool,
+        inner_corner: str,
+        align: AlignType,
+        align_char: str,
+    ) -> str:
+        """
+        Get line segment with alignment set by characters adjacent to corners.
+        Can only be used for line between header and content or (if no header)
+        the first line before content. Therefore this line cannot have any
+        dangling content segments.
+        """
+
+        left_char = align_char if align in ["left", "center"] else self.line
+        right_char = align_char if align in ["right", "center"] else self.line
+
+        seg = f"{left_char}{self.line * width}{right_char}"
+
+        if not is_last_col:
+            seg += inner_corner
+
+        return seg
+
+    def __get_seg(
+        self,
+        width: int,
+        is_last_col: bool,
+        inner_corner: str,
+        col_idx: int,
+        seg_overrides: list[str | None],
+    ):
+        """
+        Get line segment, either a solid line or dangling content from a cell
+        spanning multiple rows.
+        """
+
+        seg_override = seg_overrides[col_idx]
+
+        # get next override segment, if any
+        next_seg_override = (
+            seg_overrides[col_idx + 1] if not is_last_col else None
+        )
+
+        # check if this segment spans to the next one
+        span_next = all(
+            seg is not None for seg in [seg_override, next_seg_override]
+        )
+
+        # adjust width if necessary to reach next corner
+        if seg_override is None or not is_last_col:
+            width += 2 if span_next or seg_override is None else 1
+
+        # create segment of required width using line char or override
+        seg = (
+            self.line * width
+            if seg_override is None
+            else seg_override.ljust(width)
+        )
+
+        # append next corner if necessary
+        if not is_last_col and not span_next:
+            seg += inner_corner
+
+            if next_seg_override is not None:
+                # next segment will be overridden with dangling content, so
+                # add space after corner
+                seg += " "
+
+        return seg
 
 
 @dataclass(frozen=True)
