@@ -1,4 +1,4 @@
-from pytest_powerpack import ComparisonFiles, compare_files
+from pytest import mark
 
 from mdforge import Document, Heading, List, ListItem, Paragraph, Section
 
@@ -51,15 +51,10 @@ def test_section(doc: Document):
     doc += [sec1, sec2, h3]
 
 
-def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
+@mark.frontmatter({"title": "Doc 1"})
+@mark.elements([(Paragraph, ("Hello, world!",), {})])
+def test_frontmatter(doc: Document):
 
-    frontmatter = {
-        "title": "Doc 1",
-    }
-
-    doc = Document(
-        frontmatter=frontmatter, elements=[Paragraph("Hello, world!")]
-    )
-
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
+    assert doc._frontmatter == {"title": "Doc 1"}
+    assert len(doc._elements) == 1
+    assert isinstance(doc._elements[0], Paragraph)
