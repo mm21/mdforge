@@ -1,6 +1,3 @@
-from pytest import mark
-from pytest_powerpack import ComparisonFiles, compare_files
-
 from mdforge import Cell, Document, Section, Table
 
 ROW_COUNT = 3
@@ -18,8 +15,7 @@ FOOTER = [f"Footer\n{col_idx}" for col_idx in range(COL_COUNT)]
 WIDTHS = [15 + col_idx for col_idx in range(COL_COUNT)]
 
 
-@mark.powerpack_compare_file("doc.md")
-def test_variants(powerpack_comparison_files: ComparisonFiles):
+def test_variants(doc: Document):
     """
     Test inline and block variants.
     """
@@ -28,7 +24,7 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
         "Block tables"
     )
 
-    doc = Document(elements=[inline_section, block_section])
+    doc += [inline_section, block_section]
 
     def add_table(table: Table, content_dims: tuple[int, int], desc: str):
 
@@ -86,12 +82,8 @@ def test_variants(powerpack_comparison_files: ComparisonFiles):
                     f"With header and footer, {row_count} rows",
                 )
 
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
 
-
-@mark.powerpack_compare_file("doc.md")
-def test_widths(powerpack_comparison_files: ComparisonFiles):
+def test_widths(doc: Document):
     """
     Test explicitly provided widths with no wrapping.
     """
@@ -105,20 +97,14 @@ def test_widths(powerpack_comparison_files: ComparisonFiles):
         for row in ROWS
     ]
 
-    doc = Document()
-
     for block in [False, True]:
         doc += [
             Section(f"Block: {block}"),
             Table(rows, header=HEADER, align=ALIGN, widths=widths, block=block),
         ]
 
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
 
-
-@mark.powerpack_compare_file("doc.md")
-def test_wrap(powerpack_comparison_files: ComparisonFiles):
+def test_wrap(doc: Document):
     """
     Test cell content wrapping when explicit widths are given.
     """
@@ -131,20 +117,14 @@ def test_wrap(powerpack_comparison_files: ComparisonFiles):
         for row in ROWS
     ]
 
-    doc = Document()
-
     for block in [False, True]:
         doc += [
             Section(f"Block: {block}"),
             Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
         ]
 
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
 
-
-@mark.powerpack_compare_file("doc.md")
-def test_span(powerpack_comparison_files: ComparisonFiles):
+def test_span(doc: Document):
     """
     Test cell spanning.
     """
@@ -179,6 +159,4 @@ def test_span(powerpack_comparison_files: ComparisonFiles):
     assert table._params.content_row_count == ROW_COUNT
     assert table._params.col_count == COL_COUNT
 
-    doc = Document(elements=[table])
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
+    doc += table

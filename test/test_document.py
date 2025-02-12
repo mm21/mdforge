@@ -1,13 +1,9 @@
-from pytest import mark
 from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import Document, Heading, List, ListItem, Paragraph, Section
 
 
-@mark.powerpack_compare_file("doc.md")
-def test_doc1(powerpack_comparison_files: ComparisonFiles):
-
-    doc = Document()
+def test_doc1(doc: Document):
 
     doc += Heading("Test document 1")
     doc += Paragraph("Hello, world!")
@@ -37,12 +33,8 @@ def test_doc1(powerpack_comparison_files: ComparisonFiles):
         ]
     )
 
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
 
-
-@mark.powerpack_compare_file("doc.md")
-def test_section(powerpack_comparison_files: ComparisonFiles):
+def test_section(doc: Document):
 
     sec1 = Section("Section 1")
     sec1 += Paragraph("Hello, world!")
@@ -56,22 +48,18 @@ def test_section(powerpack_comparison_files: ComparisonFiles):
 
     h3 = Heading("Heading 3")
 
-    doc = Document()
     doc += [sec1, sec2, h3]
 
-    doc.render(powerpack_comparison_files.out_file)
-    compare_files(powerpack_comparison_files)
 
-
-@mark.powerpack_compare_file("doc.md")
 def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
 
     frontmatter = {
         "title": "Doc 1",
     }
 
-    doc = Document(frontmatter=frontmatter)
-    doc += Paragraph("Hello, world!")
+    doc = Document(
+        frontmatter=frontmatter, elements=[Paragraph("Hello, world!")]
+    )
 
     doc.render(powerpack_comparison_files.out_file)
     compare_files(powerpack_comparison_files)
