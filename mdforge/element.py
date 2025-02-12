@@ -12,6 +12,10 @@ from .types import FlavorType
 if TYPE_CHECKING:
     from ._container import BaseContainer
 
+__all__ = [
+    "BaseElement",
+]
+
 
 class BaseElement(ABC):
 
