@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+import subprocess
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generator, cast
 
-from pytest import Config, FixtureRequest, Item, fail, fixture, mark
+from pytest import Config, FixtureRequest, Item, Parser, fail, fixture, mark
 
 if TYPE_CHECKING:
     from pytest_powerpack import ComparisonFiles
@@ -24,6 +26,29 @@ def pytest_configure(config: Config):
     config.addinivalue_line(
         "markers",
         "elements: Pass elements to Document constructor",
+    )
+
+
+def pytest_addoption(parser: Parser):
+    parser.addoption(
+        "--html",
+        action="store_true",
+        default=False,
+        help="Generate .html from .md outputs",
+    )
+
+    parser.addoption(
+        "--latex",
+        action="store_true",
+        default=False,
+        help="Generate .latex from .md outputs",
+    )
+
+    parser.addoption(
+        "--pdf",
+        action="store_true",
+        default=False,
+        help="Generate .pdf from .md outputs",
     )
 
 
@@ -80,3 +105,42 @@ def doc(
         pytest_powerpack.compare_files(powerpack_comparison_files)
     except AssertionError as e:
         fail(f"Document comparison failed: {e}", pytrace=True)
+
+    # additionally run pandoc if flags passed
+    html = bool(request.config.getoption("--html"))
+    latex = bool(request.config.getoption("--latex"))
+    pdf = bool(request.config.getoption("--pdf"))
+
+    if any([html, latex, pdf]):
+        _run_pandoc(
+            powerpack_comparison_files.out_file, html=html, latex=latex, pdf=pdf
+        )
+
+
+def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):
+    """
+    Run pandoc to generate the given artifacts.
+    """
+
+    pandoc_path = md_path.parent / "pandoc"
+    pandoc_path.mkdir(parents=True, exist_ok=True)
+
+    base_cmd = [
+        "pandoc",
+        str(md_path),
+        "-f",
+        "markdown+multiline_tables+grid_tables",
+    ]
+
+    formats = (
+        (["html"] if html else [])
+        + (["latex"] if latex else [])
+        + (["pdf"] if pdf else [])
+    )
+
+    for f in formats:
+        out_path = pandoc_path / f"{md_path.stem}.{f}"
+        cmd = base_cmd + ["-t", f, "-o", str(out_path)]
+
+        logging.info(f"Running: {' '.join(cmd)}")
+        subprocess.check_call(cmd)
