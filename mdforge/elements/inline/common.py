@@ -2,7 +2,7 @@
 Common inline elements.
 """
 
-from ..._containers import BaseInlineElementContainerMixin
+from ..._containers import InlineElementContainerMixin
 from ...element import BaseInlineElement
 from ...types import FlavorType
 
@@ -16,7 +16,7 @@ __all__ = [
 
 
 class BaseInlineElementContainer(
-    BaseInlineElement, BaseInlineElementContainerMixin
+    BaseInlineElement, InlineElementContainerMixin
 ):
     """
     Inline element containing text or a list of inline elements.
@@ -62,3 +62,6 @@ class Strikethrough(BaseInlineElementContainer):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"~~{super()._render_inline(flavor)}~~"
+
+
+# TODO: span

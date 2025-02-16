@@ -4,25 +4,26 @@ Common block elements.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Generator
 
-from ..._containers import BaseInlineElementContainerMixin
-from ...element import BaseBlockElement
+from ..._containers import InlineElementContainerMixin
+from ...element import BaseBlockElement, BaseInlineElement
 from ...types import FlavorType
 
 __all__ = [
     "Heading",
     "Paragraph",
+    "BaseList",
+    "NumberedList",
     "BulletList",
     "ListItem",
     "ListItemType",
 ]
 
-INDENT = " " * 2
 
-
-type ListItemType = str | ListItem
+type ListItemType = str | BaseInlineElement | ListItem
 
 
 @dataclass
@@ -47,49 +48,94 @@ class Heading(BaseBlockElement):
         yield f"{'#' * level} {self.text}"
 
 
-class Paragraph(BaseBlockElement, BaseInlineElementContainerMixin):
+class Paragraph(BaseBlockElement, InlineElementContainerMixin):
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield self._render_elements(flavor)
 
 
 @dataclass
-class ListItem:
-    text: str
-
-    # TODO: support nested lists, e.g. numbered list in bullet list
-    sub_items: list[ListItemType] = field(default_factory=list)
-
-
-@dataclass
-class BulletList(BaseBlockElement):
+class BaseList(BaseBlockElement, ABC):
+    """
+    List which can be either ordered or bulleted.
+    """
 
     items: list[ListItemType]
 
-    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
+    @property
+    @abstractmethod
+    def _marker(self) -> str:
+        """
+        Character to indicate an item.
+        """
+        ...
+
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
 
         def do_render(
-            items: list[ListItemType], depth: int
+            items: list[ListItemType], depth: int, marker: str
         ) -> Generator[str, None, None]:
+
+            indent_spaces = len(marker) + 1
+            next_depth = indent_spaces + depth
+
             for item in items:
-                assert isinstance(item, str) or isinstance(item, ListItem)
 
-                text: str
-                sub_items: list[ListItemType]
+                text: str | BaseInlineElement
+                sub_items: list[ListItemType] | BaseList
 
-                text, sub_items = (
-                    (item.text, item.sub_items)
-                    if isinstance(item, ListItem)
-                    else (item, [])
-                )
+                if isinstance(item, str):
+                    text, sub_items = item, []
+                elif isinstance(item, BaseInlineElement):
+                    text, sub_items = item._render_inline(flavor), []
+                elif isinstance(item, ListItem):
+                    text, sub_items = item.text, item.sub_items
+                else:
+                    raise ValueError(
+                        f"Unexpected list item type: {item} ({type(item)})"
+                    )
 
-                assert isinstance(text, str)
-                assert isinstance(sub_items, list)
+                if isinstance(text, BaseInlineElement):
+                    text = text._render_inline(flavor)
 
-                # render item
-                yield f"{INDENT * depth}- {text}"
+                assert isinstance(text, str), f"got: {text} ({type(text)})"
+
+                # render item text
+                yield f"{' ' * depth}{marker} {text}"
 
                 # render any sub-items at next indentation depth
-                yield from do_render(sub_items, depth + 1)
+                if isinstance(sub_items, BaseList):
+                    yield from do_render(
+                        sub_items.items, next_depth, sub_items._marker
+                    )
+                else:
+                    assert isinstance(sub_items, list)
+                    yield from do_render(sub_items, next_depth, marker)
 
-        yield from do_render(self.items, 0)
+        yield from do_render(self.items, 0, self._marker)
+
+
+class NumberedList(BaseList):
+    """
+    Numbered list.
+    """
+
+    @property
+    def _marker(self) -> str:
+        return "1."
+
+
+class BulletList(BaseList):
+    """
+    Bullet point list.
+    """
+
+    @property
+    def _marker(self) -> str:
+        return "-"
+
+
+@dataclass
+class ListItem:
+    text: str | BaseInlineElement
+    sub_items: list[ListItemType] | BaseList = field(default_factory=list)

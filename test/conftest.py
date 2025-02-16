@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generator, cast
 
-from pytest import Config, FixtureRequest, Item, Parser, fail, fixture, mark
+from pytest import Config, FixtureRequest, Item, Parser, fixture, mark
 
 if TYPE_CHECKING:
     from pytest_powerpack import ComparisonFiles
@@ -99,12 +99,9 @@ def doc(
     doc = Document(frontmatter=frontmatter, elements=elements)
     yield doc
 
-    # consider any failures as test failures instead of teardown failures
-    try:
-        doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
-        pytest_powerpack.compare_files(powerpack_comparison_files)
-    except AssertionError as e:
-        fail(f"Document comparison failed: {e}", pytrace=True)
+    # render and compare output
+    doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
+    pytest_powerpack.compare_files(powerpack_comparison_files)
 
     # additionally run pandoc if flags passed
     html = bool(request.config.getoption("--html"))

@@ -1,6 +1,16 @@
 from pytest import mark
 
-from mdforge import BulletList, Document, Heading, ListItem, Paragraph, Section
+from mdforge import (
+    BulletList,
+    Document,
+    Emph,
+    Heading,
+    ListItem,
+    NumberedList,
+    Paragraph,
+    Section,
+    Strong,
+)
 
 from .conftest import unused
 
@@ -14,7 +24,7 @@ def test_doc1(doc: Document):
         [
             "a",
             ListItem(
-                "b",
+                Strong("b (strong)"),
                 [
                     "b1",
                     "b2",
@@ -32,6 +42,25 @@ def test_doc1(doc: Document):
                     "c2",
                 ],
             ),
+            ListItem(
+                "d",
+                NumberedList(
+                    [
+                        "d1",
+                        "d2",
+                        "d3",
+                    ]
+                ),
+            ),
+        ]
+    )
+
+    doc += Heading("Numbered list", 2)
+    doc += NumberedList(
+        [
+            Emph("a (emph)"),
+            ListItem("b", ["b1", "b2", "b3"]),
+            ListItem("c", BulletList(["c1", "c2", "c3"])),
         ]
     )
 

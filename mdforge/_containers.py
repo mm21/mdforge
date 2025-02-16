@@ -11,7 +11,7 @@ from .types import FlavorType
 
 __all__ = [
     "BaseBlockElementContainer",
-    "BaseInlineElementContainerMixin",
+    "InlineElementContainerMixin",
 ]
 
 
@@ -110,7 +110,7 @@ class BaseBlockElementContainer(BaseBlockElement):
             c.__set_level(level + self._level_inc)
 
 
-class BaseInlineElementContainerMixin:
+class InlineElementContainerMixin:
     """
     Mixin to encapsulate element which contains text or a list of inline
     elements.
