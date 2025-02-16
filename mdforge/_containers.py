@@ -6,11 +6,16 @@ from __future__ import annotations
 
 from typing import Generator, Iterable, Self
 
-from .element import BaseBlockElement, BaseElement
+from .element import BaseBlockElement, BaseElement, BaseInlineElement
 from .types import FlavorType
 
+__all__ = [
+    "BaseBlockElementContainer",
+    "BaseInlineElementContainerMixin",
+]
 
-class BaseContainer(BaseBlockElement):
+
+class BaseBlockElementContainer(BaseBlockElement):
     """
     Provides functionality to add and contain block elements.
     """
@@ -30,7 +35,7 @@ class BaseContainer(BaseBlockElement):
     List of nested elements.
     """
 
-    __containers: list[BaseContainer]
+    __containers: list[BaseBlockElementContainer]
     """
     List of nested containers; a subset of `_elements`.
     """
@@ -81,10 +86,10 @@ class BaseContainer(BaseBlockElement):
         element._container = self
 
         # if element is also a container, bind it
-        if isinstance(element, BaseContainer):
+        if isinstance(element, BaseBlockElementContainer):
             self.__bind_container(element)
 
-    def __bind_container(self, container: BaseContainer):
+    def __bind_container(self, container: BaseBlockElementContainer):
         """
         Bind another container to this one.
         """
@@ -103,3 +108,49 @@ class BaseContainer(BaseBlockElement):
 
         for c in self.__containers:
             c.__set_level(level + self._level_inc)
+
+
+class BaseInlineElementContainerMixin:
+    """
+    Mixin to encapsulate element which contains text or a list of inline
+    elements.
+    """
+
+    __elements: list[BaseInlineElement]
+    __auto_space: bool
+
+    def __init__(
+        self, *elements: str | BaseInlineElement, auto_space: bool = False
+    ):
+        self.__elements = self.__normalize_elements(list(elements))
+        self.__auto_space = auto_space
+
+    def _render_elements(self, flavor: FlavorType) -> str:
+        sep = " " if self.__auto_space else ""
+        return sep.join(
+            element._render_inline(flavor) for element in self.__elements
+        )
+
+    def __normalize_elements(
+        self, raw_elements: list[str | BaseInlineElement]
+    ) -> list[BaseInlineElement]:
+        """
+        Normalize inline elements, creating text elements from strings as
+        necessary.
+        """
+
+        from .elements.inline.common import Text
+
+        elements: list[BaseInlineElement] = []
+
+        for element in raw_elements:
+            if isinstance(element, BaseInlineElement):
+                elements.append(element)
+            else:
+                if not isinstance(element, str):
+                    raise ValueError(
+                        f"Invalid element, must be str or inline element: {element}"
+                    )
+                elements.append(Text(element))
+
+        return elements

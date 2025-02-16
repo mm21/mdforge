@@ -5,7 +5,7 @@ heading management.
 
 from __future__ import annotations
 
-from ..._container import BaseContainer
+from ..._containers import BaseBlockElementContainer
 from ...element import BaseElement
 from .common import Heading
 
@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class Section(BaseContainer):
+class Section(BaseBlockElementContainer):
 
     __heading: Heading | None
 

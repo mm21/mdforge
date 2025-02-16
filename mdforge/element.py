@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Generator
 from .types import FlavorType
 
 if TYPE_CHECKING:
-    from ._container import BaseContainer
+    from ._containers import BaseBlockElementContainer
 
 __all__ = [
     "BaseElement",
@@ -21,17 +21,17 @@ __all__ = [
 
 class BaseElement(ABC):
 
-    __container: BaseContainer | None = None
+    __container: BaseBlockElementContainer | None = None
 
     @property
-    def _container(self) -> BaseContainer:
+    def _container(self) -> BaseBlockElementContainer:
         assert (
             self.__container
         ), f"Element has not been placed in a container: {self}"
         return self.__container
 
     @_container.setter
-    def _container(self, container: BaseContainer):
+    def _container(self, container: BaseBlockElementContainer):
         assert self.__container is None
         self.__container = container
 

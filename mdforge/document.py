@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-from ._container import BaseContainer
+from ._containers import BaseBlockElementContainer
 from .element import BaseElement
 from .types import FlavorType
 
@@ -20,7 +20,7 @@ __all__ = [
 ROOT_LEVEL: int = 1
 
 
-class Document(BaseContainer):
+class Document(BaseBlockElementContainer):
     """
     Encapsulates a Markdown document. Add elements using the `+=` operator.
     """

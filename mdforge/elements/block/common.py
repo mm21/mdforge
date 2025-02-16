@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Generator
 
+from ..._containers import BaseInlineElementContainerMixin
 from ...element import BaseBlockElement
 from ...types import FlavorType
 
@@ -46,16 +47,10 @@ class Heading(BaseBlockElement):
         yield f"{'#' * level} {self.text}"
 
 
-@dataclass
-class Paragraph(BaseBlockElement):
+class Paragraph(BaseBlockElement, BaseInlineElementContainerMixin):
 
-    lines: str | list[str]
-
-    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
-        lines = [self.lines] if isinstance(self.lines, str) else self.lines
-        assert all(isinstance(l, str) for l in lines)
-
-        yield from lines
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        yield self._render_elements(flavor)
 
 
 @dataclass
