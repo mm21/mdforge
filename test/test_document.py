@@ -1,14 +1,16 @@
 from pytest import mark
 
-from mdforge import Document, Heading, List, ListItem, Paragraph, Section
+from mdforge import BulletList, Document, Heading, ListItem, Paragraph, Section
+
+from .conftest import unused
 
 
 def test_doc1(doc: Document):
 
     doc += Heading("Test document 1")
     doc += Paragraph("Hello, world!")
-    doc += Heading("List", 2)
-    doc += List(
+    doc += Heading("Bullet list", 2)
+    doc += BulletList(
         [
             "a",
             ListItem(
@@ -40,7 +42,7 @@ def test_section(doc: Document):
     sec1 += Paragraph("Hello, world!")
 
     sec11 = Section("Section 1-1")
-    sec11 += List(["a", "b", "c"])
+    sec11 += BulletList(["a", "b", "c"])
     sec1 += sec11
 
     sec2 = Section("Section 2")
@@ -54,7 +56,4 @@ def test_section(doc: Document):
 @mark.frontmatter({"title": "Doc 1"})
 @mark.elements([(Paragraph, ("Hello, world!",), {})])
 def test_frontmatter(doc: Document):
-
-    assert doc._frontmatter == {"title": "Doc 1"}
-    assert len(doc._elements) == 1
-    assert isinstance(doc._elements[0], Paragraph)
+    unused(doc)

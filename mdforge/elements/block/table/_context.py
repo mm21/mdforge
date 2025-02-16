@@ -7,7 +7,7 @@ import math
 from dataclasses import dataclass
 from functools import cached_property
 
-from ...types import FlavorType
+from ....types import FlavorType
 from ._flavors.flavor import BaseTableVariant
 from ._params import TableParams
 from .cell import Cell, VirtualCell

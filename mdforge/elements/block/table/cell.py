@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, Iterable, Literal
 
-from ...element import BaseElement
-from ...types import FlavorType
+from ....element import BaseBlockElement, BaseElement
+from ....types import FlavorType
 
 if TYPE_CHECKING:
     from ._context import RenderContext
@@ -76,8 +76,9 @@ class Cell:
             assert all(isinstance(line, str) for line in raw_content)
             lines = list(raw_content)
         else:
-            assert isinstance(raw_content, BaseElement)
-            lines = list(raw_content._render_element(flavor))
+            # TODO: handle inline vs block
+            assert isinstance(raw_content, BaseBlockElement)
+            lines = list(raw_content._render_block(flavor))
 
         if width:
             # wrap words

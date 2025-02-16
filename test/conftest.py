@@ -101,7 +101,7 @@ def doc(
 
     # consider any failures as test failures instead of teardown failures
     try:
-        doc.render(powerpack_comparison_files.out_file)
+        doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
         pytest_powerpack.compare_files(powerpack_comparison_files)
     except AssertionError as e:
         fail(f"Document comparison failed: {e}", pytrace=True)
@@ -144,3 +144,9 @@ def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):
 
         logging.info(f"Running: {' '.join(cmd)}")
         subprocess.check_call(cmd)
+
+
+def unused(*_: Any):
+    """
+    Indicates an unused argument, i.e. a fixture which is not accessed.
+    """

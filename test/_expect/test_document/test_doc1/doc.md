@@ -2,7 +2,7 @@
 
 Hello, world!
 
-## List
+## Bullet list
 
 - a
 - b

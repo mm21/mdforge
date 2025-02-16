@@ -30,7 +30,7 @@ class Document(BaseContainer):
     Treat all nested containers as top-level sections.
     """
 
-    _frontmatter: dict[str, Any] | None
+    __frontmatter: dict[str, Any] | None
 
     def __init__(
         self,
@@ -38,28 +38,28 @@ class Document(BaseContainer):
         elements: list[BaseElement] | None = None,
     ):
         super().__init__(elements=elements, level=ROOT_LEVEL)
-        self._frontmatter = frontmatter
+        self.__frontmatter = frontmatter
 
-    def render(self, path: Path, flavor: FlavorType = "pandoc"):
+    def render(self, path: Path, *, flavor: FlavorType):
         """
         Write Markdown document to the provided path using the provided flavor.
         """
         with path.open("w") as fh:
             fh.write(self.render_text(flavor=flavor))
 
-    def render_text(self, flavor: FlavorType = "pandoc") -> str:
+    def render_text(self, *, flavor: FlavorType) -> str:
         """
         Return Markdown document as text.
         """
-        frontmatter = self._render_frontmatter()
-        content: str = "\n\n".join(list(self._render_element(flavor)))
+        frontmatter = self.__render_frontmatter()
+        content: str = "\n\n".join(list(self._render_block(flavor)))
         return f"{frontmatter or ''}{content}\n"
 
-    def _render_frontmatter(self) -> str | None:
-        if self._frontmatter is None:
+    def __render_frontmatter(self) -> str | None:
+        if self.__frontmatter is None:
             return None
 
         content = yaml.dump(
-            self._frontmatter, default_flow_style=False, sort_keys=False
+            self.__frontmatter, default_flow_style=False, sort_keys=False
         )
         return f"---\n{content}---\n"

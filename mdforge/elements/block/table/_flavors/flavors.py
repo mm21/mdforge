@@ -4,7 +4,7 @@ Listing of table flavors.
 
 from __future__ import annotations
 
-from ....types import FlavorType
+from .....types import FlavorType
 from .flavor import BaseTableVariant, TableFlavor
 from .frame.variants import GRID_VARIANT, MULTILINE_VARIANT
 

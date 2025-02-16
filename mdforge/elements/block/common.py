@@ -1,5 +1,5 @@
 """
-Basic Markdown elements.
+Common block elements.
 """
 
 from __future__ import annotations
@@ -7,13 +7,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Generator
 
-from ..element import BaseElement
-from ..types import FlavorType
+from ...element import BaseBlockElement
+from ...types import FlavorType
 
 __all__ = [
     "Heading",
     "Paragraph",
-    "List",
+    "BulletList",
     "ListItem",
     "ListItemType",
 ]
@@ -25,7 +25,7 @@ type ListItemType = str | ListItem
 
 
 @dataclass
-class Heading(BaseElement):
+class Heading(BaseBlockElement):
     """
     Heading, e.g. `# My heading`. If `level` not provided, it is set
     automatically based on nesting of container.
@@ -41,17 +41,17 @@ class Heading(BaseElement):
     Heading level, or `None` to set automatically.
     """
 
-    def _render_element(self, _: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
         level = self.level or self._container._level
         yield f"{'#' * level} {self.text}"
 
 
 @dataclass
-class Paragraph(BaseElement):
+class Paragraph(BaseBlockElement):
 
     lines: str | list[str]
 
-    def _render_element(self, _: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
         lines = [self.lines] if isinstance(self.lines, str) else self.lines
         assert all(isinstance(l, str) for l in lines)
 
@@ -61,15 +61,17 @@ class Paragraph(BaseElement):
 @dataclass
 class ListItem:
     text: str
+
+    # TODO: support nested lists, e.g. numbered list in bullet list
     sub_items: list[ListItemType] = field(default_factory=list)
 
 
 @dataclass
-class List(BaseElement):
+class BulletList(BaseBlockElement):
 
     items: list[ListItemType]
 
-    def _render_element(self, _: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
 
         def do_render(
             items: list[ListItemType], depth: int

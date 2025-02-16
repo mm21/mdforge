@@ -14,25 +14,14 @@ if TYPE_CHECKING:
 
 __all__ = [
     "BaseElement",
+    "BaseInlineElement",
+    "BaseBlockElement",
 ]
 
 
 class BaseElement(ABC):
 
     __container: BaseContainer | None = None
-
-    @abstractmethod
-    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        """
-        Render by yielding each line.
-        """
-        ...
-
-    def _render_str(self, flavor: FlavorType):
-        """
-        Render as multi-line string.
-        """
-        return "\n".join(self._render_element(flavor))
 
     @property
     def _container(self) -> BaseContainer:
@@ -45,3 +34,35 @@ class BaseElement(ABC):
     def _container(self, container: BaseContainer):
         assert self.__container is None
         self.__container = container
+
+
+class BaseInlineElement(BaseElement):
+    """
+    Base inline element, rendering a single string.
+    """
+
+    @abstractmethod
+    def _render_inline(self, flavor: FlavorType) -> str:
+        """
+        Render by returning a single string.
+        """
+        ...
+
+
+class BaseBlockElement(BaseElement):
+    """
+    Base block element, rendering multiple strings.
+    """
+
+    @abstractmethod
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        """
+        Render by yielding each line.
+        """
+        ...
+
+    def _render_block_lines(self, flavor: FlavorType) -> str:
+        """
+        Render as multi-line string.
+        """
+        return "\n".join(self._render_block(flavor))

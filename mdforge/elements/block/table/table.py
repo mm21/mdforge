@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Generator, cast
 
-from ...element import BaseElement
-from ...types import FlavorType
+from ....element import BaseBlockElement
+from ....types import FlavorType
 from ._clean import get_clean_end, get_clean_start
 from ._context import RenderContext
 from ._flavors.flavors import lookup_variant
@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-class Table(BaseElement):
+class Table(BaseBlockElement):
 
     _params: TableParams
     """
@@ -48,7 +48,7 @@ class Table(BaseElement):
             clean=clean,
         )
 
-    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
 
         # get variant
         variant = lookup_variant(flavor, self._params.block)

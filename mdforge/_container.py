@@ -6,30 +6,45 @@ from __future__ import annotations
 
 from typing import Generator, Iterable, Self
 
-from .element import BaseElement
+from .element import BaseBlockElement, BaseElement
 from .types import FlavorType
 
 
-class BaseContainer(BaseElement):
+class BaseContainer(BaseBlockElement):
     """
-    Provides functionality to add and contain Markdown elements.
+    Provides functionality to add and contain block elements.
     """
 
-    _elements: list[BaseElement]
-    _containers: list[BaseContainer]
-    _level: int | None = None
     _level_inc: int = 1
+    """
+    Amount by which to increment level of nested containers.
+    """
+
+    _level: int | None = None
+    """
+    Nesting level of this container.
+    """
+
+    __elements: list[BaseBlockElement]
+    """
+    List of nested elements.
+    """
+
+    __containers: list[BaseContainer]
+    """
+    List of nested containers; a subset of `_elements`.
+    """
 
     def __init__(
         self,
         elements: list[BaseElement] | None = None,
         level: int | None = None,
     ):
-        self._elements = []
-        self._containers = []
+        self.__elements = []
+        self.__containers = []
 
         if level is not None:
-            self._set_level(level)
+            self.__set_level(level)
 
         if elements:
             self += elements
@@ -45,46 +60,46 @@ class BaseContainer(BaseElement):
 
         # bind elements to this container
         for e in elements_:
-            self._bind_element(e)
+            self.__bind_element(e)
 
         return self
 
-    def _bind_element(self, element: BaseElement):
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        yield "\n\n".join(
+            [element._render_block_lines(flavor) for element in self.__elements]
+        )
+
+    def __bind_element(self, element: BaseElement):
         """
         Bind element to this container.
         """
 
         # add to element list
-        self._elements.append(element)
+        self.__elements.append(element)
 
         # set element's container
         element._container = self
 
         # if element is also a container, bind it
         if isinstance(element, BaseContainer):
-            self._bind_container(element)
+            self.__bind_container(element)
 
-    def _bind_container(self, container: BaseContainer):
+    def __bind_container(self, container: BaseContainer):
         """
         Bind another container to this one.
         """
-        self._containers.append(container)
+        self.__containers.append(container)
 
         # propagate level, if set
         if self._level is not None:
-            container._set_level(self._level + self._level_inc)
+            container.__set_level(self._level + self._level_inc)
 
-    def _set_level(self, level: int):
+    def __set_level(self, level: int):
         """
         Set level and propagate recursively.
         """
         assert self._level is None
         self._level = level
 
-        for c in self._containers:
-            c._set_level(level + self._level_inc)
-
-    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield "\n\n".join(
-            [element._render_str(flavor) for element in self._elements]
-        )
+        for c in self.__containers:
+            c.__set_level(level + self._level_inc)
