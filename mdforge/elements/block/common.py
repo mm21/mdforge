@@ -81,36 +81,43 @@ class BaseList(BaseBlockElement, ABC):
 
             for item in items:
 
-                text: str | BaseInlineElement
-                sub_items: list[ListItemType] | BaseList
+                text: str
+                sub_items: list[ListItemType]
+
+                next_marker = marker
 
                 if isinstance(item, str):
                     text, sub_items = item, []
                 elif isinstance(item, BaseInlineElement):
                     text, sub_items = item._render_inline(flavor), []
                 elif isinstance(item, ListItem):
-                    text, sub_items = item.text, item.sub_items
+                    raw_text, raw_sub_items = item.text, item.sub_items
+
+                    # handle inline element as text
+                    if isinstance(raw_text, BaseInlineElement):
+                        text = raw_text._render_inline(flavor)
+                    else:
+                        text = raw_text
+
+                    # handle nested list as sub items
+                    if isinstance(raw_sub_items, BaseList):
+                        next_marker = raw_sub_items._marker
+                        sub_items = raw_sub_items.items
+                    else:
+                        sub_items = raw_sub_items
                 else:
                     raise ValueError(
                         f"Unexpected list item type: {item} ({type(item)})"
                     )
 
-                if isinstance(text, BaseInlineElement):
-                    text = text._render_inline(flavor)
-
-                assert isinstance(text, str), f"got: {text} ({type(text)})"
+                assert isinstance(text, str)
+                assert isinstance(sub_items, list)
 
                 # render item text
                 yield f"{' ' * depth}{marker} {text}"
 
                 # render any sub-items at next indentation depth
-                if isinstance(sub_items, BaseList):
-                    yield from do_render(
-                        sub_items.items, next_depth, sub_items._marker
-                    )
-                else:
-                    assert isinstance(sub_items, list)
-                    yield from do_render(sub_items, next_depth, marker)
+                yield from do_render(sub_items, next_depth, next_marker)
 
         yield from do_render(self.items, 0, self._marker)
 
