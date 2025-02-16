@@ -16,6 +16,9 @@ Hello, world!
   1. d1
   1. d2
   1. d3
+     1. d3-1
+     1. d3-2
+     1. d3-3
 
 ## Numbered list
 
@@ -28,3 +31,6 @@ Hello, world!
    - c1
    - c2
    - c3
+     - c3-1
+     - c3-2
+     - c3-3

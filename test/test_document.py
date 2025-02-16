@@ -48,7 +48,14 @@ def test_doc1(doc: Document):
                     [
                         "d1",
                         "d2",
-                        "d3",
+                        ListItem(
+                            "d3",
+                            [
+                                "d3-1",
+                                "d3-2",
+                                "d3-3",
+                            ],
+                        ),
                     ]
                 ),
             ),
@@ -60,7 +67,12 @@ def test_doc1(doc: Document):
         [
             Emph("a (emph)"),
             ListItem("b", ["b1", "b2", "b3"]),
-            ListItem("c", BulletList(["c1", "c2", "c3"])),
+            ListItem(
+                "c",
+                BulletList(
+                    ["c1", "c2", ListItem("c3", ["c3-1", "c3-2", "c3-3"])]
+                ),
+            ),
         ]
     )
 
