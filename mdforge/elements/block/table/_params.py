@@ -58,11 +58,6 @@ class TableParams:
     Whether table should support block content such as paragraphs and lists.
     """
 
-    clean: bool
-    """
-    Whether to omit top and bottom lines for this table.
-    """
-
     def __hash__(self) -> int:
         """
         Table params are considered immutable, even though they contain

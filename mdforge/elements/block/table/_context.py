@@ -10,7 +10,8 @@ from functools import cached_property
 from ....types import FlavorType
 from ._flavors.flavor import BaseTableVariant
 from ._params import TableParams
-from .cell import Cell, VirtualCell
+from ._vcell import VirtualCell
+from .cell import Cell
 
 
 @dataclass(frozen=True)

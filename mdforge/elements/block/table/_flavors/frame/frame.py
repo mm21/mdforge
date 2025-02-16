@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Generator
 
 from ..._context import RenderContext
-from ...cell import AlignType, VirtualCell
+from ..._vcell import VirtualCell
+from ...cell import AlignType
 from ..flavor import BaseTableVariant
 
 __all__ = [
