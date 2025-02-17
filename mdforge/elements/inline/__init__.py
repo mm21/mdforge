@@ -4,7 +4,7 @@ Inline elements.
 
 from pyrollup import rollup
 
-from . import common
-from .common import *  # noqa
+from . import text
+from .text import *  # noqa
 
-__all__ = rollup(common)
+__all__ = rollup(text)

@@ -15,9 +15,7 @@ __all__ = [
 ]
 
 
-class BaseInlineElementContainer(
-    BaseInlineElement, InlineElementContainerMixin
-):
+class BaseTextContainer(BaseInlineElement, InlineElementContainerMixin):
     """
     Inline element containing text or a list of inline elements.
     """
@@ -40,25 +38,25 @@ class Text(BaseInlineElement):
         return self.__text
 
 
-class Emph(BaseInlineElementContainer):
+class Emph(BaseTextContainer):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"_{super()._render_inline(flavor)}_"
 
 
-class Strong(BaseInlineElementContainer):
+class Strong(BaseTextContainer):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"**{super()._render_inline(flavor)}**"
 
 
-class Underline(BaseInlineElementContainer):
+class Underline(BaseTextContainer):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"<u>{super()._render_inline(flavor)}</u>"
 
 
-class Strikethrough(BaseInlineElementContainer):
+class Strikethrough(BaseTextContainer):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"~~{super()._render_inline(flavor)}~~"

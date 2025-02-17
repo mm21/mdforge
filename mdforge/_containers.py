@@ -139,7 +139,7 @@ class InlineElementContainerMixin:
         necessary.
         """
 
-        from .elements.inline.common import Text
+        from .elements.inline.text import Text
 
         elements: list[BaseInlineElement] = []
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from ..._containers import BaseBlockElementContainer
 from ...element import BaseElement
-from .common import Heading
+from .basic import Heading
 
 __all__ = [
     "Section",
