@@ -15,11 +15,10 @@ from ...types import FlavorType
 __all__ = [
     "Heading",
     "Paragraph",
-    "BaseList",
     "NumberedList",
     "BulletList",
-    "ListItem",
     "ListItemType",
+    "ListItem",
 ]
 
 
@@ -54,13 +53,18 @@ class Paragraph(BaseBlockElement, InlineElementContainerMixin):
         yield self._render_elements(flavor)
 
 
-@dataclass
 class BaseList(BaseBlockElement, ABC):
     """
     List which can be either ordered or bulleted.
     """
 
-    items: list[ListItemType]
+    __items: list[ListItemType]
+    """
+    List of items passed from user.
+    """
+
+    def __init__(self, items: list[ListItemType]):
+        self.__items = items
 
     @property
     @abstractmethod
@@ -71,55 +75,61 @@ class BaseList(BaseBlockElement, ABC):
         ...
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        yield from self._render_items(flavor, 0)
 
-        def do_render(
-            items: list[ListItemType], depth: int, marker: str
-        ) -> Generator[str, None, None]:
+    def _render_items(
+        self,
+        flavor: FlavorType,
+        indent_spaces: int,
+        items: list[ListItemType] | None = None,
+    ) -> Generator[str, None, None]:
+        """
+        Render items at the given indentation.
+        """
 
-            indent_spaces = len(marker) + 1
-            next_depth = indent_spaces + depth
+        indent_str = " " * indent_spaces
+        next_indent_spaces = indent_spaces + len(self._marker) + 1
 
-            for item in items:
+        # normalize and traverse items
+        items_norm = self.__normalize_items(
+            self.__items if items is None else items
+        )
+        for item in items_norm:
 
-                text: str
-                sub_items: list[ListItemType]
+            # render item text
+            yield f"{indent_str}{self._marker} {item._get_text(flavor)}"
 
-                next_marker = marker
-
-                if isinstance(item, str):
-                    text, sub_items = item, []
-                elif isinstance(item, BaseInlineElement):
-                    text, sub_items = item._render_inline(flavor), []
-                elif isinstance(item, ListItem):
-                    raw_text, raw_sub_items = item.text, item.sub_items
-
-                    # handle inline element as text
-                    if isinstance(raw_text, BaseInlineElement):
-                        text = raw_text._render_inline(flavor)
-                    else:
-                        text = raw_text
-
-                    # handle nested list as sub items
-                    if isinstance(raw_sub_items, BaseList):
-                        next_marker = raw_sub_items._marker
-                        sub_items = raw_sub_items.items
-                    else:
-                        sub_items = raw_sub_items
-                else:
-                    raise ValueError(
-                        f"Unexpected list item type: {item} ({type(item)})"
+            # render sub-items
+            if isinstance(item.sub_items, list):
+                # nested items of same list type
+                if len(item.sub_items):
+                    yield from self._render_items(
+                        flavor, next_indent_spaces, items=item.sub_items
                     )
+            else:
+                # nested list, may be different list type
+                assert isinstance(item.sub_items, BaseList)
+                yield from item.sub_items._render_items(
+                    flavor, next_indent_spaces
+                )
 
-                assert isinstance(text, str)
-                assert isinstance(sub_items, list)
+    def __normalize_items(self, items: list[ListItemType]) -> list[ListItem]:
+        """
+        Get items as a normalized list.
+        """
+        items_norm: list[ListItem] = []
 
-                # render item text
-                yield f"{' ' * depth}{marker} {text}"
+        for item in items:
+            if isinstance(item, (str, BaseInlineElement)):
+                items_norm.append(ListItem(item))
+            elif isinstance(item, ListItem):
+                items_norm.append(item)
+            else:
+                raise ValueError(
+                    f"Unexpected list item type: {item} ({type(item)})"
+                )
 
-                # render any sub-items at next indentation depth
-                yield from do_render(sub_items, next_depth, next_marker)
-
-        yield from do_render(self.items, 0, self._marker)
+        return items_norm
 
 
 class NumberedList(BaseList):
@@ -146,3 +156,13 @@ class BulletList(BaseList):
 class ListItem:
     text: str | BaseInlineElement
     sub_items: list[ListItemType] | BaseList = field(default_factory=list)
+
+    def _get_text(self, flavor: FlavorType) -> str:
+        """
+        Get text, rendering if necessary.
+        """
+        if isinstance(self.text, str):
+            return self.text
+        else:
+            assert isinstance(self.text, BaseInlineElement)
+            return self.text._render_inline(flavor)
