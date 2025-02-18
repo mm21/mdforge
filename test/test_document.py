@@ -10,10 +10,6 @@ def test_basic(doc: Document):
     doc += Heading("Basic test")
     doc += Paragraph("Hello, world!")
 
-    # TODO:
-    # - add block content
-    # - move lists to separate test
-
 
 def test_section(doc: Document):
 

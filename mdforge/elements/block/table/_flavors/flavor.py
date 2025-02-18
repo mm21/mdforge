@@ -36,8 +36,6 @@ class TableFlavor:
 class BaseTableVariant(ABC):
     """
     Base class to encapsulate a table variant.
-
-    TODO: scope to subclass; parameterize RenderContext with subclass
     """
 
     cell_sep: str
