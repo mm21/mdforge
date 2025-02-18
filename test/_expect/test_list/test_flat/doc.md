@@ -9,7 +9,7 @@
 # NumberedList
 
 <!-- start: NumberedList(loose=False) -->
-1. a
-1. b
-1. c
+#. a
+#. b
+#. c
 <!-- end: NumberedList(loose=False) -->

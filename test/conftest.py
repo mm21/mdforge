@@ -127,7 +127,7 @@ def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):
         "pandoc",
         str(md_path),
         "-f",
-        "markdown+multiline_tables+grid_tables",
+        "markdown+multiline_tables+grid_tables+fancy_lists",
     ]
 
     formats = (

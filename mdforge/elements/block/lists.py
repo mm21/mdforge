@@ -105,11 +105,10 @@ class BaseList(BaseBlockElement, ABC):
         self.__items = items
         self.__loose = loose or self.__check_loose(items)
 
-    @property
     @abstractmethod
-    def _marker(self) -> str:
+    def _get_marker(self, flavor: FlavorType) -> str:
         """
-        Character to indicate an item.
+        Get character to indicate an item.
         """
         ...
 
@@ -126,8 +125,9 @@ class BaseList(BaseBlockElement, ABC):
         Render items at the given indentation.
         """
 
+        marker = self._get_marker(flavor)
         indent_str = " " * indent_spaces
-        next_indent_spaces = indent_spaces + len(self._marker) + 1
+        next_indent_spaces = indent_spaces + len(marker) + 1
         desc = f"{type(self).__name__}(loose={self.__loose})"
 
         # in pandoc, inserting a comment between lists ensures they aren't
@@ -136,31 +136,35 @@ class BaseList(BaseBlockElement, ABC):
         # see: https://pandoc.org/MANUAL.html#ending-a-list
         yield f"{indent_str}<!-- start: {desc} -->"
 
-        # normalize and traverse items
+        # normalize items
         items_norm = self.__normalize_items(
             self.__items if items is None else items
         )
+
+        # if there is a single item in a list specified to be loose,
+        # there would be no way for parsers to determine that it's loose.
+        # wrap the item in a paragraph for consistent element hierarchy.
+        single_loose_item = len(items_norm) == 1 and self.__loose
+
+        # traverse items
         for item in items_norm:
 
             # get item text
             text: list[str] = list(item._render_text(flavor))
             assert len(text) >= 1
 
-            # if there is a single item in a list specified to be loose,
-            # there would be no way for parsers to determine that it's loose.
-            # wrap the item in a paragraph for consistent element hierarchy.
-            single_loose_item = (
-                len(items_norm) == 1 and len(text) == 1 and self.__loose
-            )
+            # wrap in paragraph if needed
+            if single_loose_item:
+                text[0] = f"<p>{text[0]}"
+                text[-1] = f"{text[-1]}</p>"
 
             # render item text
             for line_idx, line in enumerate(text):
-                marker = (
-                    self._marker if line_idx == 0 else " " * len(self._marker)
-                )
-                pre, post = ("<p>", "</p>") if single_loose_item else ("", "")
 
-                yield f"{indent_str}{marker} {pre}{line}{post}"
+                # only apply marker to first line
+                marker_ = marker if line_idx == 0 else " " * len(marker)
+
+                yield f"{indent_str}{marker_} {line}"
 
             # render sub-items
             yield from item._render_sub_items(flavor, next_indent_spaces, self)
@@ -208,22 +212,23 @@ class BaseList(BaseBlockElement, ABC):
         return items_norm
 
 
-class NumberedList(BaseList):
-    """
-    Numbered list.
-    """
-
-    # TODO: for pandoc, use "#." and enable fancy_lists extension
-    @property
-    def _marker(self) -> str:
-        return "1."
-
-
 class BulletList(BaseList):
     """
     Bullet point list.
     """
 
-    @property
-    def _marker(self) -> str:
+    def _get_marker(self, _: FlavorType) -> str:
         return "-"
+
+
+class NumberedList(BaseList):
+    """
+    Numbered list.
+    """
+
+    def _get_marker(self, flavor: FlavorType) -> str:
+        if flavor == "pandoc":
+            # with fancy_lists extension
+            return "#."
+        else:
+            return "1."

@@ -32,29 +32,29 @@
 # NumberedList, inline
 
 <!-- start: NumberedList(loose=False) -->
-1. **a (strong)**
-1. _b (emph)_
+#. **a (strong)**
+#. _b (emph)_
    <!-- start: NumberedList(loose=False) -->
-   1. b1
-   1. b2
-   1. b3
+   #. b1
+   #. b2
+   #. b3
    <!-- end: NumberedList(loose=False) -->
-1. **_c (strong + emph)_**
+#. **_c (strong + emph)_**
 <!-- end: NumberedList(loose=False) -->
 
 # NumberedList, block
 
 <!-- start: NumberedList(loose=True) -->
-1. **a (strong)**
+#. **a (strong)**
 
-1. _b (emph)_
+#. _b (emph)_
    <!-- start: NumberedList(loose=False) -->
-   1. b1
-   1. b2
-   1. b3
+   #. b1
+   #. b2
+   #. b3
    <!-- end: NumberedList(loose=False) -->
 
-1. c (paragraph 1)
+#. c (paragraph 1)
    
    c (paragraph 2)
 

@@ -21,13 +21,13 @@
   <!-- end: BulletList(loose=False) -->
 - d (NumberedList)
   <!-- start: NumberedList(loose=False) -->
-  1. d1
-  1. d2
-  1. d3
+  #. d1
+  #. d2
+  #. d3
      <!-- start: NumberedList(loose=False) -->
-     1. d3-1
-     1. d3-2
-     1. d3-3
+     #. d3-1
+     #. d3-2
+     #. d3-3
      <!-- end: NumberedList(loose=False) -->
   <!-- end: NumberedList(loose=False) -->
 <!-- end: BulletList(loose=False) -->
@@ -35,25 +35,25 @@
 # NumberedList
 
 <!-- start: NumberedList(loose=False) -->
-1. a
-1. b
+#. a
+#. b
    <!-- start: NumberedList(loose=False) -->
-   1. b1
-   1. b2
-   1. b3
+   #. b1
+   #. b2
+   #. b3
    <!-- end: NumberedList(loose=False) -->
-1. c
+#. c
    <!-- start: NumberedList(loose=False) -->
-   1. c1
-   1. c2
-   1. c3
+   #. c1
+   #. c2
+   #. c3
       <!-- start: NumberedList(loose=False) -->
-      1. c3-1
-      1. c3-2
-      1. c3-3
+      #. c3-1
+      #. c3-2
+      #. c3-3
       <!-- end: NumberedList(loose=False) -->
    <!-- end: NumberedList(loose=False) -->
-1. d (BulletList)
+#. d (BulletList)
    <!-- start: BulletList(loose=False) -->
    - d1
    - d2
