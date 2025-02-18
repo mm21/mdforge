@@ -74,7 +74,7 @@ def doc(
     frontmatter_marker = request.node.get_closest_marker("frontmatter")
     elements_marker = request.node.get_closest_marker("elements")
 
-    elements: list[BaseElement] | None = None
+    elements: list[BaseElement] = []
     frontmatter: dict[str, Any] | None = None
 
     if frontmatter_marker:
@@ -92,16 +92,14 @@ def doc(
         )
 
         # instantiate each element with provided args and kwargs
-        elements = []
         for element_cls, args, kwargs in elements_arg:
             elements.append(element_cls(*args, **kwargs))
 
-    doc = Document(frontmatter=frontmatter, elements=elements)
+    doc = Document(*elements, frontmatter=frontmatter)
     yield doc
 
-    # render and compare output
+    # render
     doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
-    pytest_powerpack.compare_files(powerpack_comparison_files)
 
     # additionally run pandoc if flags passed
     html = bool(request.config.getoption("--html"))
@@ -112,6 +110,9 @@ def doc(
         _run_pandoc(
             powerpack_comparison_files.out_file, html=html, latex=latex, pdf=pdf
         )
+
+    # compare output
+    pytest_powerpack.compare_files(powerpack_comparison_files)
 
 
 def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):

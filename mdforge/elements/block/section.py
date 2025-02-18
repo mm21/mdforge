@@ -5,8 +5,8 @@ heading management.
 
 from __future__ import annotations
 
-from ..._containers import BaseBlockElementContainer
-from ...element import BaseElement
+from ...container import BaseLevelBlockContainer
+from ...element import BaseBlockElement
 from .basic import Heading
 
 __all__ = [
@@ -14,26 +14,18 @@ __all__ = [
 ]
 
 
-class Section(BaseBlockElementContainer):
-
-    __heading: Heading | None
+class Section(BaseLevelBlockContainer):
+    """
+    Encapsulates a logical document section, containing block elements with
+    an optional heading. Heading level is inferred by this section's nesting
+    level.
+    """
 
     def __init__(
         self,
+        *elements: BaseBlockElement,
         heading: str | None = None,
-        elements: list[BaseElement] | None = None,
     ):
-        self.__heading = Heading(heading) if heading else None
-        elements = ([self.__heading] if self.__heading else []) + (
-            elements or []
-        )
-        super().__init__(elements=elements)
-
-    @property
-    def heading(self) -> Heading:
-        """
-        Get heading, ensuring it was set when this section was created.
-        """
-        if self.__heading is None:
-            raise ValueError("Heading not set when section was created")
-        return self.__heading
+        # create heading if given, inserting as first element
+        heading_ = tuple([Heading(heading)]) if heading else None
+        super().__init__(*heading_, *elements)

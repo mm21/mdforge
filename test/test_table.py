@@ -20,8 +20,8 @@ def test_variants(doc: Document):
     Test inline and block variants.
     """
 
-    inline_section, block_section = Section("Inline tables"), Section(
-        "Block tables"
+    inline_section, block_section = Section(heading="Inline tables"), Section(
+        heading="Block tables"
     )
 
     doc += [inline_section, block_section]
@@ -45,7 +45,7 @@ def test_variants(doc: Document):
         nonlocal block_section
 
         section = block_section if table._params.block else inline_section
-        section += Section(desc, elements=[table])
+        section += Section(table, heading=desc)
 
     for row_count in [1, ROW_COUNT]:
 
@@ -99,7 +99,7 @@ def test_widths(doc: Document):
 
     for block in [False, True]:
         doc += [
-            Section(f"Block: {block}"),
+            Section(heading=f"Block: {block}"),
             Table(rows, header=HEADER, align=ALIGN, widths=widths, block=block),
         ]
 
@@ -119,7 +119,7 @@ def test_wrap(doc: Document):
 
     for block in [False, True]:
         doc += [
-            Section(f"Block: {block}"),
+            Section(heading=f"Block: {block}"),
             Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
         ]
 

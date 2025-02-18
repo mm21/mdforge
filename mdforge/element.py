@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Generator
 from .types import FlavorType
 
 if TYPE_CHECKING:
-    from ._containers import BaseBlockElementContainer
+    from .container import BaseLevelBlockContainer
 
 __all__ = [
     "BaseElement",
@@ -21,17 +21,26 @@ __all__ = [
 
 class BaseElement(ABC):
 
-    __container: BaseBlockElementContainer | None = None
+    __container: BaseLevelBlockContainer | None = None
+
+    @abstractmethod
+    def _render_element(
+        self, flavor: BaseElement
+    ) -> Generator[str, None, None]:
+        """
+        Render this element, agnostic of concrete class.
+        """
+        ...
 
     @property
-    def _container(self) -> BaseBlockElementContainer:
+    def _container(self) -> BaseLevelBlockContainer:
         assert (
             self.__container
         ), f"Element has not been placed in a container: {self}"
         return self.__container
 
     @_container.setter
-    def _container(self, container: BaseBlockElementContainer):
+    def _container(self, container: BaseLevelBlockContainer):
         assert self.__container is None
         self.__container = container
 
@@ -48,6 +57,11 @@ class BaseInlineElement(BaseElement):
         """
         ...
 
+    def _render_element(
+        self, flavor: BaseElement
+    ) -> Generator[str, None, None]:
+        yield self._render_inline(flavor)
+
 
 class BaseBlockElement(BaseElement):
     """
@@ -60,6 +74,9 @@ class BaseBlockElement(BaseElement):
         Render by yielding each line.
         """
         ...
+
+    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
+        yield from self._render_block(flavor)
 
     def _render_block_lines(self, flavor: FlavorType) -> str:
         """

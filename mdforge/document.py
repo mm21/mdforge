@@ -9,8 +9,8 @@ from typing import Any
 
 import yaml
 
-from ._containers import BaseBlockElementContainer
-from .element import BaseElement
+from .container import BaseLevelBlockContainer
+from .element import BaseBlockElement
 from .types import FlavorType
 
 __all__ = [
@@ -20,7 +20,7 @@ __all__ = [
 ROOT_LEVEL: int = 1
 
 
-class Document(BaseBlockElementContainer):
+class Document(BaseLevelBlockContainer):
     """
     Encapsulates a Markdown document. Add elements using the `+=` operator.
     """
@@ -34,11 +34,12 @@ class Document(BaseBlockElementContainer):
 
     def __init__(
         self,
+        *elements: BaseBlockElement,
         frontmatter: dict[str, Any] | None = None,
-        elements: list[BaseElement] | None = None,
     ):
-        super().__init__(elements=elements, level=ROOT_LEVEL)
+        super().__init__(*elements)
         self.__frontmatter = frontmatter
+        self._level = ROOT_LEVEL
 
     def render(self, path: Path, *, flavor: FlavorType):
         """

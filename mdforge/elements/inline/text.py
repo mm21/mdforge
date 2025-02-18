@@ -2,7 +2,7 @@
 Common inline elements.
 """
 
-from ..._containers import InlineElementContainerMixin
+from ...container import InlineContainerMixin
 from ...element import BaseInlineElement
 from ...types import FlavorType
 
@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-class BaseTextContainer(BaseInlineElement, InlineElementContainerMixin):
+class BaseTextContainer(BaseInlineElement, InlineContainerMixin):
     """
     Inline element containing text or a list of inline elements.
     """
