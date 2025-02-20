@@ -1,143 +1,141 @@
 # BulletList, 1 element
 
-<!-- start: BulletList(loose=True) -->
 - <p>a</p>
 
-<!-- end: BulletList(loose=True) -->
+<!-- end of list -->
+
+# BulletList, 1 element (w/paragraph)
+
+- a
+  
+  b
+
+<!-- end of list -->
 
 # BulletList, implicit loose (paragraphs)
 
-<!-- start: BulletList(loose=True) -->
 - a
 
 - b (paragraph 1)
   
   b (paragraph 2)
 
-<!-- end: BulletList(loose=True) -->
+<!-- end of list -->
 
 # BulletList, implicit loose (paragraph, list)
 
-<!-- start: BulletList(loose=True) -->
 - a
 
 - b (paragraph)
   
-  <!-- start: BulletList(loose=False) -->
   - b1
   - b2
   - b3
-  <!-- end: BulletList(loose=False) -->
+  <!-- end of list -->
 
-<!-- end: BulletList(loose=True) -->
+<!-- end of list -->
 
 # BulletList, implicit loose (nested list)
 
-<!-- start: BulletList(loose=True) -->
 - a
 
-- <!-- start: BulletList(loose=False) -->
-  - b1
+- - b1
   - b2
   - b3
-  <!-- end: BulletList(loose=False) -->
+  <!-- end of list -->
 
-<!-- end: BulletList(loose=True) -->
+<!-- end of list -->
 
 # BulletList, 4 elements
 
-<!-- start: BulletList(loose=True) -->
 - a
 
 - b
 
 - c (not loose)
-  <!-- start: BulletList(loose=False) -->
   - c1
   - c2
   - c3
-  <!-- end: BulletList(loose=False) -->
+  <!-- end of list -->
 
 - d (loose)
-  <!-- start: BulletList(loose=True) -->
   - d1
 
   - d2
 
   - d3
 
-  <!-- end: BulletList(loose=True) -->
+  <!-- end of list -->
 
-<!-- end: BulletList(loose=True) -->
+<!-- end of list -->
 
 # NumberedList, 1 element
 
-<!-- start: NumberedList(loose=True) -->
 #. <p>a</p>
 
-<!-- end: NumberedList(loose=True) -->
+<!-- end of list -->
+
+# NumberedList, 1 element (w/paragraph)
+
+#. a
+   
+   b
+
+<!-- end of list -->
 
 # NumberedList, implicit loose (paragraphs)
 
-<!-- start: NumberedList(loose=True) -->
 #. a
 
 #. b (paragraph 1)
    
    b (paragraph 2)
 
-<!-- end: NumberedList(loose=True) -->
+<!-- end of list -->
 
 # NumberedList, implicit loose (paragraph, list)
 
-<!-- start: NumberedList(loose=True) -->
 #. a
 
 #. b (paragraph)
    
-   <!-- start: NumberedList(loose=False) -->
    #. b1
    #. b2
    #. b3
-   <!-- end: NumberedList(loose=False) -->
+   <!-- end of list -->
 
-<!-- end: NumberedList(loose=True) -->
+<!-- end of list -->
 
 # NumberedList, implicit loose (nested list)
 
-<!-- start: NumberedList(loose=True) -->
 #. a
 
-#. <!-- start: NumberedList(loose=False) -->
-   #. b1
+#. #. b1
    #. b2
    #. b3
-   <!-- end: NumberedList(loose=False) -->
+   <!-- end of list -->
 
-<!-- end: NumberedList(loose=True) -->
+<!-- end of list -->
 
 # NumberedList, 4 elements
 
-<!-- start: NumberedList(loose=True) -->
 #. a
 
 #. b
 
 #. c (not loose)
-   <!-- start: NumberedList(loose=False) -->
    #. c1
    #. c2
    #. c3
-   <!-- end: NumberedList(loose=False) -->
+   <!-- end of list -->
 
 #. d (loose)
-   <!-- start: NumberedList(loose=True) -->
    #. d1
 
    #. d2
 
    #. d3
 
-   <!-- end: NumberedList(loose=True) -->
+   <!-- end of list -->
 
-<!-- end: NumberedList(loose=True) -->
+<!-- end of list -->

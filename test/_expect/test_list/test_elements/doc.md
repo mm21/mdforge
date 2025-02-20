@@ -1,61 +1,85 @@
 # BulletList, inline
 
-<!-- start: BulletList(loose=False) -->
 - **a (strong)**
 - _b (emph)_
-  <!-- start: BulletList(loose=False) -->
   - b1
   - b2
   - b3
-  <!-- end: BulletList(loose=False) -->
+  <!-- end of list -->
 - **_c (strong + emph)_**
-<!-- end: BulletList(loose=False) -->
+<!-- end of list -->
 
 # BulletList, block
 
-<!-- start: BulletList(loose=True) -->
 - **a (strong)**
 
 - _b (emph)_
-  <!-- start: BulletList(loose=False) -->
   - b1
   - b2
   - b3
-  <!-- end: BulletList(loose=False) -->
+  <!-- end of list -->
 
 - c (paragraph 1)
   
   c (paragraph 2)
 
-<!-- end: BulletList(loose=True) -->
+<!-- end of list -->
+
+# BulletList, block (inferred)
+
+- a
+
+- b
+  - b1
+  - b2
+  - b3
+  <!-- end of list -->
+
+- c (paragraph 1)
+  
+  c (paragraph 2)
+
+<!-- end of list -->
 
 # NumberedList, inline
 
-<!-- start: NumberedList(loose=False) -->
 #. **a (strong)**
 #. _b (emph)_
-   <!-- start: NumberedList(loose=False) -->
    #. b1
    #. b2
    #. b3
-   <!-- end: NumberedList(loose=False) -->
+   <!-- end of list -->
 #. **_c (strong + emph)_**
-<!-- end: NumberedList(loose=False) -->
+<!-- end of list -->
 
 # NumberedList, block
 
-<!-- start: NumberedList(loose=True) -->
 #. **a (strong)**
 
 #. _b (emph)_
-   <!-- start: NumberedList(loose=False) -->
    #. b1
    #. b2
    #. b3
-   <!-- end: NumberedList(loose=False) -->
+   <!-- end of list -->
 
 #. c (paragraph 1)
    
    c (paragraph 2)
 
-<!-- end: NumberedList(loose=True) -->
+<!-- end of list -->
+
+# NumberedList, block (inferred)
+
+#. a
+
+#. b
+   #. b1
+   #. b2
+   #. b3
+   <!-- end of list -->
+
+#. c (paragraph 1)
+   
+   c (paragraph 2)
+
+<!-- end of list -->

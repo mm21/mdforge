@@ -5,6 +5,7 @@ List elements.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from functools import cache
 from typing import Generator
 
 from ...element import BaseBlockElement, BaseElement
@@ -34,11 +35,17 @@ class ListItem:
         self.__text = text
         self.__sub_items = sub_items
 
-    @property
-    def _is_block(self) -> bool:
-        return isinstance(self.__text, BaseBlockElement)
+    def _is_block(self, flavor: FlavorType) -> bool:
+        """
+        Check whether this list item is a block element. Also consider raw
+        text which has a blank line separating multiple paragraphs.
+        """
+        return isinstance(self.__text, BaseBlockElement) or any(
+            line.strip() == "" for line in self._render_text(flavor)
+        )
 
-    def _render_text(self, flavor: FlavorType) -> Generator[str, None, None]:
+    @cache
+    def _render_text(self, flavor: FlavorType) -> list[str]:
         """
         Get text, rendering if necessary.
         """
@@ -52,7 +59,7 @@ class ListItem:
             # embedded
             text = "\n".join(self.__text._render_element(flavor))
 
-        yield from text.split("\n")
+        return text.strip().split("\n")
 
     def _render_sub_items(
         self, flavor: FlavorType, indent_spaces: int, parent_list: BaseList
@@ -71,7 +78,8 @@ class ListItem:
         self, parent_list_cls: type[BaseList]
     ) -> BaseList | None:
         """
-        Get sub list from sub items.
+        Get sub list from sub items, creating a new list object if items are
+        given as a plain list.
         """
         if not self.__sub_items:
             return None
@@ -93,8 +101,7 @@ class BaseList(BaseBlockElement, ABC):
 
     __loose: bool
     """
-    Whether each item is wrapped in a paragraph, either as indicated by user
-    or inferred by one of the items having block content.
+    Whether each item is wrapped in a paragraph as indicated by user.
     """
 
     def __init__(self, items: list[ListItemType], loose: bool = False):
@@ -103,7 +110,7 @@ class BaseList(BaseBlockElement, ABC):
         :param loose: If `True`, each item is formatted as a paragraph
         """
         self.__items = items
-        self.__loose = loose or self.__check_loose(items)
+        self.__loose = loose
 
     @abstractmethod
     def _get_marker(self, flavor: FlavorType) -> str:
@@ -128,33 +135,29 @@ class BaseList(BaseBlockElement, ABC):
         marker = self._get_marker(flavor)
         indent_str = " " * indent_spaces
         next_indent_spaces = indent_spaces + len(marker) + 1
-        desc = f"{type(self).__name__}(loose={self.__loose})"
-
-        # in pandoc, inserting a comment between lists ensures they aren't
-        # considered as the same list in case there is no other content
-        # between them. might as well add a start comment too.
-        # see: https://pandoc.org/MANUAL.html#ending-a-list
-        yield f"{indent_str}<!-- start: {desc} -->"
 
         # normalize items
         items_norm = self.__normalize_items(
             self.__items if items is None else items
         )
 
-        # if there is a single item in a list specified to be loose,
-        # there would be no way for parsers to determine that it's loose.
-        # wrap the item in a paragraph for consistent element hierarchy.
-        single_loose_item = len(items_norm) == 1 and self.__loose
+        is_loose = self.__check_loose(flavor, items_norm)
+
+        # if there is a single item without multiple paragraphs in a list
+        # specified to be loose, there would be no way for parsers to
+        # determine that it's loose. wrap the item in a paragraph to ensure a
+        # consistent element hierarchy.
+        single_loose_item = len(items_norm) == 1 and is_loose
 
         # traverse items
         for item in items_norm:
 
             # get item text
-            text: list[str] = list(item._render_text(flavor))
+            text: list[str] = item._render_text(flavor)
             assert len(text) >= 1
 
             # wrap in paragraph if needed
-            if single_loose_item:
+            if single_loose_item and not any(line == "" for line in text):
                 text[0] = f"<p>{text[0]}"
                 text[-1] = f"{text[-1]}</p>"
 
@@ -169,26 +172,29 @@ class BaseList(BaseBlockElement, ABC):
             # render sub-items
             yield from item._render_sub_items(flavor, next_indent_spaces, self)
 
-            if self.__loose:
+            if is_loose:
                 # insert additional space between this item and next
                 yield ""
 
-        yield f"{indent_str}<!-- end: {desc} -->"
+        # in pandoc, inserting a comment between lists ensures they aren't
+        # considered as the same list in case there is no other content
+        # between them.
+        # see: https://pandoc.org/MANUAL.html#ending-a-list
+        yield f"{indent_str}<!-- end of list -->"
 
-    def __check_loose(self, items: list[ListItemType]):
+    def __check_loose(self, flavor: FlavorType, items: list[ListItem]):
         """
-        Check if there are any non-list block elements in items. If so,
-        consider this a loose list so blank lines are inserted between
-        elements.
+        Check if there are any block elements in items. If so, consider this a
+        loose list so blank lines are inserted between elements.
+        """
 
-        Otherwise, the list would not be considered loose if the last item
-        was a block element.
-        """
+        if self.__loose:
+            return True
 
         for item in items:
             if isinstance(item, BaseBlockElement):
                 return True
-            elif isinstance(item, ListItem) and item._is_block:
+            elif isinstance(item, ListItem) and item._is_block(flavor):
                 return True
 
         return False

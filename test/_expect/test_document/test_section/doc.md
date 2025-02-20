@@ -4,11 +4,10 @@ Hello, world!
 
 ## Section 1-1
 
-<!-- start: BulletList(loose=False) -->
 - a
 - b
 - c
-<!-- end: BulletList(loose=False) -->
+<!-- end of list -->
 
 # Section 2
 

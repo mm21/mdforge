@@ -126,6 +126,9 @@ def test_loose(doc: Document):
         doc += Heading(f"{name}, 1 element")
         doc += list_cls(["a"], loose=True)
 
+        doc += Heading(f"{name}, 1 element (w/paragraph)")
+        doc += list_cls(["a\n\nb"], loose=True)
+
         doc += Heading(f"{name}, implicit loose (paragraphs)")
         doc += list_cls(
             [
@@ -204,5 +207,21 @@ def test_elements(doc: Document):
                 BlockContainer(
                     Paragraph("c (paragraph 1)"), Paragraph("c (paragraph 2)")
                 ),
+            ]
+        )
+
+        doc += Heading(f"{name}, block (inferred)")
+        doc += list_cls(
+            [
+                "a",
+                ListItem(
+                    "b",
+                    [
+                        "b1",
+                        "b2",
+                        "b3",
+                    ],
+                ),
+                "c (paragraph 1)\n\nc (paragraph 2)",
             ]
         )
