@@ -1,5 +1,5 @@
 """
-List elements.
+Item-based list elements.
 """
 
 from __future__ import annotations
@@ -8,8 +8,8 @@ from abc import ABC, abstractmethod
 from functools import cache
 from typing import Generator
 
-from ...element import BaseBlockElement, BaseElement
-from ...types import FlavorType
+from ....element import BaseBlockElement, BaseElement
+from ....types import FlavorType
 
 __all__ = [
     "ListItemType",

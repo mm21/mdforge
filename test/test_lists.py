@@ -4,6 +4,8 @@ from mdforge import (
     BaseList,
     BlockContainer,
     BulletList,
+    DefinitionItem,
+    DefinitionList,
     Document,
     Emph,
     Heading,
@@ -225,3 +227,23 @@ def test_elements(doc: Document):
                 "c (paragraph 1)\n\nc (paragraph 2)",
             ]
         )
+
+
+def test_definition(doc: Document):
+
+    inline_items = [
+        DefinitionItem("Term A", "Definition A"),
+        DefinitionItem(
+            Strong("Term B (strong)"), Strong("Definition B (strong)")
+        ),
+        DefinitionItem(
+            "Term C", ["Definition C1", Strong("Definition C2 (strong)")]
+        ),
+    ]
+
+    # non-compact and compact, inline only
+    for compact in [False, True]:
+        doc += Heading(f"Definition list, compact={compact}")
+        doc += DefinitionList(inline_items, compact=compact)
+
+    # TODO: block items
