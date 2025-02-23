@@ -89,7 +89,7 @@ class RenderContext:
                         # origin and see if this is the last spanned column
                         origin_col_idx = origin_map[cell]
                         col_idx_offset = col_idx - origin_col_idx
-                        is_last_col_span = col_idx_offset == cell.cspan - 1
+                        is_last_col_span = col_idx_offset == cell._cspan - 1
 
                     col_cells.append((row[col_idx], is_last_col_span))
 
@@ -112,22 +112,22 @@ class RenderContext:
         cell_width = cell._get_raw_width(self.flavor)
 
         # if no spanned columns, just return raw cell width
-        if cell.cspan == 1:
+        if cell._cspan == 1:
             return cell_width
 
         # for spanned columns, subtract the separator widths since there
         # won't be any separators between cells
         cell_width = max(
-            1, cell_width - len(self.variant.cell_sep) * (cell.cspan - 1)
+            1, cell_width - len(self.variant.cell_sep) * (cell._cspan - 1)
         )
 
         # divide width amongst all the columns spanned
-        div_width = math.ceil(cell_width / cell.cspan)
+        div_width = math.ceil(cell_width / cell._cspan)
 
         if is_last_col_span:
             # the last spanned column, so it may be unnecessarily long - just
             # use the remaining width
-            current_width = div_width * (cell.cspan - 1)
+            current_width = div_width * (cell._cspan - 1)
             return max(1, cell_width - current_width)
         else:
             # not the last spanned column, this should be its width
@@ -160,7 +160,7 @@ class RenderContext:
 
             # traverse this cell along with all spanned ones
             for row_offset, col_offset in itertools.product(
-                range(cell.rspan), range(cell.cspan)
+                range(cell._rspan), range(cell._cspan)
             ):
 
                 # get virtual cell at this location, which should not have
@@ -214,7 +214,7 @@ class RenderContext:
     def __get_spanned_width(self, row: list[VirtualCell], vcell: VirtualCell):
         # add up raw widths from all spanned columns
         width: int = 0
-        for col_offset in range(vcell.cell.cspan):
+        for col_offset in range(vcell.cell._cspan):
             width += row[vcell.col_idx + col_offset].effective_width
         return width
 
@@ -226,7 +226,7 @@ class RenderContext:
         """
 
         # collect cells which don't span rows
-        non_rspan_vcells = [vcell for vcell in vrow if vcell.cell.rspan == 1]
+        non_rspan_vcells = [vcell for vcell in vrow if vcell.cell._rspan == 1]
 
         if not len(non_rspan_vcells):
             # all cells have spanned rows
@@ -264,14 +264,14 @@ class RenderContext:
         Allocate the content for this cell across all the rows/columns it
         spans, wrapping content at the given width.
         """
-        assert vcell.row_idx + vcell.cell.rspan <= len(vrows)
+        assert vcell.row_idx + vcell.cell._rspan <= len(vrows)
 
         # get content, possibly wrapping at width of all spanned cells
         # - content is cached, so need to make copy
         content = vcell.cell._get_content(self.flavor, width=width).copy()
 
         # traverse each virtual row
-        for row_offset in range(vcell.cell.rspan):
+        for row_offset in range(vcell.cell._rspan):
 
             # select this row
             vrow = vrows[vcell.row_idx + row_offset]
@@ -291,20 +291,20 @@ class RenderContext:
         """
 
         # select subset of row which is spanned
-        vcells = vrow[vcell.col_idx : vcell.col_idx + vcell.cell.cspan]
+        vcells = vrow[vcell.col_idx : vcell.col_idx + vcell.cell._cspan]
 
         # get list of widths for each spanned cell
         vcell_widths = [vcell.effective_width for vcell in vcells]
 
         # create list of lines per cell in this spanned row
-        vcell_lines: list[list[str]] = [[] for _ in range(vcell.cell.cspan)]
+        vcell_lines: list[list[str]] = [[] for _ in range(vcell.cell._cspan)]
 
         # get max height of this row
         max_height = self.__get_vrow_height(vrow)
 
         # loop over lines until expected height, if there is one
         line_idx = 0
-        last_row = row_offset == vcell.cell.rspan - 1
+        last_row = row_offset == vcell.cell._rspan - 1
 
         while (line_idx < (max_height or 1)) or (len(content) and last_row):
             line_idx += 1

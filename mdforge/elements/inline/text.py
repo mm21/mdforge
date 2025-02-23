@@ -32,6 +32,10 @@ class Text(BaseInlineElement):
     __text: str
 
     def __init__(self, text: str):
+
+        if "\n" in text:
+            raise ValueError(f"Raw text may not span multiple lines: {text}")
+
         self.__text = text
 
     def _render_inline(self, _: FlavorType) -> str:

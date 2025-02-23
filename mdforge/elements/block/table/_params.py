@@ -190,7 +190,7 @@ class TableParams:
 
                 # traverse this cell along with all spanned ones
                 for row_offset, col_offset in itertools.product(
-                    range(cell.rspan), range(cell.cspan)
+                    range(cell._rspan), range(cell._cspan)
                 ):
                     # should not be set yet
                     assert (
@@ -201,7 +201,7 @@ class TableParams:
                     # set this cell
                     norm_rows[row_idx + row_offset][col_idx + col_offset] = cell
 
-                col_idx += cell.cspan
+                col_idx += cell._cspan
 
         # validate: ensure each cell got set
         for row_idx, col_idx in itertools.product(
@@ -237,8 +237,8 @@ def _get_col_count(rows: list[list[Cell]]) -> tuple[int, int]:
     for row_idx, row in enumerate(rows):
         for cell in row:
             # add columns for each row, including spanned ones
-            for row_offset in range(cell.rspan):
-                add_col_count(row_idx + row_offset, cell.cspan)
+            for row_offset in range(cell._rspan):
+                add_col_count(row_idx + row_offset, cell._cspan)
 
     # verify consistency
     assert len(rows) == len(col_counts)

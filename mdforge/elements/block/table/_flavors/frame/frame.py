@@ -403,7 +403,7 @@ class FrameTableVariant(BaseTableVariant):
             if vcell.is_last_col:
                 # last cell in row
                 sep = self.row_trailing_sep
-            elif vcell.cell.cspan == 1 or vcell.is_last_col_span:
+            elif vcell.cell._cspan == 1 or vcell.is_last_col_span:
                 # non-spanned cell or last cell in spanned cells
                 sep = self.cell_sep
             else:
@@ -463,7 +463,7 @@ class FrameTableVariant(BaseTableVariant):
         def get_overrides(vrow: list[VirtualCell] | None) -> list[bool]:
             return (
                 [
-                    vcell.cell.cspan > 1 and not vcell.is_last_col_span
+                    vcell.cell._cspan > 1 and not vcell.is_last_col_span
                     for vcell in vrow
                 ]
                 if vrow

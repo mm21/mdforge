@@ -8,6 +8,8 @@ from abc import ABC, abstractmethod
 from functools import cache
 from typing import Generator
 
+from ...._norm import CoerceSpec, norm_list, norm_obj
+from ...._utils import coerce_text
 from ....element import BaseBlockElement, BaseElement
 from ....types import FlavorType
 
@@ -24,15 +26,18 @@ type ListItemType = str | BaseElement | ListItem
 
 
 class ListItem:
-    __text: str | BaseElement
+
+    __element: BaseElement
     __sub_items: list[ListItemType] | BaseList | None
 
     def __init__(
         self,
-        text: str | BaseElement,
+        content: str | BaseElement,
         sub_items: list[ListItemType] | BaseList | None = None,
     ):
-        self.__text = text
+        self.__element = norm_obj(
+            content, BaseElement, CoerceSpec(coerce_text, str)
+        )
         self.__sub_items = sub_items
 
     def _is_block(self, flavor: FlavorType) -> bool:
@@ -40,24 +45,19 @@ class ListItem:
         Check whether this list item is a block element. Also consider raw
         text which has a blank line separating multiple paragraphs.
         """
-        return isinstance(self.__text, BaseBlockElement) or any(
+        return isinstance(self.__element, BaseBlockElement) or any(
             line.strip() == "" for line in self._render_text(flavor)
         )
 
     @cache
     def _render_text(self, flavor: FlavorType) -> list[str]:
         """
-        Get text, rendering if necessary.
+        Get text, rendering element.
         """
-        text: str
 
-        if isinstance(self.__text, str):
-            text = self.__text
-        else:
-            assert isinstance(self.__text, BaseElement)
-            # join first, then split later in case any elements have newlines
-            # embedded
-            text = "\n".join(self.__text._render_element(flavor))
+        # join first, then split later in case any elements have newlines
+        # embedded
+        text: str = "\n".join(self.__element._render_element(flavor))
 
         return text.strip().split("\n")
 
@@ -132,15 +132,14 @@ class BaseList(BaseBlockElement, ABC):
         Render items at the given indentation.
         """
 
+        items_norm = norm_list(
+            self.__items if items is None else items,
+            ListItem,
+            CoerceSpec(ListItem, (str, BaseElement)),
+        )
         marker = self._get_marker(flavor)
         indent_str = " " * indent_spaces
         next_indent_spaces = indent_spaces + len(marker) + 1
-
-        # normalize items
-        items_norm = self.__normalize_items(
-            self.__items if items is None else items
-        )
-
         is_loose = self.__check_loose(flavor, items_norm)
 
         # if there is a single item without multiple paragraphs in a list
@@ -157,7 +156,9 @@ class BaseList(BaseBlockElement, ABC):
             assert len(text) >= 1
 
             # wrap in paragraph if needed
-            if single_loose_item and not any(line == "" for line in text):
+            if single_loose_item and not any(
+                line.strip() == "" for line in text
+            ):
                 text[0] = f"<p>{text[0]}"
                 text[-1] = f"{text[-1]}</p>"
 
@@ -198,24 +199,6 @@ class BaseList(BaseBlockElement, ABC):
                 return True
 
         return False
-
-    def __normalize_items(self, items: list[ListItemType]) -> list[ListItem]:
-        """
-        Get items as a normalized list.
-        """
-        items_norm: list[ListItem] = []
-
-        for item in items:
-            if isinstance(item, (str, BaseElement)):
-                items_norm.append(ListItem(item))
-            elif isinstance(item, ListItem):
-                items_norm.append(item)
-            else:
-                raise ValueError(
-                    f"Unexpected list item type: {item} ({type(item)})"
-                )
-
-        return items_norm
 
 
 class BulletList(BaseList):

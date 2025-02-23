@@ -14,6 +14,7 @@ from ...types import FlavorType
 __all__ = [
     "Heading",
     "Paragraph",
+    "TextBlock",
 ]
 
 
@@ -43,3 +44,24 @@ class Paragraph(BaseBlockElement, InlineContainerMixin):
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield self._render_elements(flavor)
+
+
+class TextBlock(BaseBlockElement):
+    """
+    Block element containing a single string, which may have multiple lines.
+    """
+
+    __lines: list[str]
+
+    def __init__(self, text: str):
+        self.__lines = text.strip().split("\n")
+
+    @property
+    def _has_empty_lines(self) -> bool:
+        """
+        Check if text block has any empty lines.
+        """
+        return any(line.strip() == "" for line in self.__lines)
+
+    def _render_block(self, _: FlavorType):
+        yield from self.__lines

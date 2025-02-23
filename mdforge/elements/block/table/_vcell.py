@@ -82,7 +82,7 @@ class VirtualCell:
 
     @property
     def is_spanned(self) -> bool:
-        return self.cell.rspan > 1 or self.cell.cspan > 1
+        return self.cell._rspan > 1 or self.cell._cspan > 1
 
     @property
     def cell(self) -> Cell:
@@ -102,7 +102,7 @@ class VirtualCell:
         # get offset if spanning multiple cells
         span_offset = (
             len(self.context.variant.cell_sep)
-            if self.cell.cspan > 1 and not self.is_last_col_span
+            if self.cell._cspan > 1 and not self.is_last_col_span
             else 0
         )
         return width + span_offset
@@ -150,7 +150,7 @@ class VirtualCell:
         """
         Whether this is the last spanned column.
         """
-        return self.col_offset == self.cell.cspan - 1
+        return self.col_offset == self.cell._cspan - 1
 
     @property
     def lines(self) -> list[str]:

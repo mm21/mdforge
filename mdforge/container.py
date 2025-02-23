@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import Generator, Iterable, Self
 
+from ._norm import CoerceSpec, norm_list
 from .element import BaseBlockElement, BaseInlineElement
 from .types import FlavorType
 
@@ -24,9 +25,13 @@ class InlineContainerMixin:
     __auto_space: bool
 
     def __init__(
-        self, *elements: str | BaseInlineElement, auto_space: bool = False
+        self, *elements: BaseInlineElement | str, auto_space: bool = False
     ):
-        self.__elements = self.__normalize_elements(list(elements))
+        from .elements.inline.text import Text
+
+        self.__elements = norm_list(
+            elements, BaseInlineElement, CoerceSpec(Text, str)
+        )
         self.__auto_space = auto_space
 
     def _render_elements(self, flavor: FlavorType) -> str:
@@ -34,30 +39,6 @@ class InlineContainerMixin:
         return sep.join(
             element._render_inline(flavor) for element in self.__elements
         )
-
-    def __normalize_elements(
-        self, raw_elements: list[str | BaseInlineElement]
-    ) -> list[BaseInlineElement]:
-        """
-        Normalize inline elements, creating text elements from strings as
-        necessary.
-        """
-
-        from .elements.inline.text import Text
-
-        elements: list[BaseInlineElement] = []
-
-        for element in raw_elements:
-            if isinstance(element, BaseInlineElement):
-                elements.append(element)
-            else:
-                if not isinstance(element, str):
-                    raise ValueError(
-                        f"Invalid element, must be str or inline element: {element}"
-                    )
-                elements.append(Text(element))
-
-        return elements
 
 
 class InlineContainer(BaseInlineElement, InlineContainerMixin):
@@ -77,22 +58,32 @@ class BaseBlockContainer(BaseBlockElement):
 
     __elements: list[BaseBlockElement]
 
-    def __init__(self, *elements: BaseBlockElement):
+    def __init__(self, *elements: BaseBlockElement | str):
         self.__elements = []
 
-        for element in elements:
-            self._add_element(element)
+        # add elements to this container
+        self._add_elements(self._norm_elements(elements))
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield "\n\n".join(
             [element._render_block_lines(flavor) for element in self.__elements]
         )
 
-    def _add_element(self, element: BaseBlockElement):
-        if not isinstance(element, BaseBlockElement):
-            raise ValueError
+    def _add_elements(self, elements: list[BaseBlockElement]):
+        for element in elements:
+            assert isinstance(element, BaseBlockElement)
+            self.__elements.append(element)
 
-        self.__elements.append(element)
+    def _norm_elements(
+        self,
+        elements: BaseBlockElement | str | Iterable[BaseBlockElement | str],
+    ) -> list[BaseBlockElement]:
+        """
+        Normalize elements, creating raw block text from strings as necessary.
+        """
+        from .elements.block.basic import TextBlock
+
+        return norm_list(elements, BaseBlockElement, CoerceSpec(TextBlock, str))
 
 
 class BlockContainer(BaseBlockContainer):
@@ -121,37 +112,35 @@ class BaseLevelBlockContainer(BaseBlockContainer):
     List of nested containers; a subset of nested elements.
     """
 
-    def __init__(
-        self,
-        *elements: BaseBlockElement,
-    ):
-        super().__init__(*elements)
+    def __init__(self, *elements: BaseBlockElement | str):
+        elements_norm = self._norm_elements(elements)
+
+        super().__init__(*elements_norm)
         self.__containers = []
 
-        # bind elements
-        for element in elements:
-            self.__bind_element(element)
+        # bind elements to this container
+        self.__bind_elements(elements_norm)
 
     def __iadd__(
-        self, elements: BaseBlockElement | Iterable[BaseBlockElement]
+        self,
+        elements: BaseBlockElement | str | Iterable[BaseBlockElement | str],
     ) -> Self:
         """
         Implements `+=` operator to add element(s).
         """
-        elements_: list[BaseBlockElement] = (
-            list(elements) if isinstance(elements, Iterable) else [elements]
-        )
+        elements_norm = self._norm_elements(elements)
 
-        # add and bind elements to this container
-        for element in elements_:
-            # add to element list
-            self._add_element(element)
-            self.__bind_element(element)
+        # add elements to container
+        self._add_elements(elements_norm)
+
+        # bind elements to this container
+        self.__bind_elements(elements_norm)
 
         return self
 
     @property
-    def _level(self) -> int | None:
+    def _level(self) -> int:
+        assert self.__level is not None
         return self.__level
 
     @_level.setter
@@ -162,20 +151,21 @@ class BaseLevelBlockContainer(BaseBlockContainer):
         assert self.__level is None
         self.__level = level
 
-        for c in self.__containers:
-            c._level = level + self._level_inc
+        for container in self.__containers:
+            container._level = level + self._level_inc
 
-    def __bind_element(self, element: BaseBlockElement):
+    def __bind_elements(self, elements: list[BaseBlockElement]):
         """
-        Bind element to this container.
+        Bind elements to this container.
         """
+        for element in elements:
 
-        # set element's container
-        element._container = self
+            # set element's container
+            element._container = self
 
-        # if element is also a block container, bind it
-        if isinstance(element, BaseLevelBlockContainer):
-            self.__bind_container(element)
+            # if element is also a block container, bind it
+            if isinstance(element, BaseLevelBlockContainer):
+                self.__bind_container(element)
 
     def __bind_container(self, container: BaseLevelBlockContainer):
         """

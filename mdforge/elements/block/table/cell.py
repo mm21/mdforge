@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, Iterable, Literal
 
-from ....element import BaseElement
+from ...._norm import CoerceSpec, norm_obj
+from ...._utils import coerce_text
+from ....element import BaseElement, BaseInlineElement
 from ....types import FlavorType
+from ..basic import TextBlock
 
 if TYPE_CHECKING:
     pass
@@ -18,45 +20,65 @@ __all__ = [
 ]
 
 type CellType = str | BaseElement | Cell
-type RowType = list[CellType]
+type RowType = Iterable[CellType]
 type AlignType = Literal["left", "center", "right", "default"]
-
 
 VALID_ALIGNS = ["left", "center", "right", "default"]
 
 
-@dataclass(frozen=True)
 class Cell:
     """
-    Represents a table cell which can span multiple rows/columns, if the given
-    flavor supports it.
+    Represents a table cell which can span multiple rows/columns, if the
+    flavor supports it upon render.
     """
 
-    content: str | list[str] | BaseElement
+    __content: BaseElement
     """
-    Cell content, consisting of one or more lines or an element.
-    """
-
-    rspan: int = 1
-    """
-    Row span, can only be greater than 1 for tables with `block=True`.
+    Cell content as an element.
     """
 
-    cspan: int = 1
+    __rspan: int
     """
-    Column span, can only be greater than 1 for tables with `block=True`.
+    Row span.
     """
 
-    def __hash__(self):
-        return id(self)
+    __cspan: int
+    """
+    Column span.
+    """
 
-    @classmethod
-    def _normalize(cls, cell: CellType) -> Cell:
-        if isinstance(cell, Cell):
-            return cell
+    def __init__(
+        self, content: str | BaseElement, rspan: int = 1, cspan: int = 1
+    ):
+        self.__content = norm_obj(
+            content, BaseElement, CoerceSpec(coerce_text, str)
+        )
+        self.__rspan = rspan
+        self.__cspan = cspan
+
+    @property
+    def _element(self) -> BaseElement:
+        return self.__content
+
+    @property
+    def _rspan(self) -> int:
+        return self.__rspan
+
+    @property
+    def _cspan(self) -> int:
+        return self.__cspan
+
+    @property
+    def _is_block(self) -> bool:
+        if isinstance(self.__content, BaseInlineElement):
+            return False
+        elif (
+            isinstance(self.__content, TextBlock)
+            and not self.__content._has_empty_lines
+        ):
+            return False
         else:
-            assert isinstance(cell, (str, BaseElement))
-            return Cell(cell)
+            return True
 
     @cache
     def _get_content(
@@ -67,31 +89,27 @@ class Cell:
         width provided.
         """
 
-        raw_content = self.content
-        lines: list[str]
-
-        # normalize into list of lines
-        if isinstance(raw_content, str):
-            lines = raw_content.split("\n")
-        elif isinstance(raw_content, Iterable):
-            assert all(isinstance(line, str) for line in raw_content)
-            lines = list(raw_content)
-        else:
-            assert isinstance(raw_content, BaseElement)
-            lines = list(raw_content._render_element(flavor))
+        # render element
+        lines = list(self.__content._render_element(flavor))
 
         if width:
             # wrap words
             wrapped_lines: list[str] = []
 
             for line in lines:
-                wrapped_lines += self._wrap_line(line, width)
+                wrapped_lines += self.__wrap_line(line, width)
 
             return wrapped_lines
         else:
             return lines
 
-    def _wrap_line(self, line: str, width: int) -> list[str]:
+    def _get_raw_width(self, flavor: FlavorType) -> int:
+        """
+        Get width of this cell with no wrapping or explicit width from user.
+        """
+        return max(len(line) for line in self._get_content(flavor))
+
+    def __wrap_line(self, line: str, width: int) -> list[str]:
         """
         Wrap the provided line if necessary and return a list of resulting
         lines.
@@ -118,9 +136,10 @@ class Cell:
             else:
                 # word doesn't fit in current line, append current line
                 # and start new one
-                assert (
-                    len(word) <= width
-                ), f"Unable to wrap line: len({word})={len(word)} > {width}"
+                if len(word) > width:
+                    raise ValueError(
+                        f"Unable to wrap line: len({word})={len(word)} > {width}"
+                    )
                 lines.append(line_new)
                 line_new = word
 
@@ -129,9 +148,3 @@ class Cell:
             lines.append(line_new)
 
         return lines
-
-    def _get_raw_width(self, flavor: FlavorType) -> int:
-        """
-        Get width of this cell with no wrapping or explicit width from user.
-        """
-        return max(len(line) for line in self._get_content(flavor))

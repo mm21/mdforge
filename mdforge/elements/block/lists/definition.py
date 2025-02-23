@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import Generator, Iterable
 
+from ...._norm import CoerceSpec, norm_list, norm_obj
 from ....element import BaseBlockElement, BaseElement, BaseInlineElement
 from ....types import FlavorType
 from ...inline.text import Text
@@ -33,46 +34,13 @@ class DefinitionItem:
         definitions: str | BaseElement | list[str | BaseElement],
     ):
         """
-        :param term: Term, must be an inline element
-        :param definitions: List of elements corresponding to term; may be inline or block elements, but compact definition lists require that all definitions be inline only
+        :param term: Term as a string or inline element
+        :param definitions: One or more definitions; may be inline or block elements, but compact definition lists require that all definitions be inline only
         """
-
-        def normalize_defs(
-            defs: str | BaseElement | list[str | BaseElement],
-        ) -> list[BaseElement]:
-
-            # normalize to list of strings or elements
-            defs_: list[str | BaseElement] = (
-                [defs]
-                if not isinstance(defs, Iterable) or isinstance(defs, str)
-                else defs
-            )
-
-            defs_norm: list[BaseElement] = []
-
-            # normalize to list of elements
-            for d in defs_:
-                if isinstance(d, str):
-                    defs_norm.append(Text(d))
-                elif isinstance(d, BaseElement):
-                    defs_norm.append(d)
-                else:
-                    raise ValueError(
-                        f"Definition must be str or BaseElement: {d}"
-                    )
-
-            return defs_norm
-
-        term_ = Text(term) if isinstance(term, str) else term
-        definitions_ = normalize_defs(definitions)
-
-        if not isinstance(term_, BaseInlineElement):
-            raise ValueError(
-                f"Term must be an inline element: {term_} ({type(term_)})"
-            )
-
-        self.__term = term_
-        self.__definitions = definitions_
+        self.__term = norm_obj(term, BaseInlineElement, CoerceSpec(Text, str))
+        self.__definitions = norm_list(
+            definitions, BaseElement, CoerceSpec(Text, str)
+        )
 
     def _validate(self, compact: bool):
         if compact:
@@ -95,7 +63,6 @@ class DefinitionItem:
 
         # render definitions
         for def_idx, definition in enumerate(self.__definitions):
-
             is_last_def = def_idx == len(self.__definitions) - 1
 
             # render lines for this definition
@@ -122,22 +89,27 @@ class DefinitionList(BaseBlockElement):
     __items: list[DefinitionItem]
     __compact: bool
 
-    def __init__(self, items: list[DefinitionItem], compact: bool = False):
+    def __init__(
+        self,
+        items: DefinitionItem | Iterable[DefinitionItem],
+        compact: bool = False,
+    ):
         """
-        :param items: List of definition items
+        :param items: One or more definition items
         :param compact: Whether to generate a compact list, with no paragraph wrapping the definitions; if `True`, all definitions must be inline elements
         """
 
-        for item in items:
+        items_norm = norm_list(items, DefinitionItem)
+
+        for item in items_norm:
             item._validate(compact)
 
-        self.__items = items
+        self.__items = items_norm
         self.__compact = compact
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
 
         for item_idx, item in enumerate(self.__items):
-
             is_last_item = item_idx == len(self.__items)
 
             # render this item

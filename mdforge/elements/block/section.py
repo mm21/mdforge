@@ -27,5 +27,5 @@ class Section(BaseLevelBlockContainer):
         heading: str | None = None,
     ):
         # create heading if given, inserting as first element
-        heading_ = tuple([Heading(heading)]) if heading else None
-        super().__init__(*heading_, *elements)
+        heading_norm = [Heading(heading)] if heading else []
+        super().__init__(*heading_norm, *elements)
