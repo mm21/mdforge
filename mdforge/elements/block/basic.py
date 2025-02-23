@@ -25,19 +25,47 @@ class Heading(BaseBlockElement):
     automatically based on nesting of container.
     """
 
-    text: str
+    __text: str
     """
     Heading text.
     """
 
-    level: int | None = None
+    __level: int | None
     """
     Heading level, or `None` to set automatically.
     """
 
-    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
-        level = self.level or self._container._level
-        yield f"{'#' * level} {self.text}"
+    __heading_id: str | None
+    """
+    Explicit identifier.
+    """
+
+    def __init__(
+        self, text: str, level: int | None = None, heading_id: str | None = None
+    ):
+        self.__text = text
+        self.__level = level
+        self.__heading_id = heading_id
+
+    @property
+    def _text(self) -> str:
+        return self.__text
+
+    @property
+    def _heading_id(self) -> str | None:
+        return self.__heading_id
+
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        level = self.__level or self._container._level
+
+        attrs: str
+
+        if flavor == "pandoc" and self.__heading_id:
+            attrs = f" {{#{self.__heading_id}}}"
+        else:
+            attrs = ""
+
+        yield f"{'#' * level} {self.__text}{attrs}"
 
 
 class Paragraph(BaseBlockElement, InlineContainerMixin):

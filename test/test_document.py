@@ -1,6 +1,6 @@
 from pytest import mark
 
-from mdforge import BulletList, Document, Heading, Paragraph, Section
+from mdforge import BulletList, Document, Heading, Paragraph, Ref, Section
 
 from .conftest import unused
 
@@ -31,6 +31,30 @@ def test_section(doc: Document):
     h3 = Heading("Heading 3")
 
     doc += [sec1, sec2, h3]
+
+
+def test_ref(doc: Document):
+    """
+    Test headings and references to them.
+    """
+
+    # heading w/explicit id
+    heading_1 = Heading("Test heading 1", heading_id="heading-1")
+    doc += heading_1
+    doc += Paragraph(Ref(heading_1))
+    doc += Paragraph(Ref(heading_1, "Link to heading 1"))
+
+    # heading w/implicit id
+    heading_2 = Heading("Test heading 2")
+    doc += heading_2
+    doc += Paragraph(Ref(heading_2))
+    doc += Paragraph(Ref(heading_2, "Link to heading 2"))
+
+    # section
+    section_1 = Section(heading="Test section 1")
+    doc += section_1
+    doc += Paragraph(Ref(section_1))
+    doc += Paragraph(Ref(section_1, "Link to section 1"))
 
 
 @mark.frontmatter({"title": "Doc 1"})

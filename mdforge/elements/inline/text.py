@@ -2,11 +2,15 @@
 Common inline elements.
 """
 
+from __future__ import annotations
+
 from mdforge._norm import CoerceSpec, norm_obj
 
 from ...container import InlineContainerMixin
 from ...element import BaseInlineElement
 from ...types import FlavorType
+from ..block.basic import Heading
+from ..block.section import Section
 
 __all__ = [
     "Text",
@@ -15,6 +19,7 @@ __all__ = [
     "Underline",
     "Strikethrough",
     "Link",
+    "Ref",
 ]
 
 
@@ -70,6 +75,9 @@ class Strikethrough(BaseTextContainer):
 
 
 class Link(BaseInlineElement):
+    """
+    Link to webpage.
+    """
 
     __text: BaseInlineElement
     __url: str
@@ -80,6 +88,36 @@ class Link(BaseInlineElement):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"[{self.__text._render_inline(flavor)}]({self.__url})"
+
+
+class Ref(BaseInlineElement):
+    """
+    Reference to a heading within the same document.
+
+    TODO: support ref to arbitrary anchor, add corresponding Anchor element
+    """
+
+    __target: Heading
+    __text: str | None
+
+    def __init__(self, target: Heading | Section, text: str | None = None):
+        assert isinstance(target, (Heading, Section))
+
+        self.__target = (
+            target if isinstance(target, Heading) else target._heading
+        )
+        self.__text = text
+
+    def _render_inline(self, _: FlavorType) -> str:
+
+        text = self.__text or self.__target._text
+
+        if self.__target._heading_id:
+            # explicit heading id
+            return f"[{text}](#{self.__target._heading_id})"
+        else:
+            # implicit heading id with implicit_header_references
+            return f"[{text}][{self.__target._text}]"
 
 
 # TODO: span
