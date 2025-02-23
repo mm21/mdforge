@@ -25,7 +25,7 @@ class InlineContainerMixin:
     __auto_space: bool
 
     def __init__(
-        self, *elements: BaseInlineElement | str, auto_space: bool = False
+        self, *elements: str | BaseInlineElement, auto_space: bool = False
     ):
         from .elements.inline.text import Text
 

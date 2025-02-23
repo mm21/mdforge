@@ -2,6 +2,8 @@
 Common inline elements.
 """
 
+from mdforge._norm import CoerceSpec, norm_obj
+
 from ...container import InlineContainerMixin
 from ...element import BaseInlineElement
 from ...types import FlavorType
@@ -12,6 +14,7 @@ __all__ = [
     "Strong",
     "Underline",
     "Strikethrough",
+    "Link",
 ]
 
 
@@ -64,6 +67,19 @@ class Strikethrough(BaseTextContainer):
 
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"~~{super()._render_inline(flavor)}~~"
+
+
+class Link(BaseInlineElement):
+
+    __text: BaseInlineElement
+    __url: str
+
+    def __init__(self, text: str | BaseInlineElement, url: str):
+        self.__text = norm_obj(text, BaseInlineElement, CoerceSpec(Text, str))
+        self.__url = url
+
+    def _render_inline(self, flavor: FlavorType) -> str:
+        return f"[{self.__text._render_inline(flavor)}]({self.__url})"
 
 
 # TODO: span
