@@ -9,6 +9,11 @@ def test_basic(doc: Document):
 
     doc += Heading("Basic test")
     doc += Paragraph("Hello, world!")
+    doc += "Hello, world 2!"
+    doc += [
+        "Hello, world\n3!",
+        "Hello, world 4!",
+    ]
 
 
 def test_section(doc: Document):
