@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Generator, Iterable, Self
 
 from ._norm import CoerceSpec, norm_list
-from .element import BaseBlockElement, BaseInlineElement
+from .element import BaseBlockElement, BaseElement, BaseInlineElement
 from .types import FlavorType
 
 __all__ = [
@@ -58,7 +58,7 @@ class BaseBlockContainer(BaseBlockElement):
 
     __elements: list[BaseBlockElement]
 
-    def __init__(self, *elements: BaseBlockElement | str):
+    def __init__(self, *elements: BaseElement | str):
         self.__elements = []
 
         # add elements to this container
@@ -76,14 +76,21 @@ class BaseBlockContainer(BaseBlockElement):
 
     def _norm_elements(
         self,
-        elements: BaseBlockElement | str | Iterable[BaseBlockElement | str],
+        elements: BaseElement | str | Iterable[BaseElement | str],
     ) -> list[BaseBlockElement]:
         """
         Normalize elements, creating raw block text from strings as necessary.
         """
-        from .elements.block.basic import TextBlock
+        from .elements.block.basic import Paragraph, TextBlock
 
-        return norm_list(elements, BaseBlockElement, CoerceSpec(TextBlock, str))
+        # - wrap strings in raw text blocks
+        # - wrap inline elements in paragraphs
+        return norm_list(
+            elements,
+            BaseBlockElement,
+            CoerceSpec(TextBlock, str),
+            CoerceSpec(Paragraph, BaseInlineElement),
+        )
 
 
 class BlockContainer(BaseBlockContainer):
@@ -112,7 +119,7 @@ class BaseLevelBlockContainer(BaseBlockContainer):
     List of nested containers; a subset of nested elements.
     """
 
-    def __init__(self, *elements: BaseBlockElement | str):
+    def __init__(self, *elements: BaseElement | str):
         elements_norm = self._norm_elements(elements)
 
         super().__init__(*elements_norm)
@@ -123,7 +130,7 @@ class BaseLevelBlockContainer(BaseBlockContainer):
 
     def __iadd__(
         self,
-        elements: BaseBlockElement | str | Iterable[BaseBlockElement | str],
+        elements: BaseElement | str | Iterable[BaseElement | str],
     ) -> Self:
         """
         Implements `+=` operator to add element(s).

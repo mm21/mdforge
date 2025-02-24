@@ -8,6 +8,7 @@ from mdforge import (
     Paragraph,
     Ref,
     Section,
+    Strong,
 )
 
 from .conftest import unused
@@ -22,6 +23,7 @@ def test_basic(doc: Document):
         "Hello, world\n3!",
         "Hello, world 4!",
     ]
+    doc += Strong("Hello, world strong!")
 
 
 def test_section(doc: Document):
@@ -56,20 +58,20 @@ def test_ref(doc: Document):
         ),
     )
     doc += heading_1
-    doc += Paragraph(Ref(heading_1))
-    doc += Paragraph(Ref(heading_1, "Link to heading 1"))
+    doc += Ref(heading_1)
+    doc += Ref(heading_1, "Link to heading 1")
 
     # heading w/implicit id
     heading_2 = Heading("Test heading 2")
     doc += heading_2
-    doc += Paragraph(Ref(heading_2))
-    doc += Paragraph(Ref(heading_2, "Link to heading 2"))
+    doc += Ref(heading_2)
+    doc += Ref(heading_2, "Link to heading 2")
 
     # section
     section_1 = Section(heading="Test section 1")
     doc += section_1
-    doc += Paragraph(Ref(section_1))
-    doc += Paragraph(Ref(section_1, "Link to section 1"))
+    doc += Ref(section_1)
+    doc += Ref(section_1, "Link to section 1")
 
 
 @mark.frontmatter({"title": "Doc 1"})
