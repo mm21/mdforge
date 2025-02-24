@@ -62,8 +62,5 @@ toml-sort = "^0.24.2"
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib -s -v -rA"
-markers = [
-  "filename"
-]
 powerpack_underline = true
 testpaths = ["test"]

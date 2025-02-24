@@ -20,6 +20,11 @@ logging.basicConfig(level=logging.INFO)
 def pytest_configure(config: Config):
     config.addinivalue_line(
         "markers",
+        "filename: Filename of rendered output for comparison",
+    )
+
+    config.addinivalue_line(
+        "markers",
         "frontmatter: Pass frontmatter to Document constructor",
     )
 
