@@ -104,9 +104,9 @@ class Attributes:
     HTML id to associate with this element.
     """
 
-    html_attrs: dict[str, str] | None = None
+    attrs: dict[str, str] | None = None
     """
-    Other HTML attributes.
+    Other attributes, either native HTML attributes or specific to pandoc.
     """
 
     css_classes: str | list[str] | None = None
@@ -116,7 +116,7 @@ class Attributes:
 
     @property
     def _is_empty(self) -> bool:
-        return not (self.html_id or self.html_attrs or self.css_classes)
+        return not (self.html_id or self.attrs or self.css_classes)
 
     @property
     def _css_classes_norm(self) -> list[str] | None:
@@ -132,10 +132,10 @@ class Attributes:
         Copy attributes, updating with the provided values.
         """
 
-        html_attrs, css_classes = self.html_attrs, self._css_classes_norm
+        orig_attrs, orig_css_classes = self.attrs, self._css_classes_norm
 
-        merged_attrs = html_attrs.copy() if html_attrs else {}
-        merged_css_classes = css_classes.copy() if css_classes else []
+        merged_attrs = orig_attrs.copy() if orig_attrs else {}
+        merged_css_classes = orig_css_classes.copy() if orig_css_classes else []
 
         if attrs:
             merged_attrs.update(**attrs)
@@ -145,7 +145,7 @@ class Attributes:
 
         return Attributes(
             html_id=self.html_id,
-            html_attrs=merged_attrs,
+            attrs=merged_attrs,
             css_classes=merged_css_classes,
         )
 
@@ -193,8 +193,8 @@ class AttributesMixin:
             parts.append(f"#{attributes.html_id}")
         if css_classes := attributes._css_classes_norm:
             parts += [f".{css_class}" for css_class in css_classes]
-        if attributes.html_attrs:
-            parts += [f'{k}="{v}"' for k, v in attributes.html_attrs.items()]
+        if attributes.attrs:
+            parts += [f'{k}="{v}"' for k, v in attributes.attrs.items()]
 
         parts_str = "{" + " ".join(parts) + "}"
         prefix = " " if space_prefix else ""

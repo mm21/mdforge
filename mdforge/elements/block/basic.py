@@ -106,7 +106,7 @@ class BlockImage(BaseBlockElement, ImageMixin):
             new_attributes = (
                 attributes._copy(attrs=attrs)
                 if attributes
-                else Attributes(html_attrs=attrs)
+                else Attributes(attrs=attrs)
             )
         else:
             new_attributes = attributes
