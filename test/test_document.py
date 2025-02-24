@@ -1,4 +1,4 @@
-from pytest import mark
+from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import (
     Attributes,
@@ -10,8 +10,6 @@ from mdforge import (
     Section,
     Strong,
 )
-
-from .conftest import unused
 
 
 def test_basic(doc: Document):
@@ -28,14 +26,14 @@ def test_basic(doc: Document):
 
 def test_section(doc: Document):
 
-    sec1 = Section(heading="Section 1")
+    sec1 = Section("Section 1")
     sec1 += Paragraph("Hello, world!")
 
-    sec11 = Section(heading="Section 1-1")
+    sec11 = Section("Section 1-1")
     sec11 += BulletList(["a", "b", "c"])
     sec1 += sec11
 
-    sec2 = Section(heading="Section 2")
+    sec2 = Section("Section 2")
     sec2 += Paragraph("Hello, world 2!")
 
     h3 = Heading("Heading 3")
@@ -74,7 +72,10 @@ def test_ref(doc: Document):
     doc += Ref(section_1, "Link to section 1")
 
 
-@mark.frontmatter({"title": "Doc 1"})
-@mark.elements([(Paragraph, ("Hello, world!",), {})])
-def test_frontmatter(doc: Document):
-    unused(doc)
+def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
+    doc = Document(
+        frontmatter={"title": "Doc 1"}, elements=Paragraph("Hello, world!")
+    )
+
+    doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
+    compare_files(powerpack_comparison_files)

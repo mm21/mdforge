@@ -5,9 +5,11 @@ heading management.
 
 from __future__ import annotations
 
+from typing import Iterable
+
 from ..._norm import CoerceSpec, norm_obj
 from ...container import BaseLevelBlockContainer
-from ...element import BaseBlockElement
+from ...element import BaseElement
 from .basic import Heading
 
 __all__ = [
@@ -22,22 +24,25 @@ class Section(BaseLevelBlockContainer):
     level.
     """
 
-    __heading: Heading | None
+    __heading: Heading | None = None
 
     def __init__(
         self,
-        *elements: BaseBlockElement | str,
         heading: str | Heading | None = None,
+        *,
+        elements: BaseElement | str | Iterable[BaseElement | str] | None = None,
     ):
-        # create heading if given, inserting as first element
-        heading_norm = (
-            norm_obj(heading, Heading, CoerceSpec(Heading, str))
-            if heading
-            else None
-        )
-        self.__heading = heading_norm
+        super().__init__()
 
-        super().__init__(*([heading_norm] if heading_norm else []), *elements)
+        # create heading if given and add as first element
+        if heading:
+            self.__heading = norm_obj(
+                heading, Heading, CoerceSpec(Heading, str)
+            )
+            self += self.__heading
+
+        if elements:
+            self += elements
 
     @property
     def _heading(self) -> Heading | None:

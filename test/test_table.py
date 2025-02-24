@@ -45,7 +45,7 @@ def test_variants(doc: Document):
         nonlocal block_section
 
         section = block_section if table._params.block else inline_section
-        section += Section(table, heading=desc)
+        section += Section(desc, elements=table)
 
     for row_count in [1, ROW_COUNT]:
 

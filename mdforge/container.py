@@ -58,11 +58,18 @@ class BaseBlockContainer(BaseBlockElement):
 
     __elements: list[BaseBlockElement]
 
-    def __init__(self, *elements: BaseElement | str):
+    def __init__(self):
         self.__elements = []
 
-        # add elements to this container
+    def __iadd__(
+        self,
+        elements: BaseElement | str | Iterable[BaseElement | str],
+    ) -> Self:
+        """
+        Implement `+=` operator to add element(s).
+        """
         self._add_elements(self._norm_elements(elements))
+        return self
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield "\n\n".join(
@@ -98,6 +105,10 @@ class BlockContainer(BaseBlockContainer):
     Block element which contains one or more block elements.
     """
 
+    def __init__(self, *elements: BaseElement | str):
+        super().__init__()
+        self += elements
+
 
 class BaseLevelBlockContainer(BaseBlockContainer):
     """
@@ -119,31 +130,9 @@ class BaseLevelBlockContainer(BaseBlockContainer):
     List of nested containers; a subset of nested elements.
     """
 
-    def __init__(self, *elements: BaseElement | str):
-        elements_norm = self._norm_elements(elements)
-
-        super().__init__(*elements_norm)
+    def __init__(self):
+        super().__init__()
         self.__containers = []
-
-        # bind elements to this container
-        self.__bind_elements(elements_norm)
-
-    def __iadd__(
-        self,
-        elements: BaseElement | str | Iterable[BaseElement | str],
-    ) -> Self:
-        """
-        Implements `+=` operator to add element(s).
-        """
-        elements_norm = self._norm_elements(elements)
-
-        # add elements to container
-        self._add_elements(elements_norm)
-
-        # bind elements to this container
-        self.__bind_elements(elements_norm)
-
-        return self
 
     @property
     def _level(self) -> int:
@@ -161,10 +150,12 @@ class BaseLevelBlockContainer(BaseBlockContainer):
         for container in self.__containers:
             container._level = level + self._level_inc
 
-    def __bind_elements(self, elements: list[BaseBlockElement]):
+    def _add_elements(self, elements: list[BaseBlockElement]):
         """
-        Bind elements to this container.
+        Add elements to container and additionally bind them.
         """
+        super()._add_elements(elements)
+
         for element in elements:
 
             # set element's container

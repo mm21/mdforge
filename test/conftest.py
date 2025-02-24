@@ -95,7 +95,8 @@ def doc(
         for element_cls, args, kwargs in elements_arg:
             elements.append(element_cls(*args, **kwargs))
 
-    doc = Document(*elements, frontmatter=frontmatter)
+    doc = Document(frontmatter=frontmatter, elements=elements)
+
     yield doc
 
     # render
@@ -142,9 +143,3 @@ def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):
 
         logging.info(f"Running: {' '.join(cmd)}")
         subprocess.check_call(cmd)
-
-
-def unused(*_: Any):
-    """
-    Indicates an unused argument, i.e. a fixture which is not accessed.
-    """
