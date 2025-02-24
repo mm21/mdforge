@@ -112,9 +112,9 @@ class Ref(BaseInlineElement):
 
         text = self.__text or self.__target._text
 
-        if self.__target._heading_id:
+        if self.__target._html_id:
             # explicit heading id
-            return f"[{text}](#{self.__target._heading_id})"
+            return f"[{text}](#{self.__target._html_id})"
         else:
             # implicit heading id with implicit_header_references
             return f"[{text}][{self.__target._text}]"

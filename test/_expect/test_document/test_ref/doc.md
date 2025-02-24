@@ -1,4 +1,4 @@
-# Test heading 1 {#heading-1}
+# Test heading 1 {#heading-1 .class1 .class2 style="color: blue;"}
 
 [Test heading 1](#heading-1)
 

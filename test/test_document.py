@@ -1,6 +1,14 @@
 from pytest import mark
 
-from mdforge import BulletList, Document, Heading, Paragraph, Ref, Section
+from mdforge import (
+    Attributes,
+    BulletList,
+    Document,
+    Heading,
+    Paragraph,
+    Ref,
+    Section,
+)
 
 from .conftest import unused
 
@@ -38,8 +46,15 @@ def test_ref(doc: Document):
     Test headings and references to them.
     """
 
-    # heading w/explicit id
-    heading_1 = Heading("Test heading 1", heading_id="heading-1")
+    # heading w/attributes
+    heading_1 = Heading(
+        "Test heading 1",
+        attributes=Attributes(
+            html_id="heading-1",
+            html_attrs={"style": "color: blue;"},
+            css_classes=["class1", "class2"],
+        ),
+    )
     doc += heading_1
     doc += Paragraph(Ref(heading_1))
     doc += Paragraph(Ref(heading_1, "Link to heading 1"))

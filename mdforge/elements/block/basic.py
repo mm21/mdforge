@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Generator
 
 from ...container import InlineContainerMixin
-from ...element import BaseBlockElement
+from ...element import Attributes, AttributesMixin, BaseBlockElement
 from ...types import FlavorType
 
 __all__ = [
@@ -19,7 +19,7 @@ __all__ = [
 
 
 @dataclass
-class Heading(BaseBlockElement):
+class Heading(BaseBlockElement, AttributesMixin):
     """
     Heading, e.g. `# My heading`. If `level` not provided, it is set
     automatically based on nesting of container.
@@ -35,37 +35,24 @@ class Heading(BaseBlockElement):
     Heading level, or `None` to set automatically.
     """
 
-    __heading_id: str | None
-    """
-    Explicit identifier.
-    """
-
     def __init__(
-        self, text: str, level: int | None = None, heading_id: str | None = None
+        self,
+        text: str,
+        level: int | None = None,
+        *,
+        attributes: Attributes | None = None,
     ):
         self.__text = text
         self.__level = level
-        self.__heading_id = heading_id
+        self._set_attrs(attributes)
 
     @property
     def _text(self) -> str:
         return self.__text
 
-    @property
-    def _heading_id(self) -> str | None:
-        return self.__heading_id
-
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         level = self.__level or self._container._level
-
-        attrs: str
-
-        if flavor == "pandoc" and self.__heading_id:
-            attrs = f" {{#{self.__heading_id}}}"
-        else:
-            attrs = ""
-
-        yield f"{'#' * level} {self.__text}{attrs}"
+        yield f"{'#' * level} {self.__text}{self._get_attrs_str(flavor, space_prefix=True)}"
 
 
 class Paragraph(BaseBlockElement, InlineContainerMixin):
