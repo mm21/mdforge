@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Generator
 
+from ......types import AlignType
 from ..._context import RenderContext
 from ..._vcell import VirtualCell
-from ...cell import AlignType
 from ..flavor import BaseTableVariant
 
 __all__ = [

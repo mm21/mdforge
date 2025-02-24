@@ -115,8 +115,39 @@ class Attributes:
     """
 
     @property
+    def _is_empty(self) -> bool:
+        return not (self.html_id or self.html_attrs or self.css_classes)
+
+    @property
     def _css_classes_norm(self) -> list[str] | None:
         return norm_list(self.css_classes, str) if self.css_classes else None
+
+    def _copy(
+        self,
+        *,
+        attrs: dict[str, str] | None = None,
+        css_classes: str | list[str] | None = None,
+    ) -> Attributes:
+        """
+        Copy attributes, updating with the provided values.
+        """
+
+        html_attrs, css_classes = self.html_attrs, self._css_classes_norm
+
+        merged_attrs = html_attrs.copy() if html_attrs else {}
+        merged_css_classes = css_classes.copy() if css_classes else []
+
+        if attrs:
+            merged_attrs.update(**attrs)
+
+        if css_classes:
+            merged_css_classes += norm_list(css_classes, str)
+
+        return Attributes(
+            html_id=self.html_id,
+            html_attrs=merged_attrs,
+            css_classes=merged_css_classes,
+        )
 
 
 class AttributesMixin:
@@ -153,7 +184,7 @@ class AttributesMixin:
 
         # return if not applicable or no attributes set
         attributes = self.__attributes
-        if flavor != "pandoc" or attributes is None:
+        if flavor != "pandoc" or attributes is None or attributes._is_empty:
             return ""
 
         parts: list[str] = []

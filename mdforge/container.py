@@ -88,14 +88,14 @@ class BaseBlockContainer(BaseBlockElement):
         """
         Normalize elements, creating raw block text from strings as necessary.
         """
-        from .elements.block.basic import Paragraph, TextBlock
+        from .elements.block.basic import BlockText, Paragraph
 
         # - wrap strings in raw text blocks
         # - wrap inline elements in paragraphs
         return norm_list(
             elements,
             BaseBlockElement,
-            CoerceSpec(TextBlock, str),
+            CoerceSpec(BlockText, str),
             CoerceSpec(Paragraph, BaseInlineElement),
         )
 

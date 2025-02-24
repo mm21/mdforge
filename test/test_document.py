@@ -1,10 +1,13 @@
 from pytest_powerpack import ComparisonFiles, compare_files
 
 from mdforge import (
+    AlignType,
     Attributes,
+    BlockImage,
     BulletList,
     Document,
     Heading,
+    InlineImage,
     Paragraph,
     Ref,
     Section,
@@ -70,6 +73,36 @@ def test_ref(doc: Document):
     doc += section_1
     doc += Ref(section_1)
     doc += Ref(section_1, "Link to section 1")
+
+
+def test_image(doc: Document):
+    """
+    Test inline and block images.
+    """
+
+    doc += Paragraph(
+        "Here is an inline image",
+        InlineImage("./image.png", alt_text="Inline image"),
+        "in the middle of a paragraph.",
+        auto_space=True,
+    )
+
+    aligns: list[AlignType | None] = [
+        "left",
+        "center",
+        "right",
+        "default",
+        None,
+    ]
+    for align in aligns:
+        doc += [
+            Paragraph(f"Here is a {align}-aligned block image:"),
+            BlockImage(
+                "./image.png",
+                alt_text=f"Block image, {align} aligned",
+                align=align,
+            ),
+        ]
 
 
 def test_frontmatter(powerpack_comparison_files: ComparisonFiles):

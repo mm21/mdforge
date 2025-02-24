@@ -10,11 +10,11 @@ from typing import Any, Generator, Iterable, cast
 from mdforge._norm import CoerceSpec, norm_obj
 
 from ....element import BaseBlockElement, BaseElement
-from ....types import FlavorType
+from ....types import AlignType, FlavorType
 from ._context import RenderContext
 from ._flavors.flavors import lookup_variant
 from ._params import TableParams
-from .cell import AlignType, Cell, RowType
+from .cell import Cell, RowType
 
 __all__ = [
     "Table",

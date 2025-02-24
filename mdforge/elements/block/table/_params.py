@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Iterable, cast
 
-from .cell import VALID_ALIGNS, AlignType, Cell
+from ....types import VALID_ALIGNS, AlignType
+from .cell import Cell
 
 __all__ = [
     "TableParams",

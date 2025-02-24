@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from functools import cache
-from typing import TYPE_CHECKING, Iterable, Literal
+from typing import TYPE_CHECKING, Iterable
 
 from ...._norm import CoerceSpec, norm_obj
 from ...._utils import coerce_text
 from ....element import BaseElement, BaseInlineElement
 from ....types import FlavorType
-from ..basic import TextBlock
+from ..basic import BlockText
 
 if TYPE_CHECKING:
     pass
@@ -16,14 +16,10 @@ __all__ = [
     "Cell",
     "CellType",
     "RowType",
-    "AlignType",
 ]
 
 type CellType = str | BaseElement | Cell
 type RowType = Iterable[CellType]
-type AlignType = Literal["left", "center", "right", "default"]
-
-VALID_ALIGNS = ["left", "center", "right", "default"]
 
 
 class Cell:
@@ -73,7 +69,7 @@ class Cell:
         if isinstance(self.__content, BaseInlineElement):
             return False
         elif (
-            isinstance(self.__content, TextBlock)
+            isinstance(self.__content, BlockText)
             and not self.__content._has_empty_lines
         ):
             return False

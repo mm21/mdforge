@@ -9,12 +9,14 @@ from typing import Generator
 
 from ...container import InlineContainerMixin
 from ...element import Attributes, AttributesMixin, BaseBlockElement
-from ...types import FlavorType
+from ...types import VALID_ALIGNS, AlignType, FlavorType
+from .._image import ImageMixin
 
 __all__ = [
     "Heading",
     "Paragraph",
-    "TextBlock",
+    "BlockText",
+    "BlockImage",
 ]
 
 
@@ -61,7 +63,7 @@ class Paragraph(BaseBlockElement, InlineContainerMixin):
         yield self._render_elements(flavor)
 
 
-class TextBlock(BaseBlockElement):
+class BlockText(BaseBlockElement):
     """
     Block element containing a single string, which may have multiple lines.
     """
@@ -78,5 +80,38 @@ class TextBlock(BaseBlockElement):
         """
         return any(line.strip() == "" for line in self.__lines)
 
-    def _render_block(self, _: FlavorType):
+    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
         yield from self.__lines
+
+
+class BlockImage(BaseBlockElement, ImageMixin):
+    """
+    Block image.
+    """
+
+    def __init__(
+        self,
+        path: str,
+        alt_text: str | None = None,
+        *,
+        attributes: Attributes | None = None,
+        align: AlignType | None = None,
+    ):
+        if align and align not in VALID_ALIGNS:
+            raise ValueError(f"Invalid alignment: {align}")
+
+        # create new attributes to handle alignment in pandoc
+        if align and align != "default":
+            attrs = {"fig-align": align}
+            new_attributes = (
+                attributes._copy(attrs=attrs)
+                if attributes
+                else Attributes(html_attrs=attrs)
+            )
+        else:
+            new_attributes = attributes
+
+        super().__init__(path, alt_text=alt_text, attributes=new_attributes)
+
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        yield self._render_image(flavor)

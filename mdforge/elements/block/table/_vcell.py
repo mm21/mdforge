@@ -3,7 +3,8 @@ from __future__ import annotations
 from functools import cached_property
 from typing import TYPE_CHECKING
 
-from .cell import AlignType, Cell
+from ....types import AlignType
+from .cell import Cell
 
 if TYPE_CHECKING:
     from ._context import RenderContext
