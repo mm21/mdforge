@@ -39,6 +39,7 @@ class Table(BaseBlockElement):
         widths: Iterable[int | None] | None = None,
         caption: str | None = None,
         block: bool = False,
+        loose: bool = False,
     ):
 
         def norm_widths(widths: Iterable[int | None]) -> list[int | None]:
@@ -63,6 +64,7 @@ class Table(BaseBlockElement):
             widths=norm_widths(widths) if widths else None,
             caption=caption,
             block=block,
+            loose=loose,
         )
 
         # ensure content is valid given params

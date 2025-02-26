@@ -31,13 +31,20 @@ class BaseElement(ABC):
     """
 
     @abstractmethod
-    def _render_element(
-        self, flavor: BaseElement
-    ) -> Generator[str, None, None]:
+    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         """
         Render this element, agnostic of concrete class.
         """
         ...
+
+    def _render_element_norm(
+        self, flavor: FlavorType
+    ) -> Generator[str, None, None]:
+        """
+        Render this element, splitting any newlines embedded in content and
+        stripping whitespace.
+        """
+        yield from "\n".join(self._render_element(flavor)).strip().split("\n")
 
     @property
     def _container(self) -> BaseLevelBlockContainer:

@@ -66,7 +66,9 @@ class DefinitionItem:
             is_last_def = def_idx == len(self.__definitions) - 1
 
             # render lines for this definition
-            for line_idx, line in enumerate(definition._render_element(flavor)):
+            for line_idx, line in enumerate(
+                definition._render_element_norm(flavor)
+            ):
 
                 # include ":" for first line
                 is_first_line = line_idx == 0

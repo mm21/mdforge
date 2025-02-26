@@ -9,7 +9,7 @@ from functools import cache
 from typing import Generator
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
-from ...._utils import coerce_text
+from ...._utils import coerce_text, wrap_para_cond
 from ....element import BaseBlockElement, BaseElement
 from ....types import FlavorType
 
@@ -54,12 +54,7 @@ class ListItem:
         """
         Get text, rendering element.
         """
-
-        # join first, then split later in case any elements have newlines
-        # embedded
-        text: str = "\n".join(self.__element._render_element(flavor))
-
-        return text.strip().split("\n")
+        return list(self.__element._render_element_norm(flavor))
 
     def _render_sub_items(
         self, flavor: FlavorType, indent_spaces: int, parent_list: BaseList
@@ -153,14 +148,11 @@ class BaseList(BaseBlockElement, ABC):
 
             # get item text
             text: list[str] = item._render_text(flavor)
-            assert len(text) >= 1
+            assert len(text)
 
             # wrap in paragraph if needed
-            if single_loose_item and not any(
-                line.strip() == "" for line in text
-            ):
-                text[0] = f"<p>{text[0]}"
-                text[-1] = f"{text[-1]}</p>"
+            if single_loose_item:
+                wrap_para_cond(text)
 
             # render item text
             for line_idx, line in enumerate(text):

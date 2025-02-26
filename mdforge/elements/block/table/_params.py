@@ -59,15 +59,22 @@ class TableParams:
     Whether table should support block content such as paragraphs and lists.
     """
 
+    loose: bool
+    """
+    Whether cell content should always be wrapped in a paragraph in the
+    rendered output (HTML only). Ensures consistent padding if there are
+    any cells containing block content.
+    """
+
     def __hash__(self) -> int:
         """
         Table params are considered immutable, even though they contain
         mutable types (lists). This method is implemented to enable caching of
-        values derived from the user inputs.
+        values derived from user inputs.
         """
         return id(self)
 
-    @property
+    @cached_property
     def content_row_count(self) -> int:
         """
         Get number of content rows.
@@ -213,7 +220,7 @@ class TableParams:
         return cast(list[list[Cell]], norm_rows)
 
 
-def _get_col_count(rows: list[list[Cell]]) -> tuple[int, int]:
+def _get_col_count(rows: list[list[Cell]]) -> int:
     """
     Get effective columns of the provided matrix, accounting for any
     merged cells.

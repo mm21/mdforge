@@ -4,7 +4,7 @@ from functools import cache
 from typing import TYPE_CHECKING, Iterable
 
 from ...._norm import CoerceSpec, norm_obj
-from ...._utils import coerce_text
+from ...._utils import coerce_text, wrap_para_cond
 from ....element import BaseElement, BaseInlineElement
 from ....types import FlavorType
 from ..basic import BlockText
@@ -78,7 +78,7 @@ class Cell:
 
     @cache
     def _get_content(
-        self, flavor: FlavorType, width: int | None = None
+        self, flavor: FlavorType, loose: bool, width: int | None = None
     ) -> list[str]:
         """
         Get this cell's content as a list of strings, wrapping words if
@@ -86,7 +86,11 @@ class Cell:
         """
 
         # render element
-        lines = list(self.__content._render_element(flavor))
+        lines = list(self.__content._render_element_norm(flavor))
+
+        # if loose and no blank lines, wrap in paragraph
+        if loose:
+            wrap_para_cond(lines)
 
         if width:
             # wrap words
@@ -99,11 +103,11 @@ class Cell:
         else:
             return lines
 
-    def _get_raw_width(self, flavor: FlavorType) -> int:
+    def _get_raw_width(self, flavor: FlavorType, loose: bool) -> int:
         """
         Get width of this cell with no wrapping or explicit width from user.
         """
-        return max(len(line) for line in self._get_content(flavor))
+        return max(len(line) for line in self._get_content(flavor, loose))
 
     def __wrap_line(self, line: str, width: int) -> list[str]:
         """
