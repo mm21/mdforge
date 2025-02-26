@@ -7,15 +7,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Generator
 
-from ...container import InlineContainerMixin
 from ...element import Attributes, AttributesMixin, BaseBlockElement
 from ...types import VALID_ALIGNS, AlignType, FlavorType
 from .._image import ImageMixin
 
 __all__ = [
     "Heading",
-    "Paragraph",
-    "BlockText",
     "BlockImage",
 ]
 
@@ -55,33 +52,6 @@ class Heading(BaseBlockElement, AttributesMixin):
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         level = self.__level or self._container._level
         yield f"{'#' * level} {self.__text}{self._get_attrs_str(flavor, space_prefix=True)}"
-
-
-class Paragraph(BaseBlockElement, InlineContainerMixin):
-
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield self._render_elements(flavor)
-
-
-class BlockText(BaseBlockElement):
-    """
-    Block element containing a single string, which may have multiple lines.
-    """
-
-    __lines: list[str]
-
-    def __init__(self, text: str):
-        self.__lines = text.strip().split("\n")
-
-    @property
-    def _has_empty_lines(self) -> bool:
-        """
-        Check if text block has any empty lines.
-        """
-        return any(line.strip() == "" for line in self.__lines)
-
-    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
-        yield from self.__lines
 
 
 class BlockImage(BaseBlockElement, ImageMixin):

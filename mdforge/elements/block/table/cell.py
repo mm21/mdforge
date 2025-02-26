@@ -7,7 +7,7 @@ from ...._norm import CoerceSpec, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
 from ....element import BaseElement, BaseInlineElement
 from ....types import FlavorType
-from ..basic import BlockText
+from ..text import BlockText
 
 if TYPE_CHECKING:
     pass

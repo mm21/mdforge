@@ -88,7 +88,7 @@ class BaseBlockContainer(BaseBlockElement):
         """
         Normalize elements, creating raw block text from strings as necessary.
         """
-        from .elements.block.basic import BlockText, Paragraph
+        from .elements.block.text import BlockText, Paragraph
 
         # - wrap strings in raw text blocks
         # - wrap inline elements in paragraphs
