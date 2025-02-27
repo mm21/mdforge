@@ -7,6 +7,7 @@ from mdforge import (
     BulletList,
     Document,
     Heading,
+    InlineContainer,
     InlineImage,
     Paragraph,
     Ref,
@@ -99,7 +100,12 @@ def test_image(doc: Document):
             Paragraph(f"Here is a {align}-aligned block image:"),
             BlockImage(
                 "./image.png",
-                alt_text=f"Block image, {align} aligned",
+                caption=InlineContainer(
+                    f"Block image",
+                    Strong(str(align)),
+                    "aligned",
+                    auto_space=True,
+                ),
                 align=align,
             ),
         ]

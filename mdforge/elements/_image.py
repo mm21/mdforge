@@ -18,19 +18,25 @@ class ImageMixin(AttributesMixin):
     """
 
     __path: str
-    __alt_text: str
 
     def __init__(
         self,
         path: str,
-        alt_text: str | None = None,
         *,
         attributes: Attributes | None = None,
     ):
         self.__path = path
-        self.__alt_text = alt_text or ""
         self._set_attrs(attributes)
 
-    def _render_image(self, flavor: FlavorType) -> str:
+    def _render_alt_text(self, _: FlavorType) -> str:
+        """
+        Override to get alt text.
+        """
+        return ""
+
+    def _render_commonmark_image(self, flavor: FlavorType) -> str:
+        """
+        Render image with CommonMark syntax.
+        """
         attrs = self._get_attrs_str(flavor)
-        return f"![{self.__alt_text}]({self.__path}){attrs}"
+        return f"![{self._render_alt_text(flavor)}]({self.__path}){attrs}"

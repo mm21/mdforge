@@ -41,5 +41,21 @@ class InlineImage(BaseInlineElement, ImageMixin):
     Inline image.
     """
 
+    __alt_text: str
+
+    def __init__(
+        self,
+        path: str,
+        alt_text: str | None = None,
+        *,
+        attributes: Attributes | None = None,
+    ):
+        super().__init__(path, attributes=attributes)
+        self.__alt_text = alt_text or ""
+
+    def _render_alt_text(self, _: FlavorType) -> str:
+        # note: no markdown flavors support inline elements as alt text
+        return self.__alt_text
+
     def _render_inline(self, flavor: FlavorType) -> str:
-        return self._render_image(flavor)
+        return self._render_commonmark_image(flavor)
