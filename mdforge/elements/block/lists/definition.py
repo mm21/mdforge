@@ -120,3 +120,7 @@ class DefinitionList(BaseBlockElement):
             # render blank line between items
             if not is_last_item:
                 yield ""
+
+        # in case of back-to-back definition lists with no elements in between,
+        # add a comment so they don't get considered as the same list
+        yield "<!-- end of definition list -->"

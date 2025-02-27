@@ -14,6 +14,7 @@ Term C
 
 :   **Definition C2 (strong)**
 
+<!-- end of definition list -->
 
 # Definition list, compact=True
 
@@ -27,3 +28,4 @@ Term C
 :   Definition C1
 :   **Definition C2 (strong)**
 
+<!-- end of definition list -->
