@@ -36,10 +36,12 @@ class CoerceSpec[CoerceT]:
     """
 
 
-def norm_obj(
+def norm_obj[
+    ExpectT, CoerceT
+](
     obj: Any,
     expect_type: type[ExpectT],
-    *coerce_specs: CoerceSpec,
+    *coerce_specs: CoerceSpec[CoerceT],
 ) -> ExpectT:
     """
     Normalize object to the expected type, coercing if applicable.
@@ -72,10 +74,12 @@ def norm_obj(
         raise ValueError(_err_str(obj, expect_type, note))
 
 
-def norm_list(
+def norm_list[
+    ExpectT, CoerceT
+](
     objs: Any | Iterable[Any],
     expect_type: type[ExpectT],
-    *coerce_specs: CoerceSpec,
+    *coerce_specs: CoerceSpec[CoerceT],
 ) -> list[ExpectT]:
     """
     Normalize object(s) to a list of the expected type, coercing if applicable.
