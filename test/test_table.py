@@ -1,4 +1,12 @@
-from mdforge import Cell, Document, Section, Table
+from mdforge import (
+    BlockContainer,
+    BulletList,
+    Cell,
+    Document,
+    Paragraph,
+    Section,
+    Table,
+)
 
 ROW_COUNT = 3
 COL_COUNT = 4
@@ -160,3 +168,28 @@ def test_span(doc: Document):
     assert table._params.col_count == COL_COUNT
 
     doc += table
+
+
+def test_loose(doc: Document):
+    """
+    Test table with loose=True, inserting paragraphs for non-block elements
+    for consistent spacing.
+    """
+
+    ROW_COUNT = 3
+
+    rows = [
+        [
+            Cell(f"Test\ntext {row_idx}"),
+            Cell(Paragraph(f"Test paragraph {row_idx}")),
+            Cell(
+                BlockContainer(
+                    Paragraph(f"Test block {row_idx}"),
+                    BulletList(["Item 1", "Item 2", "Item 3"]),
+                )
+            ),
+        ]
+        for row_idx in range(ROW_COUNT)
+    ]
+
+    doc += Table(rows, block=True, loose=True)
