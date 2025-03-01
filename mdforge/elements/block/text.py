@@ -18,6 +18,8 @@ __all__ = [
 
 class Paragraph(BaseBlockElement, InlineContainerMixin):
 
+    _allow_multiline = True
+
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield self._render_elements(flavor)
 

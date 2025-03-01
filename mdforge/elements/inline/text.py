@@ -4,8 +4,7 @@ Common inline elements.
 
 from __future__ import annotations
 
-from mdforge._norm import CoerceSpec, norm_obj
-
+from ..._norm import CoerceSpec, norm_obj
 from ...container import InlineContainerMixin
 from ...element import BaseInlineElement
 from ...types import FlavorType
@@ -20,6 +19,7 @@ __all__ = [
     "Strikethrough",
     "Link",
     "Ref",
+    "Newline",
 ]
 
 
@@ -94,7 +94,7 @@ class Ref(BaseInlineElement):
     """
     Reference to a heading within the same document.
 
-    TODO: support ref to arbitrary anchor, add corresponding Anchor element
+    TODO: support ref to arbitrary element w/id, e.g. paragraph
     """
 
     __target: Heading
@@ -120,4 +120,11 @@ class Ref(BaseInlineElement):
             return f"[{text}][{self.__target._text}]"
 
 
-# TODO: span
+class Newline(BaseInlineElement):
+    """
+    Element to represent a newline. Used for inline containers which allow
+    multiple lines, e.g. paragraphs.
+    """
+
+    def _render_inline(self, _: FlavorType) -> str:
+        return "\n"

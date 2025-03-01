@@ -19,11 +19,13 @@ from mdforge import (
 def test_basic(doc: Document):
 
     doc += Heading("Basic test")
-    doc += Paragraph("Hello, world!")
-    doc += "Hello, world 2!"
+    doc += Paragraph("Hello, world paragraph!")
+    doc += Paragraph("Hello, world\nmultiline paragraph!")
+    doc += Paragraph("Hello, world\nmultiline paragraph  \nwith line break!")
+    doc += "Hello, world text!"
     doc += [
-        "Hello, world\n3!",
-        "Hello, world 4!",
+        "Hello, world text 2!",
+        "Hello, world\nblock text!",
     ]
     doc += Strong("Hello, world strong!")
 

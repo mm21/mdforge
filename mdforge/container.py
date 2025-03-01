@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Generator, Iterable, Self
 
 from ._norm import CoerceSpec, norm_list
+from ._utils import coerce_inline_text
 from .element import BaseBlockElement, BaseElement, BaseInlineElement
 from .types import FlavorType
 
@@ -21,16 +22,24 @@ class InlineContainerMixin:
     Mixin to encapsulate an element which contains one or more inline elements.
     """
 
+    _allow_multiline: bool = False
+    """
+    Whether to allow text elements containing newlines, but no blank lines.
+    """
+
     __elements: list[BaseInlineElement]
     __auto_space: bool
 
     def __init__(
         self, *elements: str | BaseInlineElement, auto_space: bool = False
     ):
-        from .elements.inline.text import Text
+        def coerce(obj: str) -> BaseInlineElement:
+            return coerce_inline_text(
+                obj, allow_multiline=self._allow_multiline
+            )
 
         self.__elements = norm_list(
-            elements, BaseInlineElement, CoerceSpec(Text, str)
+            elements, BaseInlineElement, CoerceSpec(coerce, str)
         )
         self.__auto_space = auto_space
 
