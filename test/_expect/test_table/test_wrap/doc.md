@@ -1,4 +1,6 @@
-# Block: False
+<!-- table start: variant=FrameTableVariant, block=False, loose=False -->
+
+: Block: False
 
 -----------------------------------------------------------------------------
 Header 0,             Header 1,                Header 2, Header 3,           
@@ -23,7 +25,11 @@ dolor sit amet,    dolor sit amet,             sit amet, sit amet, width=18
 width=15               width=16                 width=17                     
 -----------------------------------------------------------------------------
 
-# Block: True
+<!-- table end -->
+
+<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+
+: Block: True
 
 +-----------------+------------------+-------------------+--------------------+
 | Header 0,       | Header 1,        | Header 2,         | Header 3,          |
@@ -47,3 +53,5 @@ width=15               width=16                 width=17
 | dolor sit amet, | dolor sit amet,  | sit amet,         | sit amet, width=18 |
 | width=15        | width=16         | width=17          |                    |
 +-----------------+------------------+-------------------+--------------------+
+
+<!-- table end -->

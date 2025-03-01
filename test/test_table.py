@@ -114,7 +114,8 @@ def test_widths(doc: Document):
 
 def test_wrap(doc: Document):
     """
-    Test cell content wrapping when explicit widths are given.
+    Test cell content wrapping when explicit widths are given. Also tests
+    captions.
     """
 
     rows = [
@@ -126,10 +127,14 @@ def test_wrap(doc: Document):
     ]
 
     for block in [False, True]:
-        doc += [
-            Section(heading=f"Block: {block}"),
-            Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
-        ]
+        doc += Table(
+            rows,
+            header=HEADER,
+            align=ALIGN,
+            widths=WIDTHS,
+            caption=f"Block: {block}",
+            block=block,
+        )
 
 
 def test_span(doc: Document):

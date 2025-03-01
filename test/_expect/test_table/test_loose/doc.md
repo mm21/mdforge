@@ -1,3 +1,5 @@
+<!-- table start: variant=FrameTableVariant, block=True, loose=True -->
+
 +------------+-------------------------+----------------------+
 | <p>Test    | <p>Test paragraph 0</p> | Test block 0         |
 | text 0</p> |                         |                      |
@@ -20,3 +22,5 @@
 |            |                         | - Item 3             |
 |            |                         | <!-- end of list --> |
 +------------+-------------------------+----------------------+
+
+<!-- table end -->

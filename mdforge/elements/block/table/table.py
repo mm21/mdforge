@@ -83,8 +83,23 @@ class Table(BaseBlockElement):
         # create context to encapsulate render info
         context = RenderContext(flavor, variant, self._params)
 
+        # start comment, required to disambiguate table caption in case of
+        # back-to-back tables (caption can be before or after table)
+        desc = [
+            f"variant={type(variant).__name__}",
+            f"block={self._params.block}",
+            f"loose={self._params.loose}",
+        ]
+        yield f"<!-- table start: {', '.join(desc)} -->\n"
+
+        # render caption
+        if caption := self._params.caption:
+            yield f": {caption}\n"
+
         # render based on variant
         yield from variant.render(context)
+
+        yield "\n<!-- table end -->"
 
     def __normalize_cells(
         self, rows: RowType | Iterable[RowType]
