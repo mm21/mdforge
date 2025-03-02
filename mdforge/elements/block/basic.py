@@ -4,7 +4,6 @@ Common block elements.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Generator
 
 from ..._norm import CoerceSpec, norm_obj
@@ -23,7 +22,6 @@ __all__ = [
 ]
 
 
-@dataclass
 class Heading(BaseBlockElement, AttributesMixin):
     """
     Heading, e.g. `# My heading`. If `level` not provided, it is set
