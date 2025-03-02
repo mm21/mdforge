@@ -2,7 +2,7 @@
 
 ## No header or footer, 1 rows
 
-<!-- table start: variant=FrameTableVariant, block=False, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=False, loose=False -->
 
 ------ ------ ------ ------
 Cell    Cell    Cell Cell  
@@ -14,7 +14,7 @@ Cell    Cell    Cell Cell
 
 ## With header, 1 rows
 
-<!-- table start: variant=FrameTableVariant, block=False, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=False, loose=False -->
 
 -------------------------------------------------------------
 Header 0,        Header 1,         Header 2, Header 3,       
@@ -29,7 +29,7 @@ Cell               Cell                 Cell Cell
 
 ## No header or footer, 3 rows
 
-<!-- table start: variant=FrameTableVariant, block=False, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=False, loose=False -->
 
 ------ ------ ------ ------
 Cell    Cell    Cell Cell  
@@ -46,7 +46,7 @@ Cell    Cell    Cell Cell
 
 ## With header, 3 rows
 
-<!-- table start: variant=FrameTableVariant, block=False, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=False, loose=False -->
 
 -------------------------------------------------------------
 Header 0,        Header 1,         Header 2, Header 3,       
@@ -68,7 +68,7 @@ Cell               Cell                 Cell Cell
 
 ## No header or footer, 1 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +:-----+:----:+-----:+------+
 | Cell | Cell | Cell | Cell |
@@ -79,7 +79,7 @@ Cell               Cell                 Cell Cell
 
 ## With header, 1 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +-------------+---------------+--------------+----------------+
 | Header 0,   | Header 1,     | Header 2,    | Header 3,      |
@@ -93,7 +93,7 @@ Cell               Cell                 Cell Cell
 
 ## With footer, 1 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +:-------+:------:+-------:+--------+
 | Cell   | Cell   | Cell   | Cell   |
@@ -107,7 +107,7 @@ Cell               Cell                 Cell Cell
 
 ## With header and footer, 1 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +-------------+---------------+--------------+----------------+
 | Header 0,   | Header 1,     | Header 2,    | Header 3,      |
@@ -124,7 +124,7 @@ Cell               Cell                 Cell Cell
 
 ## No header or footer, 3 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +:-----+:----:+-----:+------+
 | Cell | Cell | Cell | Cell |
@@ -141,7 +141,7 @@ Cell               Cell                 Cell Cell
 
 ## With header, 3 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +-------------+---------------+--------------+----------------+
 | Header 0,   | Header 1,     | Header 2,    | Header 3,      |
@@ -161,7 +161,7 @@ Cell               Cell                 Cell Cell
 
 ## With footer, 3 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +:-------+:------:+-------:+--------+
 | Cell   | Cell   | Cell   | Cell   |
@@ -181,7 +181,7 @@ Cell               Cell                 Cell Cell
 
 ## With header and footer, 3 rows
 
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +-------------+---------------+--------------+----------------+
 | Header 0,   | Header 1,     | Header 2,    | Header 3,      |

@@ -61,13 +61,16 @@ class Table(BaseBlockElement):
         widths_norm = list(widths) if widths else None
         widths_pct_norm = list(widths_pct) if widths_pct else None
 
-        if (
-            widths_pct_norm is not None
-            and (total := sum(widths_pct_norm)) != 100
-        ):
-            raise ValueError(
-                f"Width percents must add to 100, got {total}: {widths_pct_norm}"
-            )
+        if widths_pct_norm is not None:
+            if (total := sum(widths_pct_norm)) != 100:
+                raise ValueError(
+                    f"Width percents must add to 100, got {total}: {widths_pct_norm}"
+                )
+
+            if any(width_pct == 0 for width_pct in widths_pct_norm):
+                raise ValueError(
+                    f"Width percents must be nonzero, got {widths_pct_norm}"
+                )
 
         content_rows = _normalize_cells(rows)
         header_rows = _normalize_cells(header) if header else None
@@ -128,6 +131,8 @@ class Table(BaseBlockElement):
         # back-to-back tables (caption can be before or after table)
         desc = [
             f"variant={type(variant).__name__}",
+            f"widths={self._params.widths}",
+            f"widths_pct={self._params.widths_pct}",
             f"block={self._params.block}",
             f"loose={self._params.loose}",
         ]

@@ -3,6 +3,7 @@ from mdforge import (
     BulletList,
     Cell,
     Document,
+    Heading,
     Paragraph,
     Section,
     Table,
@@ -106,6 +107,40 @@ def test_widths(doc: Document):
             Section(heading=f"Block: {block}"),
             Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
         ]
+
+
+def test_widths_pct(doc: Document):
+    """
+    Test explicitly provided width percents with no wrapping.
+    """
+
+    # simple case: first cell width is exactly half of second cell width,
+    # target 50/50 widths
+    doc += [
+        Heading("Simple case"),
+        Table(
+            [["Cell 0-0", "Cell 0-1 aaaaaaa"]], widths_pct=[50, 50], block=True
+        ),
+    ]
+
+    widths_pct = [10 * (i + 1) for i in range(len(WIDTHS) - 1)]
+    widths_pct.append(100 - sum(widths_pct))
+    assert sum(widths_pct) == 100
+
+    rows = [
+        [
+            f"{cell} {'a'*(cell_idx+1)*5}, width_pct={width_pct}"
+            for cell, cell_idx, width_pct in zip(
+                row, range(COL_COUNT), widths_pct
+            )
+        ]
+        for row in ROWS
+    ]
+
+    doc += [
+        Heading("Complex case"),
+        Table(rows, widths_pct=widths_pct, block=True),
+    ]
 
 
 def test_wrap(doc: Document):

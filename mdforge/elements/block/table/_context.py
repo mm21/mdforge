@@ -49,15 +49,47 @@ class RenderContext:
     @cached_property
     def col_widths(self) -> list[int]:
         """
-        Get column widths based on params and variant.
+        Get column widths based on params and variant, scaling as necessary.
+        Variant applies to calculation of merged cell widths based on the
+        configured cell separator.
         """
 
+        widths_pct = self.params.widths_pct
         unscaled_widths = self.__get_unscaled_widths()
 
-        if self.params.widths_pct is None:
+        if widths_pct is None:
             return unscaled_widths
 
-        # TODO: handle self.params.widths_pct
+        assert len(widths_pct) == len(unscaled_widths)
+
+        # get width percents for unscaled widths
+        total_width = sum(unscaled_widths)
+        unscaled_widths_pct = [
+            100 * (width / total_width) for width in unscaled_widths
+        ]
+
+        # get raw factors needed to achieve target percents
+        raw_scale_factors = [
+            width_pct / unscaled_width_pct
+            for width_pct, unscaled_width_pct in zip(
+                widths_pct, unscaled_widths_pct
+            )
+        ]
+
+        # scale raw factors such that the smallest one is 1.0, keeping the
+        # limiting width the same
+        min_raw_scale_factor = min(raw_scale_factors)
+        scale_factors = [
+            factor / min_raw_scale_factor for factor in raw_scale_factors
+        ]
+
+        # scale widths according to scale factors
+        scaled_widths = [
+            round(width * factor)
+            for width, factor in zip(unscaled_widths, scale_factors)
+        ]
+
+        return scaled_widths
 
     def __get_unscaled_widths(self) -> list[int]:
         """

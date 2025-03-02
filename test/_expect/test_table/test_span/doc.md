@@ -1,4 +1,4 @@
-<!-- table start: variant=FrameTableVariant, block=True, loose=False -->
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
 
 +--------------------------+----------+
 | Test cspan               | Test 0-2 |
