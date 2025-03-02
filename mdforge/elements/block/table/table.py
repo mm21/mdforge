@@ -58,14 +58,23 @@ class Table(BaseBlockElement):
                 f"Ambiguous widths: cannot pass both widths={widths} and widths_pct={widths_pct}"
             )
 
+        widths_norm = list(widths) if widths else None
+        widths_pct_norm = list(widths_pct) if widths_pct else None
+
+        if (
+            widths_pct_norm is not None
+            and (total := sum(widths_pct_norm)) != 100
+        ):
+            raise ValueError(
+                f"Width percents must add to 100, got {total}: {widths_pct_norm}"
+            )
+
         content_rows = _normalize_cells(rows)
         header_rows = _normalize_cells(header) if header else None
         footer_rows = _normalize_cells(footer) if footer else None
         col_count = _get_col_count(
             content_rows + (header_rows or []) + (footer_rows or [])
         )
-        widths_norm = list(widths) if widths else None
-        widths_pct_norm = list(widths_pct) if widths_pct else None
 
         def validate_widths(
             var: list[int],
