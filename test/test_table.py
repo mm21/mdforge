@@ -96,19 +96,15 @@ def test_widths(doc: Document):
     Test explicitly provided widths with no wrapping.
     """
 
-    # omit width of last column to verify optional width
-    widths = WIDTHS.copy()
-    widths[-1] = None
-
     rows = [
-        [f"{cell}, width={width}" for cell, width in zip(row, widths)]
+        [f"{cell}, width={width}" for cell, width in zip(row, WIDTHS)]
         for row in ROWS
     ]
 
     for block in [False, True]:
         doc += [
             Section(heading=f"Block: {block}"),
-            Table(rows, header=HEADER, align=ALIGN, widths=widths, block=block),
+            Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
         ]
 
 

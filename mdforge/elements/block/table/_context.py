@@ -49,57 +49,64 @@ class RenderContext:
     @cached_property
     def col_widths(self) -> list[int]:
         """
-        Get normalized widths based on params and variant.
+        Get column widths based on params and variant.
         """
 
-        widths: list[int] = []
-        param_widths: list[int | None] = (
-            self.params.widths or [None] * self.params.col_count
-        )
+        unscaled_widths = self.__get_unscaled_widths()
 
-        assert len(param_widths) == self.params.col_count
+        if self.params.widths_pct is None:
+            return unscaled_widths
+
+        # TODO: handle self.params.widths_pct
+
+    def __get_unscaled_widths(self) -> list[int]:
+        """
+        Get widths accounting for widths from user or raw width of columns
+        with no other constraints.
+        """
+
+        if self.params.widths is not None:
+            return self.params.widths
+
+        widths: list[int] = []
 
         # mapping of origin cells to their column index
         origin_map: dict[Cell, int] = {}
 
-        for col_idx, width in enumerate(param_widths):
+        for col_idx in range(self.params.col_count):
 
-            if width:
-                # width passed from user
-                widths.append(width)
-            else:
-                # get max width of this column
+            # get max width of this column
 
-                # list of cells and whether cell is the last spanned column
-                col_cells: list[tuple[Cell, bool]] = []
+            # list of cells and whether cell is the last spanned column
+            col_cells: list[tuple[Cell, bool]] = []
 
-                # select the cell at this column from each row
-                for row in self.params.norm_effective_rows:
+            # select the cell at this column from each row
+            for row in self.params.norm_effective_rows:
 
-                    cell = row[col_idx]
+                cell = row[col_idx]
 
-                    # determine if this is the last spanned column: needed to
-                    # calculate width of spanned columns
-                    if cell not in origin_map:
-                        # have an origin cell, add it to the map
-                        origin_map[cell] = col_idx
-                        is_last_col_span = False
-                    else:
-                        # have a spanned cell, get the column index of the
-                        # origin and see if this is the last spanned column
-                        origin_col_idx = origin_map[cell]
-                        col_idx_offset = col_idx - origin_col_idx
-                        is_last_col_span = col_idx_offset == cell._cspan - 1
+                # determine if this is the last spanned column: needed to
+                # calculate width of spanned columns
+                if cell not in origin_map:
+                    # have an origin cell, add it to the map
+                    origin_map[cell] = col_idx
+                    is_last_col_span = False
+                else:
+                    # have a spanned cell, get the column index of the
+                    # origin and see if this is the last spanned column
+                    origin_col_idx = origin_map[cell]
+                    col_idx_offset = col_idx - origin_col_idx
+                    is_last_col_span = col_idx_offset == cell._cspan - 1
 
-                    col_cells.append((row[col_idx], is_last_col_span))
+                col_cells.append((row[col_idx], is_last_col_span))
 
-                assert len(col_cells) == len(self.params.effective_rows)
-                widths.append(
-                    max(
-                        self.__get_raw_width(cell, is_last_col_span)
-                        for cell, is_last_col_span in col_cells
-                    )
+            assert len(col_cells) == len(self.params.effective_rows)
+            widths.append(
+                max(
+                    self.__get_raw_width(cell, is_last_col_span)
+                    for cell, is_last_col_span in col_cells
                 )
+            )
 
         return widths
 

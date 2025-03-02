@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TableParams:
     """
     Parameters from user, applicable to all table variants.
@@ -41,12 +41,17 @@ class TableParams:
     Optional alignment for each column, single alignmen to apply to all columns.
     """
 
-    widths: list[int | None] | None
+    widths: list[int] | None
     """
     If provided, generated cells are sized to that number of characters
     by padding or wrapping lines. Otherwise, widths are as small as possible.
 
     Useful to generate consistently-sized tables for varying content length.
+    """
+
+    widths_pct: list[int] | None
+    """
+    Widths as percents.
     """
 
     caption: str | None
@@ -64,6 +69,11 @@ class TableParams:
     Whether cell content should always be wrapped in a paragraph in the
     rendered output (HTML only). Ensures consistent padding if there are
     any cells containing block content.
+    """
+
+    col_count: int
+    """
+    Number of columns.
     """
 
     def __hash__(self) -> int:
@@ -94,13 +104,6 @@ class TableParams:
         Get number of footer rows.
         """
         return len(self.footer_rows) if self.footer_rows else 0
-
-    @cached_property
-    def col_count(self) -> int:
-        """
-        Get number of columns.
-        """
-        return _get_col_count(self.effective_rows)
 
     @cached_property
     def col_aligns(self) -> list[AlignType]:
@@ -218,41 +221,3 @@ class TableParams:
             assert isinstance(norm_rows[row_idx][col_idx], Cell)
 
         return cast(list[list[Cell]], norm_rows)
-
-
-def _get_col_count(rows: list[list[Cell]]) -> int:
-    """
-    Get effective columns of the provided matrix, accounting for any
-    merged cells.
-    """
-
-    if not rows:
-        return 0
-
-    # column counts per row
-    col_counts: list[int] = []
-
-    def add_col_count(index: int, val: int):
-        """
-        Add value at the given row index, inserting elements as needed.
-        """
-        nonlocal col_counts
-        if index >= len(col_counts):
-            col_counts += [0] * (index - len(col_counts) + 1)
-        col_counts[index] += val
-
-    # get col counts
-    for row_idx, row in enumerate(rows):
-        for cell in row:
-            # add columns for each row, including spanned ones
-            for row_offset in range(cell._rspan):
-                add_col_count(row_idx + row_offset, cell._cspan)
-
-    # verify consistency
-    assert len(rows) == len(col_counts)
-    for row_idx, col_count in enumerate(col_counts):
-        assert (
-            col_count == col_counts[row_idx - 1]
-        ), f"Inconsistent column counts: row {row_idx}={col_count}, row {row_idx-1}={col_counts[row_idx-1]}"
-
-    return col_counts[0]

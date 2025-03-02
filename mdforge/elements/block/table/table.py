@@ -4,7 +4,6 @@ Table element.
 
 from __future__ import annotations
 
-from types import NoneType
 from typing import Any, Generator, Iterable, cast
 
 from mdforge._norm import CoerceSpec, norm_obj
@@ -36,35 +35,68 @@ class Table(BaseBlockElement):
         header: RowType | Iterable[RowType] | None = None,
         footer: RowType | Iterable[RowType] | None = None,
         align: AlignType | Iterable[AlignType] | None = None,
-        widths: Iterable[int | None] | None = None,
+        widths: Iterable[int] | None = None,
+        widths_pct: Iterable[int] | None = None,
         caption: str | None = None,
         block: bool = False,
         loose: bool = False,
     ):
+        """
+        :param rows: Content rows
+        :param header: Header row(s)
+        :param footer: Footer row(s)
+        :param align: Column alignment(s)
+        :param widths: Absolute column widths in characters, mutually exclusive with `widths_pct`
+        :param widths_pct: Column widths in percents, mutually exclusive with `widths`
+        :param caption: Caption, if supported by flavor
+        :param block: Whether cells can have block content
+        :param loose: Whether to insert explicit paragraph tags for consistency with cells containing block elements
+        """
 
-        def norm_widths(widths: Iterable[int | None]) -> list[int | None]:
-            if not isinstance(widths, Iterable):
-                raise ValueError(f"Invalid widths, must be iterable: {widths}")
+        if widths is not None and widths_pct is not None:
+            raise ValueError(
+                f"Ambiguous widths: cannot pass both widths={widths} and widths_pct={widths_pct}"
+            )
 
-            widths_list: list[Any] = list(widths)
-            if not all(
-                isinstance(width, (int, NoneType)) for width in widths_list
-            ):
+        content_rows = _normalize_cells(rows)
+        header_rows = _normalize_cells(header) if header else None
+        footer_rows = _normalize_cells(footer) if footer else None
+        col_count = _get_col_count(
+            content_rows + (header_rows or []) + (footer_rows or [])
+        )
+        widths_norm = list(widths) if widths else None
+        widths_pct_norm = list(widths_pct) if widths_pct else None
+
+        def validate_widths(
+            var: list[int],
+            var_name: str,
+        ):
+            if len(var) != col_count:
                 raise ValueError(
-                    f"Invalid widths iterable, must contain int or None: {widths}"
+                    f"{var_name}={var} does not match col_count={col_count}"
+                )
+            if not all(isinstance(width, int) for width in var):
+                raise ValueError(
+                    f"{var_name}={var} must be passed as list of int"
                 )
 
-            return cast(list[int | None], widths_list)
+        if widths_norm is not None:
+            validate_widths(widths_norm, "widths")
+
+        if widths_pct_norm is not None:
+            validate_widths(widths_pct_norm, "widths_pct")
 
         self._params = TableParams(
-            content_rows=self.__normalize_cells(rows),
-            header_rows=self.__normalize_cells(header) if header else None,
-            footer_rows=self.__normalize_cells(footer) if footer else None,
+            content_rows=content_rows,
+            header_rows=header_rows,
+            footer_rows=footer_rows,
             align=align,
-            widths=norm_widths(widths) if widths else None,
+            widths=widths_norm,
+            widths_pct=widths_pct_norm,
             caption=caption,
             block=block,
             loose=loose,
+            col_count=col_count,
         )
 
         # ensure content is valid given params
@@ -101,38 +133,76 @@ class Table(BaseBlockElement):
 
         yield "\n<!-- table end -->"
 
-    def __normalize_cells(
-        self, rows: RowType | Iterable[RowType]
-    ) -> list[list[Cell]]:
+
+def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
+    """
+    Normalize given rows to a list of lists of cells.
+    """
+
+    if not (isinstance(rows, Iterable) and len(rows)):
+        raise ValueError(f"Invalid row specification: {rows}")
+
+    rows_list = list(rows)
+
+    # normalize to list of lists
+    rows_lists: list[list[Any]]
+
+    if all(isinstance(cell, VALID_CELL_TYPES) for cell in rows_list):
+        # have a list of valid cell types
+        rows_lists = cast(list[list[Any]], [rows_list])
+    elif all(isinstance(row, Iterable) for row in rows_list):
+        # have a list of iterables
+        rows_lists = cast(list[list[Any]], rows_list)
+    else:
+        raise ValueError(f"Invalid row or iterable of rows: {rows_list}")
+
+    # normalize to list of lists of cells
+    rows_norm: list[list[Cell]] = []
+    for row in rows_lists:
+        rows_norm.append(
+            [
+                norm_obj(cell, Cell, CoerceSpec(Cell, (str, BaseElement)))
+                for cell in row
+            ]
+        )
+
+    return rows_norm
+
+
+def _get_col_count(rows: list[list[Cell]]) -> int:
+    """
+    Get effective columns of the provided matrix, accounting for any
+    merged cells.
+    """
+
+    if not rows:
+        return 0
+
+    # column counts per row
+    col_counts: list[int] = []
+
+    def add_col_count(index: int, val: int):
         """
-        Normalize given rows to a list of lists of cells.
+        Add value at the given row index, inserting elements as needed.
         """
+        nonlocal col_counts
+        if index >= len(col_counts):
+            col_counts += [0] * (index - len(col_counts) + 1)
+        col_counts[index] += val
 
-        if not (isinstance(rows, Iterable) and len(rows)):
-            raise ValueError(f"Invalid row specification: {rows}")
+    # get col counts
+    for row_idx, row in enumerate(rows):
+        for cell in row:
+            # add columns for each row, including spanned ones
+            for row_offset in range(cell._rspan):
+                add_col_count(row_idx + row_offset, cell._cspan)
 
-        rows_list = list(rows)
-
-        # normalize to list of lists
-        rows_lists: list[list[Any]]
-
-        if all(isinstance(cell, VALID_CELL_TYPES) for cell in rows_list):
-            # have a list of valid cell types
-            rows_lists = cast(list[list[Any]], [rows_list])
-        elif all(isinstance(row, Iterable) for row in rows_list):
-            # have a list of iterables
-            rows_lists = cast(list[list[Any]], rows_list)
-        else:
-            raise ValueError(f"Invalid row or iterable of rows: {rows_list}")
-
-        # normalize to list of lists of cells
-        rows_norm: list[list[Cell]] = []
-        for row in rows_lists:
-            rows_norm.append(
-                [
-                    norm_obj(cell, Cell, CoerceSpec(Cell, (str, BaseElement)))
-                    for cell in row
-                ]
+    # verify consistency
+    assert len(rows) == len(col_counts)
+    for row_idx, col_count in enumerate(col_counts):
+        if col_count != col_counts[row_idx - 1]:
+            raise ValueError(
+                f"Inconsistent column counts: row {row_idx}={col_count}, row {row_idx-1}={col_counts[row_idx-1]}"
             )
 
-        return rows_norm
+    return col_counts[0]
