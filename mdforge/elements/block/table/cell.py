@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Iterable
 from ...._norm import CoerceSpec, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
 from ....element import BaseElement, BaseInlineElement
+from ....exceptions import RenderError
 from ....types import FlavorType
 from ..text import BlockText
 
@@ -137,7 +138,7 @@ class Cell:
                 # word doesn't fit in current line, append current line
                 # and start new one
                 if len(word) > width:
-                    raise ValueError(
+                    raise RenderError(
                         f"Unable to wrap line: len({word})={len(word)} > {width}"
                     )
                 lines.append(line_new)

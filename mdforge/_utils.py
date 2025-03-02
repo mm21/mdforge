@@ -1,4 +1,5 @@
 from .element import BaseElement, BaseInlineElement
+from .exceptions import ValidationError
 
 __all__ = [
     "coerce_text",
@@ -32,7 +33,7 @@ def coerce_inline_text(
 
     # check for blank lines
     if any(line.strip() == "" for line in lines):
-        raise ValueError(f"Input text cannot contain blank lines: {obj}")
+        raise ValidationError(f"Input text cannot contain blank lines: {obj}")
 
     if len(lines) > 1 and allow_multiline:
 

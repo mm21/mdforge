@@ -7,6 +7,7 @@ from __future__ import annotations
 from ..._norm import CoerceSpec, norm_obj
 from ...container import InlineContainerMixin
 from ...element import BaseInlineElement
+from ...exceptions import ValidationError
 from ...types import FlavorType
 from ..block.basic import Heading
 from ..block.section import Section
@@ -42,7 +43,9 @@ class Text(BaseInlineElement):
     def __init__(self, text: str):
 
         if "\n" in text:
-            raise ValueError(f"Raw text may not span multiple lines: {text}")
+            raise ValidationError(
+                f"Raw text may not span multiple lines: {text}"
+            )
 
         self.__text = text
 

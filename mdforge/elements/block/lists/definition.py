@@ -8,6 +8,7 @@ from typing import Generator, Iterable
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
 from ....element import BaseBlockElement, BaseElement, BaseInlineElement
+from ....exceptions import ValidationError
 from ....types import FlavorType
 from ...inline.text import Text
 
@@ -46,7 +47,7 @@ class DefinitionItem:
         if compact:
             for definition in self.__definitions:
                 if not isinstance(definition, BaseInlineElement):
-                    raise ValueError(
+                    raise ValidationError(
                         f"Definition must be inline element for compact definition list: {definition} ({type(definition)})"
                     )
 

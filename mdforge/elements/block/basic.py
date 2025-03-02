@@ -13,6 +13,7 @@ from ...element import (
     BaseBlockElement,
     BaseInlineElement,
 )
+from ...exceptions import ValidationError
 from ...types import VALID_ALIGNS, AlignType, FlavorType
 from .._image import ImageMixin
 
@@ -76,7 +77,7 @@ class BlockImage(BaseBlockElement, ImageMixin):
         from ..inline.text import Text
 
         if align and align not in VALID_ALIGNS:
-            raise ValueError(f"Invalid alignment: {align}")
+            raise ValidationError(f"Invalid alignment: {align}")
 
         # create new attributes to handle alignment in pandoc
         if align and align != "default":

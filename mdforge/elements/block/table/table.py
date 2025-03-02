@@ -9,6 +9,7 @@ from typing import Any, Generator, Iterable, cast
 from mdforge._norm import CoerceSpec, norm_obj
 
 from ....element import BaseBlockElement, BaseElement
+from ....exceptions import ValidationError
 from ....types import AlignType, FlavorType
 from ._context import RenderContext
 from ._flavors.flavors import lookup_variant
@@ -54,7 +55,7 @@ class Table(BaseBlockElement):
         """
 
         if widths is not None and widths_pct is not None:
-            raise ValueError(
+            raise ValidationError(
                 f"Ambiguous widths: cannot pass both widths={widths} and widths_pct={widths_pct}"
             )
 
@@ -63,12 +64,12 @@ class Table(BaseBlockElement):
 
         if widths_pct_norm is not None:
             if (total := sum(widths_pct_norm)) != 100:
-                raise ValueError(
+                raise ValidationError(
                     f"Width percents must add to 100, got {total}: {widths_pct_norm}"
                 )
 
             if any(width_pct == 0 for width_pct in widths_pct_norm):
-                raise ValueError(
+                raise ValidationError(
                     f"Width percents must be nonzero, got {widths_pct_norm}"
                 )
 
@@ -84,11 +85,11 @@ class Table(BaseBlockElement):
             var_name: str,
         ):
             if len(var) != col_count:
-                raise ValueError(
+                raise ValidationError(
                     f"{var_name}={var} does not match col_count={col_count}"
                 )
             if not all(isinstance(width, int) for width in var):
-                raise ValueError(
+                raise ValidationError(
                     f"{var_name}={var} must be passed as list of int"
                 )
 
@@ -115,7 +116,7 @@ class Table(BaseBlockElement):
         for row in self._params.effective_rows:
             for cell in row:
                 if not block and cell._is_block:
-                    raise ValueError(
+                    raise ValidationError(
                         f"Inline-only table contains a block element: {cell._element}"
                     )
 
@@ -154,7 +155,7 @@ def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
     """
 
     if not (isinstance(rows, Iterable) and len(rows)):
-        raise ValueError(f"Invalid row specification: {rows}")
+        raise ValidationError(f"Invalid row specification: {rows}")
 
     rows_list = list(rows)
 
@@ -168,7 +169,7 @@ def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
         # have a list of iterables
         rows_lists = cast(list[list[Any]], rows_list)
     else:
-        raise ValueError(f"Invalid row or iterable of rows: {rows_list}")
+        raise ValidationError(f"Invalid row or iterable of rows: {rows_list}")
 
     # normalize to list of lists of cells
     rows_norm: list[list[Cell]] = []
@@ -215,7 +216,7 @@ def _get_col_count(rows: list[list[Cell]]) -> int:
     assert len(rows) == len(col_counts)
     for row_idx, col_count in enumerate(col_counts):
         if col_count != col_counts[row_idx - 1]:
-            raise ValueError(
+            raise ValidationError(
                 f"Inconsistent column counts: row {row_idx}={col_count}, row {row_idx-1}={col_counts[row_idx-1]}"
             )
 
