@@ -76,14 +76,6 @@ class TableParams:
     Number of columns.
     """
 
-    def __hash__(self) -> int:
-        """
-        Table params are considered immutable, even though they contain
-        mutable types (lists). This method is implemented to enable caching of
-        values derived from user inputs.
-        """
-        return id(self)
-
     @cached_property
     def content_row_count(self) -> int:
         """

@@ -4,6 +4,8 @@ Implements image handling.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+
 from ..element import Attributes, AttributesMixin
 from ..types import FlavorType
 
@@ -12,7 +14,7 @@ __all__ = [
 ]
 
 
-class ImageMixin(AttributesMixin):
+class ImageMixin(AttributesMixin, ABC):
     """
     Mixin to implement common image handling between inline and block images.
     """
@@ -28,11 +30,12 @@ class ImageMixin(AttributesMixin):
         self.__path = path
         self._set_attrs(attributes)
 
+    @abstractmethod
     def _render_alt_text(self, _: FlavorType) -> str:
         """
-        Override to get alt text.
+        Implemented by concrete class to get alt text.
         """
-        return ""
+        ...
 
     def _render_commonmark_image(self, flavor: FlavorType) -> str:
         """

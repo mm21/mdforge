@@ -205,6 +205,19 @@ def test_span(doc: Document):
 
     doc += table
 
+    # test table where a cell spans multiple rows, but content ends immediately
+    # before dangling line (boundary between virtual cells)
+    # - also test a single alignment applied to all columns
+    doc += Table(
+        [
+            [Cell("Test 0-0\nabc", rspan=2), "Test 0-1\nabc"],
+            ["Test 1-1"],
+            ["Test 2-0", "Test 2-1"],
+        ],
+        align="center",
+        block=True,
+    )
+
 
 def test_loose(doc: Document):
     """

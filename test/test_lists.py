@@ -1,7 +1,7 @@
 from typing import cast
 
 from mdforge import (
-    BaseList,
+    BaseItemList,
     BlockContainer,
     BulletList,
     DefinitionItem,
@@ -15,7 +15,7 @@ from mdforge import (
     Strong,
 )
 
-LIST_CLASSES = cast(list[type[BaseList]], [BulletList, NumberedList])
+LIST_CLASSES = cast(list[type[BaseItemList]], [BulletList, NumberedList])
 LIST_NAMES = [cls.__name__ for cls in LIST_CLASSES]
 
 

@@ -18,7 +18,7 @@ __all__ = [
     "ListItem",
     "BulletList",
     "NumberedList",
-    "BaseList",
+    "BaseItemList",
 ]
 
 
@@ -28,12 +28,12 @@ type ListItemType = str | BaseElement | ListItem
 class ListItem:
 
     __element: BaseElement
-    __sub_items: list[ListItemType] | BaseList | None
+    __sub_items: list[ListItemType] | BaseItemList | None
 
     def __init__(
         self,
         content: str | BaseElement,
-        sub_items: list[ListItemType] | BaseList | None = None,
+        sub_items: list[ListItemType] | BaseItemList | None = None,
     ):
         self.__element = norm_obj(
             content, BaseElement, CoerceSpec(coerce_text, str)
@@ -57,7 +57,7 @@ class ListItem:
         return list(self.__element._render_element_norm(flavor))
 
     def _render_sub_items(
-        self, flavor: FlavorType, indent_spaces: int, parent_list: BaseList
+        self, flavor: FlavorType, indent_spaces: int, parent_list: BaseItemList
     ) -> Generator[str, None, None]:
         """
         Render sub-items, if any.
@@ -70,23 +70,24 @@ class ListItem:
         yield from sub_list._render_items(flavor, indent_spaces)
 
     def __get_sub_list(
-        self, parent_list_cls: type[BaseList]
-    ) -> BaseList | None:
+        self, parent_list_cls: type[BaseItemList]
+    ) -> BaseItemList | None:
         """
         Get sub list from sub items, creating a new list object if items are
         given as a plain list.
         """
         if not self.__sub_items:
             return None
-        elif isinstance(self.__sub_items, BaseList):
+        elif isinstance(self.__sub_items, BaseItemList):
             return self.__sub_items
         else:
             return parent_list_cls(self.__sub_items)
 
 
-class BaseList(BaseBlockElement, ABC):
+class BaseItemList(BaseBlockElement, ABC):
     """
-    List which can be either bulleted or ordered.
+    List containing items which can be either unordered (bulleted) or ordered
+    (numbered).
     """
 
     __items: list[ListItemType]
@@ -177,23 +178,20 @@ class BaseList(BaseBlockElement, ABC):
 
     def __check_loose(self, flavor: FlavorType, items: list[ListItem]):
         """
-        Check if there are any block elements in items. If so, consider this a
-        loose list so blank lines are inserted between elements.
+        Check if this list should be considered loose, either explicitly
+        or based on whether there are any block items.
         """
 
         if self.__loose:
             return True
 
-        for item in items:
-            if isinstance(item, BaseBlockElement):
-                return True
-            elif isinstance(item, ListItem) and item._is_block(flavor):
-                return True
+        if any(item._is_block(flavor) for item in items):
+            return True
 
         return False
 
 
-class BulletList(BaseList):
+class BulletList(BaseItemList):
     """
     Bullet point list.
     """
@@ -202,14 +200,16 @@ class BulletList(BaseList):
         return "-"
 
 
-class NumberedList(BaseList):
+class NumberedList(BaseItemList):
     """
     Numbered list.
     """
 
-    def _get_marker(self, flavor: FlavorType) -> str:
-        if flavor == "pandoc":
-            # with fancy_lists extension
-            return "#."
-        else:
-            return "1."
+    def _get_marker(self, _: FlavorType) -> str:
+        # pandoc with fancy_lists extension only
+        # - enables nested unordered lists to automatically use different
+        #   enumerators, e.g. letters or roman numerals
+        return "#."
+
+        # non-pandoc flavors should just use:
+        # return "1."

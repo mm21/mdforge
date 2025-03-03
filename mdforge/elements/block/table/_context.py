@@ -281,13 +281,11 @@ class RenderContext:
             if not vcell.is_origin:
                 # skip if not origin cell, we would have already counted it
                 continue
-            elif vcell.content_is_set:
-                # if already have content, get height
-                heights.append(len(vcell.lines))
-                continue
+
+            # content for spanned cells has not yet been set
+            assert not vcell.content_is_set
 
             # get total width of this cell and add height of resulting content
-            # - content for spanned cells has not been set yet
             width = self.__get_spanned_width(vrow, vcell)
             heights.append(
                 len(

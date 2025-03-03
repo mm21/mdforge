@@ -20,3 +20,16 @@
 +-------------+------------+----------+
 
 <!-- table end -->
+
+<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
+
++:--------:+:--------:+
+| Test 0-0 | Test 0-1 |
+| abc      | abc      |
+|          +----------+
+|          | Test 1-1 |
++----------+----------+
+| Test 2-0 | Test 2-1 |
++----------+----------+
+
+<!-- table end -->
