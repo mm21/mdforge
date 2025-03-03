@@ -78,7 +78,7 @@ def test_ref(doc: Document):
     doc += Ref(section_1, "Link to section 1")
 
 
-def test_image(doc: Document):
+def test_images(doc: Document):
     """
     Test inline and block images.
     """
@@ -109,6 +109,9 @@ def test_image(doc: Document):
                     auto_space=True,
                 ),
                 align=align,
+                attributes=Attributes(
+                    html_id=f"block-image-{align}", css_classes="block-image"
+                ),
             ),
         ]
 
