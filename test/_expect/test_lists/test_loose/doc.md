@@ -71,13 +71,13 @@
 
 # NumberedList, 1 element
 
-#. <p>a</p>
+1. <p>a</p>
 
 <!-- end of list -->
 
 # NumberedList, 1 element (w/paragraph)
 
-#. a
+1. a
    
    b
 
@@ -85,9 +85,9 @@
 
 # NumberedList, implicit loose (paragraphs)
 
-#. a
+1. a
 
-#. b (paragraph 1)
+1. b (paragraph 1)
    
    b (paragraph 2)
 
@@ -95,46 +95,46 @@
 
 # NumberedList, implicit loose (paragraph, list)
 
-#. a
+1. a
 
-#. b (paragraph)
+1. b (paragraph)
    
-   #. b1
-   #. b2
-   #. b3
+   1. b1
+   1. b2
+   1. b3
    <!-- end of list -->
 
 <!-- end of list -->
 
 # NumberedList, implicit loose (nested list)
 
-#. a
+1. a
 
-#. #. b1
-   #. b2
-   #. b3
+1. 1. b1
+   1. b2
+   1. b3
    <!-- end of list -->
 
 <!-- end of list -->
 
 # NumberedList, 4 elements
 
-#. a
+1. a
 
-#. b
+1. b
 
-#. c (not loose)
-   #. c1
-   #. c2
-   #. c3
+1. c (not loose)
+   1. c1
+   1. c2
+   1. c3
    <!-- end of list -->
 
-#. d (loose)
-   #. d1
+1. d (loose)
+   1. d1
 
-   #. d2
+   1. d2
 
-   #. d3
+   1. d3
 
    <!-- end of list -->
 

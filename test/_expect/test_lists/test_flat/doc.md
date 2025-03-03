@@ -7,7 +7,7 @@
 
 # NumberedList
 
-#. a
-#. b
-#. c
+1. a
+1. b
+1. c
 <!-- end of list -->

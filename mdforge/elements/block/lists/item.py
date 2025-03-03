@@ -206,10 +206,4 @@ class NumberedList(BaseItemList):
     """
 
     def _get_marker(self, _: FlavorType) -> str:
-        # pandoc with fancy_lists extension only
-        # - enables nested unordered lists to automatically use different
-        #   enumerators, e.g. letters or roman numerals
-        return "#."
-
-        # non-pandoc flavors should just use:
-        # return "1."
+        return "1."
