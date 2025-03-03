@@ -133,27 +133,20 @@ class Attributes:
         self,
         *,
         attrs: dict[str, str] | None = None,
-        css_classes: str | list[str] | None = None,
     ) -> Attributes:
         """
-        Copy attributes, updating with the provided values.
+        Copy attributes object, updating CSS attributes.
         """
 
-        orig_attrs, orig_css_classes = self.attrs, self._css_classes_norm
-
-        merged_attrs = orig_attrs.copy() if orig_attrs else {}
-        merged_css_classes = orig_css_classes.copy() if orig_css_classes else []
+        merged_attrs = self.attrs.copy() if self.attrs else {}
 
         if attrs:
             merged_attrs.update(**attrs)
 
-        if css_classes:
-            merged_css_classes += norm_list(css_classes, str)
-
         return Attributes(
             html_id=self.html_id,
             attrs=merged_attrs,
-            css_classes=merged_css_classes,
+            css_classes=self.css_classes,
         )
 
 

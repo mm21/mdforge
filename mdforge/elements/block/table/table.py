@@ -190,9 +190,6 @@ def _get_col_count(rows: list[list[Cell]]) -> int:
     merged cells.
     """
 
-    if not rows:
-        return 0
-
     # column counts per row
     col_counts: list[int] = []
 

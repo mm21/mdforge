@@ -211,7 +211,7 @@ class RenderContext:
                 origin_vcell = vrows[row_idx][col_idx]
 
                 # set this cell
-                vcell.set_cell(cell, row_offset, col_offset, origin_vcell)
+                vcell.set_cell(cell, col_offset, origin_vcell)
 
         # validate: ensure each virtual cell got set
         for row_idx, col_idx in itertools.product(

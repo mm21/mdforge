@@ -37,11 +37,6 @@ class VirtualCell:
     Original cell, which may span multiple rows/columns.
     """
 
-    __row_offset: int | None = None
-    """
-    Row offset from the original cell.
-    """
-
     __col_offset: int | None = None
     """
     Column offset from the original cell.
@@ -116,28 +111,12 @@ class VirtualCell:
         return self.context.params.col_aligns[self.col_idx]
 
     @property
-    def row_offset(self) -> int:
-        """
-        Get row offset from the original cell.
-        """
-        assert self.__row_offset is not None
-        return self.__row_offset
-
-    @property
     def col_offset(self) -> int:
         """
         Get column offset from the original cell.
         """
         assert self.__col_offset is not None
         return self.__col_offset
-
-    @property
-    def origin_cell(self) -> VirtualCell:
-        """
-        Get origin virtual cell.
-        """
-        assert self.__origin_vcell is not None
-        return self.__origin_vcell
 
     @property
     def is_last_col(self) -> bool:
@@ -174,7 +153,6 @@ class VirtualCell:
     def set_cell(
         self,
         cell: Cell,
-        row_offset: int,
         col_offset: int,
         origin_vcell: VirtualCell,
     ):
@@ -182,7 +160,6 @@ class VirtualCell:
         Populate with cell and any offset, if spanning multiple rows/columns.
         """
         self.__cell = cell
-        self.__row_offset = row_offset
         self.__col_offset = col_offset
         self.__origin_vcell = origin_vcell
 
