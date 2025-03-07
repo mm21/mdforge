@@ -60,6 +60,14 @@ class Document(BaseLevelBlockContainer):
         content: str = "\n\n".join(self._render_block(flavor))
         return f"{frontmatter or ''}{content}\n"
 
+    def get_pandoc_extensions(self) -> list[str]:
+        """
+        Get a list of extensions required to convert the resulting
+        markdown document in pandoc, assuming pandoc flavor is used for
+        rendering.
+        """
+        return sorted(self._get_pandoc_extensions())
+
     def __render_frontmatter(self) -> str | None:
         if self.__frontmatter is None:
             return None

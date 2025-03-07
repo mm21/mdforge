@@ -91,6 +91,11 @@ def test_variants(doc: Document):
                     f"With header and footer, {row_count} rows",
                 )
 
+    assert doc.get_pandoc_extensions() == [
+        "grid_tables",
+        "multiline_tables",
+    ]
+
 
 def test_widths(doc: Document):
     """
@@ -142,6 +147,8 @@ def test_widths_pct(doc: Document):
         Table(rows, widths_pct=widths_pct, block=True),
     ]
 
+    assert doc.get_pandoc_extensions() == ["grid_tables"]
+
 
 def test_wrap(doc: Document):
     """
@@ -166,6 +173,12 @@ def test_wrap(doc: Document):
             caption=f"Block: {block}",
             block=block,
         )
+
+    assert doc.get_pandoc_extensions() == [
+        "grid_tables",
+        "multiline_tables",
+        "table_captions",
+    ]
 
 
 def test_span(doc: Document):

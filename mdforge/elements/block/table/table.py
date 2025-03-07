@@ -148,6 +148,13 @@ class Table(BaseBlockElement):
 
         yield "\n<!-- table end -->"
 
+    def _get_pandoc_extensions(self) -> set[str]:
+        table_ext = (
+            {"grid_tables"} if self._params.block else {"multiline_tables"}
+        )
+        caption_ext = {"table_captions"} if self._params.caption else set()
+        return table_ext | caption_ext
+
 
 def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
     """

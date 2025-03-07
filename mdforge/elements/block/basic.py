@@ -58,6 +58,9 @@ class Heading(BaseBlockElement, AttributesMixin):
         level = self.__level or self._container._level
         yield f"{'#' * level} {self.__text}{self._get_attrs_str(flavor, space_prefix=True)}"
 
+    def _get_pandoc_extensions(self) -> set[str]:
+        return {"header_attributes"} if self._has_attrs else set()
+
 
 class BlockImage(BaseBlockElement, ImageMixin):
     """

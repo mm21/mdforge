@@ -20,6 +20,8 @@ def test_composition(doc: Document):
     doc += Strong(Underline("Strong w/underline!"))
     doc += Emph(Strikethrough("Emph w/strikethrough!"))
 
+    assert doc.get_pandoc_extensions() == ["strikeout"]
+
 
 def test_link(doc: Document):
     """
@@ -40,3 +42,5 @@ def test_span(doc: Document):
         Strong("strong text"),
         attributes=Attributes(html_id="span1", css_classes="class1"),
     )
+
+    assert doc.get_pandoc_extensions() == ["bracketed_spans"]

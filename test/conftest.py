@@ -114,14 +114,20 @@ def doc(
 
     if any([html, latex, pdf]):
         _run_pandoc(
-            powerpack_comparison_files.out_file, html=html, latex=latex, pdf=pdf
+            doc,
+            powerpack_comparison_files.out_file,
+            html=html,
+            latex=latex,
+            pdf=pdf,
         )
 
     # compare output
     pytest_powerpack.compare_files(powerpack_comparison_files)
 
 
-def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):
+def _run_pandoc(
+    doc: Document, md_path: Path, *, html: bool, latex: bool, pdf: bool
+):
     """
     Run pandoc to generate the given artifacts.
     """
@@ -129,11 +135,13 @@ def _run_pandoc(md_path: Path, *, html: bool, latex: bool, pdf: bool):
     pandoc_path = md_path.parent / "pandoc"
     pandoc_path.mkdir(parents=True, exist_ok=True)
 
+    md_args = ["markdown"] + doc.get_pandoc_extensions()
+
     base_cmd = [
         "pandoc",
         str(md_path),
         "-f",
-        "markdown+multiline_tables+grid_tables+implicit_header_references",
+        "+".join(md_args),
     ]
 
     formats = (

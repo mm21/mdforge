@@ -77,6 +77,11 @@ def test_ref(doc: Document):
     doc += Ref(section_1)
     doc += Ref(section_1, "Link to section 1")
 
+    assert doc.get_pandoc_extensions() == [
+        "header_attributes",
+        "implicit_header_references",
+    ]
+
 
 def test_images(doc: Document):
     """

@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class Paragraph(BaseBlockElement, InlineContainerMixin):
+class Paragraph(InlineContainerMixin, BaseBlockElement):
 
     _allow_multiline = True
 

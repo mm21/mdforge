@@ -247,3 +247,5 @@ def test_definition(doc: Document):
         doc += DefinitionList(inline_items, compact=compact)
 
     # TODO: block items
+
+    assert doc.get_pandoc_extensions() == ["definition_lists"]

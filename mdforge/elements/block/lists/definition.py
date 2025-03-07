@@ -125,3 +125,6 @@ class DefinitionList(BaseBlockElement):
         # in case of back-to-back definition lists with no elements in between,
         # add a comment so they don't get considered as the same list
         yield "<!-- end of definition list -->"
+
+    def _get_pandoc_extensions(self) -> set[str]:
+        return {"definition_lists"}

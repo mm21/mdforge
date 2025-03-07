@@ -37,6 +37,12 @@ class BaseElement(ABC):
         """
         ...
 
+    def _get_pandoc_extensions(self) -> set[str]:
+        """
+        Get required pandoc extensions, recursing into nested elements.
+        """
+        return set()
+
     def _render_element_norm(
         self, flavor: FlavorType
     ) -> Generator[str, None, None]:
@@ -165,6 +171,13 @@ class AttributesMixin:
         """
         return self.__attributes.html_id if self.__attributes else None
 
+    @property
+    def _has_attrs(self) -> bool:
+        """
+        Whether this element has attributes.
+        """
+        return self.__attributes is not None and not self.__attributes._is_empty
+
     def _set_attrs(self, attributes: Attributes | None):
         """
         Set HTML attributes.
@@ -183,12 +196,12 @@ class AttributesMixin:
         """
 
         # return if not applicable or no attributes set
-        attributes = self.__attributes
-        if flavor != "pandoc" or attributes is None or attributes._is_empty:
+        if flavor != "pandoc" or not self._has_attrs:
             return ""
 
         parts: list[str] = []
 
+        attributes = self.__attributes
         if attributes.html_id:
             parts.append(f"#{attributes.html_id}")
         if css_classes := attributes._css_classes_norm:

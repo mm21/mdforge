@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-class BaseTextContainer(BaseInlineElement, InlineContainerMixin):
+class BaseTextContainer(InlineContainerMixin, BaseInlineElement):
     """
     Inline element containing text or a list of inline elements.
     """
@@ -76,6 +76,9 @@ class Strikethrough(BaseTextContainer):
     def _render_inline(self, flavor: FlavorType) -> str:
         return f"~~{super()._render_inline(flavor)}~~"
 
+    def _get_pandoc_extensions(self) -> set[str]:
+        return {"strikeout"}
+
 
 class Link(BaseInlineElement):
     """
@@ -121,6 +124,13 @@ class Ref(BaseInlineElement):
         else:
             # implicit heading id with implicit_header_references
             return f"[{text}][{self.__target._text}]"
+
+    def _get_pandoc_extensions(self) -> set[str]:
+        return (
+            {"implicit_header_references"}
+            if not self.__target._html_id
+            else set()
+        )
 
 
 class Newline(BaseInlineElement):

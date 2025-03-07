@@ -49,8 +49,11 @@ class InlineContainerMixin:
             element._render_inline(flavor) for element in self.__elements
         )
 
+    def _get_pandoc_extensions(self) -> set[str]:
+        return _aggregate_extensions(self.__elements)
 
-class InlineContainer(BaseInlineElement, InlineContainerMixin):
+
+class InlineContainer(InlineContainerMixin, BaseInlineElement):
     """
     Container for inline elements; wraps multiple inline elements in a single
     one.
@@ -84,6 +87,9 @@ class BaseBlockContainer(BaseBlockElement):
         yield "\n\n".join(
             [element._render_block_lines(flavor) for element in self.__elements]
         )
+
+    def _get_pandoc_extensions(self) -> set[str]:
+        return _aggregate_extensions(self.__elements)
 
     def _add_elements(self, elements: list[BaseBlockElement]):
         for element in elements:
@@ -183,3 +189,13 @@ class BaseLevelBlockContainer(BaseBlockContainer):
         # propagate level, if set
         if self.__level is not None:
             container._level = self.__level + self._level_inc
+
+
+def _aggregate_extensions(elements: list[BaseElement]) -> set[str]:
+    """
+    Aggregate extensions from elements.
+    """
+    extensions: set[str] = set()
+    for elem in elements:
+        extensions |= elem._get_pandoc_extensions()
+    return extensions

@@ -35,6 +35,9 @@ class Span(BaseTextContainer, AttributesMixin):
         attrs = self._get_attrs_str(flavor)
         return f"[{text}]{attrs}"
 
+    def _get_pandoc_extensions(self) -> set[str]:
+        return {"bracketed_spans"} if self._has_attrs else set()
+
 
 class InlineImage(BaseInlineElement, ImageMixin):
     """
