@@ -10,7 +10,10 @@ from mdforge import (
     Underline,
 )
 
+from .conftest import compare_doc
 
+
+@compare_doc
 def test_composition(doc: Document):
     """
     Test composition of inline elements.
@@ -23,6 +26,7 @@ def test_composition(doc: Document):
     assert doc.get_pandoc_extensions() == ["strikeout"]
 
 
+@compare_doc
 def test_link(doc: Document):
     """
     Test external link.
@@ -32,6 +36,7 @@ def test_link(doc: Document):
     doc += Link(Strong("Test link w/strong"), "https://github.com/")
 
 
+@compare_doc
 def test_span(doc: Document):
     """
     Test span with composition.

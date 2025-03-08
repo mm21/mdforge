@@ -3,38 +3,25 @@ from __future__ import annotations
 import logging
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, cast
+from typing import TYPE_CHECKING, Callable
 
-from pytest import Config, FixtureRequest, Item, Parser, fixture, mark
+from pytest import FixtureRequest, Parser, fixture, mark
 
 if TYPE_CHECKING:
     from pytest_powerpack import ComparisonFiles
 
-from mdforge import BaseElement, Document
+from mdforge import Document
 
 pytest_plugins = ["pytest_powerpack"]
 
 logging.basicConfig(level=logging.INFO)
 
 
-def pytest_configure(config: Config):
-    config.addinivalue_line(
-        "markers",
-        "filename: Filename of rendered output for comparison",
-    )
-
-    config.addinivalue_line(
-        "markers",
-        "frontmatter: Pass frontmatter to Document constructor",
-    )
-
-    config.addinivalue_line(
-        "markers",
-        "elements: Pass elements to Document constructor",
-    )
-
-
 def pytest_addoption(parser: Parser):
+    """
+    Add options to additionally invoke pandoc on rendered markdown files.
+    """
+
     parser.addoption(
         "--html",
         action="store_true",
@@ -57,54 +44,51 @@ def pytest_addoption(parser: Parser):
     )
 
 
-def pytest_collection_modifyitems(items: list[Item]):
-
-    # add marker for each testcase to indicate filename to compare
-    for item in items:
-        item.add_marker(mark.powerpack_compare_file("doc.md"))
-
-
 @fixture
-def doc(
+def doc() -> Document:
+    """
+    Create a document.
+    """
+    return Document()
+
+
+def compare_doc(func: Callable):
+    """
+    Decorator to render this document for pandoc flavor and compare against
+    the expected one.
+
+    Could be done in the doc fixture during teardown, but this way the test
+    itself can fail rather than teardown.
+    """
+
+    @mark.powerpack_compare_file("doc.md")
+    def wrapper(
+        doc: Document,
+        request: FixtureRequest,
+        powerpack_comparison_files: ComparisonFiles,
+    ):
+        # invoke testcase
+        func(doc=doc)
+
+        # render and perform document checks
+        render_doc(doc, request, powerpack_comparison_files)
+
+    return wrapper
+
+
+def render_doc(
+    doc: Document,
     request: FixtureRequest,
     powerpack_comparison_files: ComparisonFiles,
-) -> Generator[Document, None, None]:
+):
     """
-    Create a document, write it, and compare its contents against the expected
-    contents.
+    Render document for pandoc flavor, run pandoc based on command line flags,
+    and compare output.
     """
-
+    # just-in-time import so asserts can be rewritten
     import pytest_powerpack
 
-    frontmatter_marker = request.node.get_closest_marker("frontmatter")
-    elements_marker = request.node.get_closest_marker("elements")
-
-    elements: list[BaseElement] = []
-    frontmatter: dict[str, Any] | None = None
-
-    if frontmatter_marker:
-        assert len(frontmatter_marker.args) == 1
-
-        frontmatter = cast(dict[str, Any], frontmatter_marker.args[0])
-        assert isinstance(frontmatter, dict)
-
-    if elements_marker:
-        assert len(elements_marker.args)
-
-        elements_arg = cast(
-            list[tuple[type[BaseElement], tuple[Any, ...], dict[str, Any]]],
-            elements_marker.args[0],
-        )
-
-        # instantiate each element with provided args and kwargs
-        for element_cls, args, kwargs in elements_arg:
-            elements.append(element_cls(*args, **kwargs))
-
-    doc = Document(frontmatter=frontmatter, elements=elements)
-
-    yield doc
-
-    # render
+    # render document
     doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
 
     # additionally run pandoc if flags passed
@@ -150,9 +134,9 @@ def _run_pandoc(
         + (["pdf"] if pdf else [])
     )
 
-    for f in formats:
-        out_path = pandoc_path / f"{md_path.stem}.{f}"
-        cmd = base_cmd + ["-t", f, "-o", str(out_path)]
+    for fmt in formats:
+        out_path = pandoc_path / f"{md_path.stem}.{fmt}"
+        cmd = base_cmd + ["-t", fmt, "-o", str(out_path)]
 
         logging.info(f"Running: {' '.join(cmd)}")
         subprocess.check_call(cmd)

@@ -9,6 +9,8 @@ from mdforge import (
     Table,
 )
 
+from .conftest import compare_doc
+
 ROW_COUNT = 3
 COL_COUNT = 4
 ALIGN = ["left", "center", "right", "default"]
@@ -24,6 +26,7 @@ FOOTER = [f"Footer\n{col_idx}" for col_idx in range(COL_COUNT)]
 WIDTHS = [15 + col_idx for col_idx in range(COL_COUNT)]
 
 
+@compare_doc
 def test_variants(doc: Document):
     """
     Test inline and block variants.
@@ -97,6 +100,7 @@ def test_variants(doc: Document):
     ]
 
 
+@compare_doc
 def test_widths(doc: Document):
     """
     Test explicitly provided widths with no wrapping.
@@ -114,6 +118,7 @@ def test_widths(doc: Document):
         ]
 
 
+@compare_doc
 def test_widths_pct(doc: Document):
     """
     Test explicitly provided width percents with no wrapping.
@@ -150,6 +155,7 @@ def test_widths_pct(doc: Document):
     assert doc.get_pandoc_extensions() == ["grid_tables"]
 
 
+@compare_doc
 def test_wrap(doc: Document):
     """
     Test cell content wrapping when explicit widths are given. Also tests
@@ -181,6 +187,7 @@ def test_wrap(doc: Document):
     ]
 
 
+@compare_doc
 def test_span(doc: Document):
     """
     Test cell spanning.
@@ -232,6 +239,7 @@ def test_span(doc: Document):
     )
 
 
+@compare_doc
 def test_loose(doc: Document):
     """
     Test table with loose=True, inserting paragraphs for non-block elements

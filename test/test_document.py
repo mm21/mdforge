@@ -1,4 +1,5 @@
-from pytest_powerpack import ComparisonFiles, compare_files
+from pytest import FixtureRequest, mark
+from pytest_powerpack import ComparisonFiles
 
 from mdforge import (
     AlignType,
@@ -15,7 +16,10 @@ from mdforge import (
     Strong,
 )
 
+from .conftest import compare_doc, render_doc
 
+
+@compare_doc
 def test_basic(doc: Document):
 
     doc += Heading("Basic test")
@@ -30,6 +34,7 @@ def test_basic(doc: Document):
     doc += Strong("Hello, world strong!")
 
 
+@compare_doc
 def test_section(doc: Document):
 
     sec1 = Section("Section 1")
@@ -47,6 +52,7 @@ def test_section(doc: Document):
     doc += [sec1, sec2, h3]
 
 
+@compare_doc
 def test_ref(doc: Document):
     """
     Test headings and references to them.
@@ -83,6 +89,7 @@ def test_ref(doc: Document):
     ]
 
 
+@compare_doc
 def test_images(doc: Document):
     """
     Test inline and block images.
@@ -121,10 +128,12 @@ def test_images(doc: Document):
         ]
 
 
-def test_frontmatter(powerpack_comparison_files: ComparisonFiles):
+@mark.powerpack_compare_file("doc.md")
+def test_frontmatter(
+    request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
+):
     doc = Document(
         frontmatter={"title": "Doc 1"}, elements=Paragraph("Hello, world!")
     )
 
-    doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
-    compare_files(powerpack_comparison_files)
+    render_doc(doc, request, powerpack_comparison_files)

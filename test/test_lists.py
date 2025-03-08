@@ -15,10 +15,13 @@ from mdforge import (
     Strong,
 )
 
+from .conftest import compare_doc
+
 LIST_CLASSES = cast(list[type[BaseItemList]], [BulletList, NumberedList])
 LIST_NAMES = [cls.__name__ for cls in LIST_CLASSES]
 
 
+@compare_doc
 def test_flat(doc: Document):
     """
     Test lists with no nesting.
@@ -36,6 +39,7 @@ def test_flat(doc: Document):
         )
 
 
+@compare_doc
 def test_nested(doc: Document):
     """
     Test lists with nesting.
@@ -96,6 +100,7 @@ def test_nested(doc: Document):
         )
 
 
+@compare_doc
 def test_tight(doc: Document):
     """
     Test "tight" pandoc lists.
@@ -118,6 +123,7 @@ def test_tight(doc: Document):
         )
 
 
+@compare_doc
 def test_loose(doc: Document):
     """
     Test "loose" pandoc lists.
@@ -171,6 +177,7 @@ def test_loose(doc: Document):
         )
 
 
+@compare_doc
 def test_elements(doc: Document):
     """
     Test lists with elements as text.
@@ -229,6 +236,7 @@ def test_elements(doc: Document):
         )
 
 
+@compare_doc
 def test_definition(doc: Document):
 
     inline_items = [
