@@ -41,7 +41,7 @@ homepage = "https://github.com/mm21/mdforge"
 name = "mdforge"
 packages = [{include = "mdforge"}]
 readme = "README.md"
-version = "0.1.0"
+version = "0.2.0"
 
 [tool.poetry.dependencies]
 pyrollup = "^0.1.0"
