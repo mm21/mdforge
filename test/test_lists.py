@@ -249,11 +249,31 @@ def test_definition(doc: Document):
         ),
     ]
 
-    # non-compact and compact, inline only
+    # inline items (compact or non-compact)
     for compact in [False, True]:
-        doc += Heading(f"Definition list, compact={compact}")
-        doc += DefinitionList(inline_items, compact=compact)
+        doc += [
+            Heading(f"Definition list w/inline items, compact={compact}"),
+            DefinitionList(inline_items, compact=compact),
+        ]
 
-    # TODO: block items
+    block_items = [
+        DefinitionItem(
+            "Term A",
+            BlockContainer(
+                "This is a paragraph.",
+                BulletList(["Definition A1", "Definition A2"]),
+            ),
+        ),
+        DefinitionItem(
+            "Term B", BulletList(["Definition B1", "Definition B2"])
+        ),
+        DefinitionItem("Term C", "Definition C"),
+    ]
+
+    # block items (non-compact only)
+    doc += [
+        Heading("Definition list w/block items"),
+        DefinitionList(block_items),
+    ]
 
     assert doc.get_pandoc_extensions() == ["definition_lists"]
