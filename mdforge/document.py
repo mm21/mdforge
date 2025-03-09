@@ -45,20 +45,21 @@ class Document(BaseLevelBlockContainer):
         if elements:
             self += elements
 
-    def render(self, path: Path, *, flavor: FlavorType):
+    def render(self, *, flavor: FlavorType) -> str:
         """
-        Write Markdown document to the provided path using the provided flavor.
-        """
-        with path.open("w") as fh:
-            fh.write(self.render_text(flavor=flavor))
-
-    def render_text(self, *, flavor: FlavorType) -> str:
-        """
-        Return Markdown document as text.
+        Return Markdown document using the provided flavor as a string.
         """
         frontmatter = self.__render_frontmatter()
         content: str = "\n\n".join(self._render_block(flavor))
         return f"{frontmatter or ''}{content}\n"
+
+    def render_file(self, path: Path | str, *, flavor: FlavorType):
+        """
+        Write Markdown document using the provided flavor to the provided file.
+        """
+        path_norm = path if isinstance(path, Path) else Path(path)
+        with path_norm.open("w") as fh:
+            fh.write(self.render(flavor=flavor))
 
     def get_pandoc_extensions(self) -> list[str]:
         """

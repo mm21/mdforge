@@ -89,7 +89,7 @@ def render_doc(
     import pytest_powerpack
 
     # render document
-    doc.render(powerpack_comparison_files.out_file, flavor="pandoc")
+    doc.render_file(powerpack_comparison_files.out_file, flavor="pandoc")
 
     # additionally run pandoc if flags passed
     html = bool(request.config.getoption("--html"))

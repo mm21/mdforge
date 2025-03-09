@@ -137,3 +137,19 @@ def test_frontmatter(
     )
 
     render_doc(doc, request, powerpack_comparison_files)
+
+
+def test_attributes_copy():
+
+    attributes = Attributes(
+        html_id="attrs-1",
+        css_classes=["class1", "class2"],
+        attrs={"attr1": "value1"},
+    )
+    attributes_copy = attributes._copy(
+        css_classes="class3", attrs={"attr2": "value2"}
+    )
+
+    assert attributes_copy.html_id == "attrs-1"
+    assert attributes_copy.css_classes == ["class1", "class2", "class3"]
+    assert attributes_copy.attrs == {"attr1": "value1", "attr2": "value2"}
