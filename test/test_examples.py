@@ -134,12 +134,11 @@ def test_lists(
     doc += BulletList(
         [
             "Item 1",
-            "Item 2",
             ListItem(
-                "Item 3",
+                "Item 2",
                 [
-                    "Item 3-1",
-                    "Item 3-2",
+                    "Item 2-1",
+                    "Item 2-2",
                 ],
             ),
         ]
@@ -213,7 +212,7 @@ def test_tables(
         [
             [
                 BlockContainer(
-                    "This text is automatically wrapped in a paragraph",
+                    "This text is implicitly wrapped in a paragraph",
                     BulletList(["Item 1", "Item 2"]),
                 ),
                 "Cell 2",
