@@ -73,6 +73,9 @@ class Table(BaseBlockElement):
                     f"Width percents must be nonzero, got {widths_pct_norm}"
                 )
 
+        if loose and not block:
+            raise ValidationError(f"Table with loose=True requires block=True")
+
         content_rows = _normalize_cells(rows)
         header_rows = _normalize_cells(header) if header else None
         footer_rows = _normalize_cells(footer) if footer else None
@@ -125,19 +128,30 @@ class Table(BaseBlockElement):
         # get variant
         variant = lookup_variant(flavor, self._params.block)
 
+        # ensure variant supports params
+        variant.validate_params(self._params)
+
         # create context to encapsulate render info
         context = RenderContext(flavor, variant, self._params)
 
         # start comment, required to disambiguate table caption in case of
         # back-to-back tables (caption can be before or after table)
-        desc = [
-            f"variant={type(variant).__name__}",
-            f"widths={self._params.widths}",
-            f"widths_pct={self._params.widths_pct}",
-            f"block={self._params.block}",
-            f"loose={self._params.loose}",
-        ]
-        yield f"<!-- table start: {', '.join(desc)} -->\n"
+
+        descs: list[str] = []
+
+        if align := self._params.align:
+            descs.append(f"align={align}")
+        if widths := self._params.widths:
+            descs.append(f"widths={widths}")
+        if widths_pct := self._params.widths_pct:
+            descs.append(f"widths_pct={widths_pct}")
+        if block := self._params.block:
+            descs.append(f"block={block}")
+        if loose := self._params.loose:
+            descs.append(f"loose={loose}")
+
+        desc = f": {', '.join(descs)}" if descs else ""
+        yield f"<!-- table start{desc} -->\n"
 
         # render caption
         if caption := self._params.caption:
@@ -153,7 +167,7 @@ class Table(BaseBlockElement):
             {"grid_tables"} if self._params.block else {"multiline_tables"}
         )
         caption_ext = {"table_captions"} if self._params.caption else set()
-        return table_ext | caption_ext
+        return table_ext | caption_ext | super()._get_pandoc_extensions()
 
 
 def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:

@@ -127,4 +127,4 @@ class DefinitionList(BaseBlockElement):
         yield "<!-- end of definition list -->"
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return {"definition_lists"}
+        return {"definition_lists"} | super()._get_pandoc_extensions()

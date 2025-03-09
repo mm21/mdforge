@@ -23,7 +23,7 @@ def test_composition(doc: Document):
     doc += Strong(Underline("Strong w/underline!"))
     doc += Emph(Strikethrough("Emph w/strikethrough!"))
 
-    assert doc.get_pandoc_extensions() == ["strikeout"]
+    assert doc.get_pandoc_extensions() == ["bracketed_spans", "strikeout"]
 
 
 @compare_doc

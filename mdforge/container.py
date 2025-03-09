@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-class InlineContainerMixin:
+class InlineContainerMixin(BaseElement):
     """
     Mixin to encapsulate an element which contains one or more inline elements.
     """
@@ -43,6 +43,13 @@ class InlineContainerMixin:
         )
         self.__auto_space = auto_space
 
+        self._inline_post_init()
+
+    def _inline_post_init(self):
+        """
+        Optionally overridden by subclass to perform additional init.
+        """
+
     def _render_elements(self, flavor: FlavorType) -> str:
         sep = " " if self.__auto_space else ""
         return sep.join(
@@ -50,7 +57,10 @@ class InlineContainerMixin:
         )
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return _aggregate_extensions(self.__elements)
+        return (
+            _aggregate_extensions(self.__elements)
+            | super()._get_pandoc_extensions()
+        )
 
 
 class InlineContainer(InlineContainerMixin, BaseInlineElement):
@@ -89,7 +99,10 @@ class BaseBlockContainer(BaseBlockElement):
         )
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return _aggregate_extensions(self.__elements)
+        return (
+            _aggregate_extensions(self.__elements)
+            | super()._get_pandoc_extensions()
+        )
 
     def _add_elements(self, elements: list[BaseBlockElement]):
         for element in elements:

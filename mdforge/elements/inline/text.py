@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from ..._norm import CoerceSpec, norm_obj
 from ...container import InlineContainerMixin
-from ...element import BaseInlineElement
+from ...element import Attributes, AttributesMixin, BaseInlineElement
 from ...exceptions import ValidationError
 from ...types import FlavorType
 from ..block.basic import Heading
@@ -65,10 +65,19 @@ class Strong(BaseTextContainer):
         return f"**{super()._render_inline(flavor)}**"
 
 
-class Underline(BaseTextContainer):
+class Underline(AttributesMixin, BaseTextContainer):
+
+    def _inline_post_init(self):
+        # add underline class, only relevant for pandoc flavor
+        self._set_attrs(Attributes(css_classes="underline"))
 
     def _render_inline(self, flavor: FlavorType) -> str:
-        return f"<u>{super()._render_inline(flavor)}</u>"
+        return (
+            f"[{super()._render_inline(flavor)}]{self._get_attrs_str(flavor)}"
+        )
+
+    def _get_pandoc_extensions(self) -> set[str]:
+        return {"bracketed_spans"} | super()._get_pandoc_extensions()
 
 
 class Strikethrough(BaseTextContainer):
@@ -77,7 +86,7 @@ class Strikethrough(BaseTextContainer):
         return f"~~{super()._render_inline(flavor)}~~"
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return {"strikeout"}
+        return {"strikeout"} | super()._get_pandoc_extensions()
 
 
 class Link(BaseInlineElement):
@@ -130,7 +139,7 @@ class Ref(BaseInlineElement):
             {"implicit_header_references"}
             if not self.__target._html_id
             else set()
-        )
+        ) | super()._get_pandoc_extensions()
 
 
 class Newline(BaseInlineElement):

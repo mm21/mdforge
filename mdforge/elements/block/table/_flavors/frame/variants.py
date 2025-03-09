@@ -8,6 +8,7 @@ __all__ = [
 ]
 
 MULTILINE_VARIANT = FrameTableVariant(
+    name="Pandoc multiline",
     header_section=SectionConfig(
         SeparatorConfig(),
         upper_sep=SeparatorConfig(outer_corner=""),
@@ -51,6 +52,7 @@ For example:
 """
 
 GRID_VARIANT = FrameTableVariant(
+    name="Pandoc grid",
     header_section=SectionConfig(
         SeparatorConfig(corner="+"),
         lower_sep=SeparatorConfig(line="=", corner="+"),

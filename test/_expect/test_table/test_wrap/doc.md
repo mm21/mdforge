@@ -1,4 +1,4 @@
-<!-- table start: variant=FrameTableVariant, widths=[15, 16, 17, 18], widths_pct=None, block=False, loose=False -->
+<!-- table start: align=['left', 'center', 'right', 'default'], widths=[15, 16, 17, 18] -->
 
 : Block: False
 
@@ -27,7 +27,7 @@ width=15               width=16                 width=17
 
 <!-- table end -->
 
-<!-- table start: variant=FrameTableVariant, widths=[15, 16, 17, 18], widths_pct=None, block=True, loose=False -->
+<!-- table start: align=['left', 'center', 'right', 'default'], widths=[15, 16, 17, 18], block=True -->
 
 : Block: True
 

@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-class Heading(BaseBlockElement, AttributesMixin):
+class Heading(AttributesMixin, BaseBlockElement):
     """
     Heading, e.g. `# My heading`. If `level` not provided, it is set
     automatically based on nesting of container.
@@ -59,7 +59,9 @@ class Heading(BaseBlockElement, AttributesMixin):
         yield f"{'#' * level} {self.__text}{self._get_attrs_str(flavor, space_prefix=True)}"
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return {"header_attributes"} if self._has_attrs else set()
+        return (
+            {"header_attributes"} if self._has_attrs else set()
+        ) | super()._get_pandoc_extensions()
 
 
 class BlockImage(BaseBlockElement, ImageMixin):

@@ -1,6 +1,6 @@
 # Block: False
 
-<!-- table start: variant=FrameTableVariant, widths=[15, 16, 17, 18], widths_pct=None, block=False, loose=False -->
+<!-- table start: align=['left', 'center', 'right', 'default'], widths=[15, 16, 17, 18] -->
 
 -----------------------------------------------------------------------------
 Header 0,             Header 1,                Header 2, Header 3,           
@@ -20,7 +20,7 @@ Cell                     Cell                       Cell Cell
 
 # Block: True
 
-<!-- table start: variant=FrameTableVariant, widths=[15, 16, 17, 18], widths_pct=None, block=True, loose=False -->
+<!-- table start: align=['left', 'center', 'right', 'default'], widths=[15, 16, 17, 18], block=True -->
 
 +-----------------+------------------+-------------------+--------------------+
 | Header 0,       | Header 1,        | Header 2,         | Header 3,          |

@@ -63,8 +63,8 @@ def test_ref(doc: Document):
         "Test heading 1",
         attributes=Attributes(
             html_id="heading-1",
-            attrs={"style": "color: blue;"},
             css_classes=["class1", "class2"],
+            attrs={"style": "color: blue;"},
         ),
     )
     doc += heading_1

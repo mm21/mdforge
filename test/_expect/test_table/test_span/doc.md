@@ -1,4 +1,4 @@
-<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
+<!-- table start: block=True -->
 
 +--------------------------+----------+
 | Test cspan               | Test 0-2 |
@@ -21,7 +21,7 @@
 
 <!-- table end -->
 
-<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=False -->
+<!-- table start: align=center, block=True -->
 
 +:--------:+:--------:+
 | Test 0-0 | Test 0-1 |

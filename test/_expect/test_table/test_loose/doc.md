@@ -1,4 +1,4 @@
-<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=None, block=True, loose=True -->
+<!-- table start: block=True, loose=True -->
 
 +------------+-------------------------+----------------------+
 | <p>Test    | <p>Test paragraph 0</p> | Test block 0         |

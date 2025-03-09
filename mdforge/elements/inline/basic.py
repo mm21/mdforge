@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-class Span(BaseTextContainer, AttributesMixin):
+class Span(AttributesMixin, BaseTextContainer):
     """
     Span element; a container for inline elements which can have its own
     attributes.
@@ -36,7 +36,9 @@ class Span(BaseTextContainer, AttributesMixin):
         return f"[{text}]{attrs}"
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return {"bracketed_spans"} if self._has_attrs else set()
+        return (
+            {"bracketed_spans"} if self._has_attrs else set()
+        ) | super()._get_pandoc_extensions()
 
 
 class InlineImage(BaseInlineElement, ImageMixin):

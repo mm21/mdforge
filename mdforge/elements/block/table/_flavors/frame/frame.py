@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Generator
 
+from ......exceptions import RenderError
 from ......types import AlignType
 from ..._context import RenderContext
+from ..._params import TableParams
 from ..._vcell import VirtualCell
 from ..flavor import BaseTableVariant
 
@@ -236,9 +238,20 @@ class FrameTableVariant(BaseTableVariant):
     Encapsulates frame table construction info.
     """
 
+    name: str
     header_section: SectionConfig
     content_section: SectionConfig
     footer_section: SectionConfig | None = None
+
+    # TODO: most of this logic belongs in RenderContext, keeping
+    # this class as a simple dataclass
+
+    def validate_params(self, params: TableParams):
+
+        if params.footer_rows and not self.footer_section:
+            raise RenderError(
+                f"Table variant '{self.name}' does not support footer rows, try passing block=True"
+            )
 
     def render(self, context: RenderContext) -> Generator[str, None, None]:
         """

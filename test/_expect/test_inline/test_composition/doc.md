@@ -1,5 +1,5 @@
 Hello, _world_!
 
-**<u>Strong w/underline!</u>**
+**[Strong w/underline!]{.underline}**
 
 _~~Emph w/strikethrough!~~_

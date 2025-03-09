@@ -50,14 +50,14 @@ def test_tables():
     # non-int width provided
     with raises(ValidationError):
         Table(
-            [["Cell1", "Cell2", "Cell3"]],
+            [["Cell 1", "Cell 2", "Cell 3"]],
             widths=[10, 10, None],
         )
 
     # both widths and widths_pct being provided
     with raises(ValidationError):
         Table(
-            [["Cell1", "Cell2", "Cell3"]],
+            [["Cell 1", "Cell 2", "Cell 3"]],
             widths=[10, 10, 10],
             widths_pct=[30, 30, 40],
         )
@@ -65,28 +65,28 @@ def test_tables():
     # width_pct not adding up to 100
     with raises(ValidationError):
         Table(
-            [["Cell1", "Cell2", "Cell3"]],
+            [["Cell 1", "Cell 2", "Cell 3"]],
             widths_pct=[30, 30, 30],
         )
 
     # zero width_pct
     with raises(ValidationError):
         Table(
-            [["Cell1", "Cell2", "Cell3"]],
+            [["Cell 1", "Cell 2", "Cell 3"]],
             widths_pct=[0, 50, 50],
         )
 
     # widths length mismatch
     with raises(ValidationError):
         Table(
-            [["Cell1", "Cell2", "Cell3"]],
+            [["Cell 1", "Cell 2", "Cell 3"]],
             widths=[10, 20],  # only 2 widths for 3 columns
         )
 
     # widths_pct length mismatch
     with raises(ValidationError):
         Table(
-            [["Cell1", "Cell2", "Cell3"]],
+            [["Cell 1", "Cell 2", "Cell 3"]],
             widths_pct=[50, 50],  # only 2 percentages for 3 columns
         )
 
@@ -96,36 +96,42 @@ def test_tables():
 
     # invalid row type
     with raises(ValidationError):
-        Table([1, 2, 3])  # Integers are not valid cell types
+        Table([1, 2, 3])  # integers are not valid cell types
 
     # merged cells with inconsistent column counts
     with raises(ValidationError):
         Table(
             [
-                ["Cell1", "Cell2", "Cell3"],
-                ["Cell1", Cell("Spans 2 columns", cspan=2)],
-                ["Cell1", "Cell2", "Cell3", "Extra Cell"],
+                ["Cell 1", "Cell 2", "Cell 3"],
+                ["Cell 1", Cell("Spans 2 columns", cspan=2)],
+                ["Cell 1", "Cell 2", "Cell 3", "Extra Cell"],
             ]
         )
 
-    # create a block element and try to put it in an inline table
+    # block element in an inline table
     block_element = BulletList(["Item 1", "Item 2"])
-
     with raises(ValidationError):
         Table(
-            [[block_element, "Cell2"]],
-            block=False,  # Specify inline-only table
+            [[block_element, "Cell 2"]],
+            block=False,  # specify inline-only table
         )
+
+    # table with loose=True but block=False
+    with raises(ValidationError):
+        Table([["Cell 1", "Cell 2"]], loose=True)
 
     # table with a very long word and a small width
     very_long_word = "ThisIsAnExtremelyLongWordThatCannotBeWrappedProperly"
-
     with raises(RenderError):
         table = Table(
             [[very_long_word]],
-            widths=[10],  # Too small for the long word
+            widths=[10],  # too small for the long word
         )
-        # force rendering to trigger the wrap error
+        list(table._render_block("pandoc"))
+
+    # multiline table with footer
+    with raises(RenderError):
+        table = Table([["Cell 1", "Cell 2"]], footer=["Footer 1", "Footer 2"])
         list(table._render_block("pandoc"))
 
 

@@ -12,6 +12,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generator
 
+from .._params import TableParams
+
 if TYPE_CHECKING:
     from .._context import RenderContext
 
@@ -69,6 +71,13 @@ class BaseTableVariant(ABC):
     Character used to indicate alignment within a separator, e.g. ":" for
     `pandoc`.
     """
+
+    @abstractmethod
+    def validate_params(self, params: TableParams):
+        """
+        Ensure this variant can be rendered given params.
+        """
+        ...
 
     @abstractmethod
     def render(self, context: RenderContext) -> Generator[str, None, None]:

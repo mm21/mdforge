@@ -1,6 +1,6 @@
 # Simple case
 
-<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=[50, 50], block=True, loose=False -->
+<!-- table start: widths_pct=[50, 50], block=True -->
 
 +------------------+------------------+
 | Cell 0-0         | Cell 0-1 aaaaaaa |
@@ -10,7 +10,7 @@
 
 # Complex case
 
-<!-- table start: variant=FrameTableVariant, widths=None, widths_pct=[10, 20, 30, 40], block=True, loose=False -->
+<!-- table start: widths_pct=[10, 20, 30, 40], block=True -->
 
 +-------------------------+------------------------------------------------+-----------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
 | Cell                    | Cell                                           | Cell                                                                  | Cell                                                                                         |
