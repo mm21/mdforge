@@ -74,7 +74,7 @@ class BlockImage(BaseBlockElement, ImageMixin):
     def __init__(
         self,
         path: str,
-        caption: str | BaseInlineElement | None = None,
+        caption: BaseInlineElement | str | None = None,
         align: AlignType | None = None,
         *,
         attributes: Attributes | None = None,

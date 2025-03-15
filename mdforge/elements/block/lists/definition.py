@@ -31,8 +31,8 @@ class DefinitionItem:
 
     def __init__(
         self,
-        term: str | BaseInlineElement,
-        definitions: str | BaseElement | list[str | BaseElement],
+        term: BaseInlineElement | str,
+        definitions: BaseElement | str | list[BaseElement | str],
     ):
         """
         :param term: Term as a string or inline element

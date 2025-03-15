@@ -31,7 +31,7 @@ class InlineContainerMixin(BaseElement):
     __auto_space: bool
 
     def __init__(
-        self, *elements: str | BaseInlineElement, auto_space: bool = False
+        self, *elements: BaseInlineElement | str, auto_space: bool = False
     ):
         def coerce(obj: str) -> BaseInlineElement:
             return coerce_inline_text(

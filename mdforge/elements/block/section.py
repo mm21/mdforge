@@ -28,7 +28,7 @@ class Section(BaseLevelBlockContainer):
 
     def __init__(
         self,
-        heading: str | Heading | None = None,
+        heading: Heading | str | None = None,
         *,
         elements: BaseElement | str | Iterable[BaseElement | str] | None = None,
     ):

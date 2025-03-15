@@ -19,7 +19,7 @@ __all__ = [
     "RowType",
 ]
 
-type CellType = str | BaseElement | Cell
+type CellType = BaseElement | Cell | str
 type RowType = Iterable[CellType]
 
 
@@ -45,7 +45,7 @@ class Cell:
     """
 
     def __init__(
-        self, content: str | BaseElement, rspan: int = 1, cspan: int = 1
+        self, content: BaseElement | str, rspan: int = 1, cspan: int = 1
     ):
         self.__content = norm_obj(
             content, BaseElement, CoerceSpec(coerce_text, str)

@@ -97,7 +97,7 @@ class Link(BaseInlineElement):
     __text: BaseInlineElement
     __url: str
 
-    def __init__(self, text: str | BaseInlineElement, url: str):
+    def __init__(self, text: BaseInlineElement | str, url: str):
         self.__text = norm_obj(text, BaseInlineElement, CoerceSpec(Text, str))
         self.__url = url
 

@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-type ListItemType = str | BaseElement | ListItem
+type ListItemType = BaseElement | ListItem | str
 
 
 class ListItem:
@@ -32,7 +32,7 @@ class ListItem:
 
     def __init__(
         self,
-        content: str | BaseElement,
+        content: BaseElement | str,
         sub_items: list[ListItemType] | BaseItemList | None = None,
     ):
         self.__element = norm_obj(

@@ -23,7 +23,7 @@ class Span(AttributesMixin, BaseTextContainer):
 
     def __init__(
         self,
-        *elements: str | BaseInlineElement,
+        *elements: BaseInlineElement | str,
         auto_space: bool = False,
         attributes: Attributes | None = None,
     ):
