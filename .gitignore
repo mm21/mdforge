@@ -3,6 +3,7 @@
 .coverage
 .env
 .doit.db*
+.tox/
 build
 dist
 __out__
