@@ -95,7 +95,10 @@ class BaseBlockContainer(BaseBlockElement):
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield "\n\n".join(
-            [element._render_block_lines(flavor) for element in self.__elements]
+            [
+                "\n".join(element._render_block(flavor))
+                for element in self.__elements
+            ]
         )
 
     def _get_pandoc_extensions(self) -> set[str]:

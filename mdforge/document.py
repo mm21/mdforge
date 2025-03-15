@@ -4,8 +4,7 @@ Interface for Markdown document generation.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Generator, Iterable
 
 import yaml
 
@@ -45,35 +44,16 @@ class Document(BaseLevelBlockContainer):
         if elements:
             self += elements
 
-    def render(self, *, flavor: FlavorType) -> str:
-        """
-        Return Markdown document using the provided flavor as a string.
-        """
-        frontmatter = self.__render_frontmatter()
-        content: str = "\n\n".join(self._render_block(flavor))
-        return f"{frontmatter or ''}{content}\n"
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+        yield from self.__render_frontmatter()
+        yield from super()._render_block(flavor)
+        yield ""
 
-    def render_file(self, path: Path | str, *, flavor: FlavorType):
-        """
-        Write Markdown document using the provided flavor to the provided file.
-        """
-        path_norm = path if isinstance(path, Path) else Path(path)
-        with path_norm.open("w") as fh:
-            fh.write(self.render(flavor=flavor))
-
-    def get_pandoc_extensions(self) -> list[str]:
-        """
-        Get a list of extensions required to convert the resulting
-        markdown document in pandoc, assuming pandoc flavor is used for
-        rendering.
-        """
-        return sorted(self._get_pandoc_extensions())
-
-    def __render_frontmatter(self) -> str | None:
+    def __render_frontmatter(self) -> Generator[str, None, None]:
         if self.__frontmatter is None:
             return None
 
         content = yaml.dump(
             self.__frontmatter, default_flow_style=False, sort_keys=False
         )
-        return f"---\n{content}---\n"
+        yield from ["---", f"{content}---", ""]

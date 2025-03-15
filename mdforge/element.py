@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 from ._norm import norm_list
@@ -23,12 +24,39 @@ __all__ = [
 
 
 class BaseElement(ABC):
+    """
+    Base renderable markdown element, which may be a container of other
+    elements.
+    """
 
     __container: BaseLevelBlockContainer | None = None
     """
     Container to which this element belongs. Must be added to a container in
-    order to be rendered in output.
+    order to be rendered in a document, but otherwise can still be rendered
+    standalone.
     """
+
+    def render(self, *, flavor: FlavorType) -> str:
+        """
+        Return element as a string using the provided flavor.
+        """
+        return "\n".join(self._render_element(flavor))
+
+    def render_file(self, path: Path | str, *, flavor: FlavorType):
+        """
+        Write Markdown document using the provided flavor to the provided file.
+        """
+        path_norm = path if isinstance(path, Path) else Path(path)
+        with path_norm.open("w") as fh:
+            fh.write(self.render(flavor=flavor))
+
+    def get_pandoc_extensions(self) -> list[str]:
+        """
+        Get a list of extensions required to convert the resulting
+        markdown document in pandoc, assuming pandoc flavor is used for
+        rendering.
+        """
+        return sorted(self._get_pandoc_extensions())
 
     @abstractmethod
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
@@ -97,12 +125,6 @@ class BaseBlockElement(BaseElement):
 
     def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield from self._render_block(flavor)
-
-    def _render_block_lines(self, flavor: FlavorType) -> str:
-        """
-        Render as multi-line string.
-        """
-        return "\n".join(self._render_block(flavor))
 
 
 @dataclass(kw_only=True)

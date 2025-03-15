@@ -16,6 +16,7 @@ Pythonic multi-flavor Markdown generator
     - [Lists](#lists)
     - [Tables](#tables)
     - [Images](#images)
+    - [Rendering standalone elements](#rendering-standalone-elements)
   - [Advanced features](#advanced-features)
     - [HTML attributes](#html-attributes)
     - [Pandoc extensions](#pandoc-extensions)
@@ -108,6 +109,7 @@ This is rendered as:
 title: My Document
 author: Me
 ---
+
 # Introduction
 
 This is an introduction paragraph.
@@ -515,6 +517,18 @@ Here is an inline image ![Inline image](./image.png) in a paragraph.
 Note the following observations:
 
 - Support for caption and alignment depends on flavor
+
+### Rendering standalone elements
+
+Any element class can be rendered by itself, even if not placed in a document. This is useful for generating document snippets which may be embedded in a document, e.g. via a templating engine.
+
+```python
+from mdforge import InlineContainer, Strong
+
+element = InlineContainer("This is a ", Strong("test element"))
+
+assert element.render(flavor="pandoc") == "This is a **test element**"
+```
 
 ## Advanced features
 

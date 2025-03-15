@@ -261,6 +261,14 @@ def test_images(
     render_doc(doc, request, powerpack_comparison_files)
 
 
+def test_standalone():
+    from mdforge import InlineContainer, Strong
+
+    element = InlineContainer("This is a ", Strong("test element"))
+
+    assert element.render(flavor="pandoc") == "This is a **test element**"
+
+
 @mark.powerpack_compare_file("doc.md")
 def test_html_attributes(
     request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
