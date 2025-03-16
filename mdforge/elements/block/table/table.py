@@ -11,8 +11,7 @@ from mdforge._norm import CoerceSpec, norm_obj
 from ....element import BaseBlockElement, BaseElement
 from ....exceptions import ValidationError
 from ....types import AlignType, FlavorType
-from ._context import RenderContext
-from ._flavors.flavors import lookup_variant
+from ._flavors.flavors import create_render_context
 from ._params import TableParams
 from .cell import Cell, RowType
 
@@ -125,14 +124,10 @@ class Table(BaseBlockElement):
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
 
-        # get variant
-        variant = lookup_variant(flavor, self._params.block)
-
-        # ensure variant supports params
-        variant.validate_params(self._params)
-
-        # create context to encapsulate render info
-        context = RenderContext(flavor, variant, self._params)
+        # create render context
+        context = create_render_context(
+            flavor, self._params, self._params.block
+        )
 
         # start comment, required to disambiguate table caption in case of
         # back-to-back tables (caption can be before or after table)
@@ -158,7 +153,7 @@ class Table(BaseBlockElement):
             yield f": {caption}\n"
 
         # render based on variant
-        yield from variant.render(context)
+        yield from context.render()
 
         yield "\n<!-- table end -->"
 

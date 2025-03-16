@@ -7,7 +7,7 @@ from ....types import AlignType
 from .cell import Cell
 
 if TYPE_CHECKING:
-    from ._context import RenderContext
+    from ._context import BaseRenderContext
 
 
 class VirtualCell:
@@ -17,7 +17,7 @@ class VirtualCell:
     consistent column counts.
     """
 
-    context: RenderContext
+    context: BaseRenderContext
     """
     Render context.
     """
@@ -58,7 +58,7 @@ class VirtualCell:
     Content line inserted in place of line separator for spanned rows.
     """
 
-    def __init__(self, context: RenderContext, row_idx: int, col_idx: int):
+    def __init__(self, context: BaseRenderContext, row_idx: int, col_idx: int):
         self.context = context
         self.row_idx = row_idx
         self.col_idx = col_idx

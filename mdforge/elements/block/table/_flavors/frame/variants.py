@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .frame import FrameTableVariant, SectionConfig, SeparatorConfig
+from .variant import FrameTableVariant, SectionConfig, SeparatorConfig
 
 __all__ = [
     "MULTILINE_VARIANT",
