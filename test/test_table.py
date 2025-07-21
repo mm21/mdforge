@@ -238,6 +238,21 @@ def test_span(doc: Document):
         block=True,
     )
 
+    doc += Table(
+        [
+            [
+                "Test 0-0",
+                "Test 0-1",
+                Cell("Test 0-2", rspan=2),
+                Cell("Test 0-3", rspan=3),
+            ],
+            ["Test 1-0", "Test 1-1"],
+            ["Test 2-0", "Test 2-1", "Test 2-2"],
+        ],
+        widths=[15, 16, 17, 18],
+        block=True,
+    )
+
 
 @compare_doc
 def test_loose(doc: Document):

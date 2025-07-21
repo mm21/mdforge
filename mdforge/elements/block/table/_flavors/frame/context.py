@@ -179,6 +179,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
                 yield self.__render_sep_line(
                     section.middle_sep,
+                    vrow=vrow,
                     seg_overrides=seg_overrides,
                     corner_overrides=corner_overrides,
                 )
@@ -253,6 +254,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
     def __render_sep_line(
         self,
         sep: SeparatorConfig,
+        vrow: list[VirtualCell] | None = None,
         do_align: bool = False,
         seg_overrides: list[str | None] | None = None,
         corner_overrides: list[bool] | None = None,
@@ -325,6 +327,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
                     inner_corner,
                     col_idx,
                     seg_overrides_,
+                    vrow=vrow,
                 )
 
         # end with right corner
@@ -380,6 +383,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         inner_corner: str,
         col_idx: int,
         seg_overrides: list[str | None],
+        vrow: list[VirtualCell] | None = None,
     ):
         """
         Get separator line segment, either a solid line or dangling content
@@ -397,8 +401,12 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         )
 
         # check if this segment spans to the next one
-        span_next = all(
-            seg is not None for seg in [seg_override, next_seg_override]
+        span_next = (
+            seg_override is not None
+            and next_seg_override is not None
+            and
+            # check if they're from the same origin cell
+            ((vrow[col_idx].cell is vrow[col_idx + 1].cell) if vrow else False)
         )
 
         # adjust width if necessary to reach next corner
@@ -412,7 +420,10 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         # append next corner if necessary
         if not is_last_col and not span_next:
-            seg += inner_corner
+            if seg_override is not None and next_seg_override is not None:
+                seg += self.variant.cell_sep.strip()
+            else:
+                seg += inner_corner
 
             if next_seg_override is not None:
                 # next segment will be overridden with dangling content, so
@@ -662,9 +673,6 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             if not vcell.is_origin:
                 # skip if not origin cell, we would have already counted it
                 continue
-
-            # content for spanned cells has not yet been set
-            assert not vcell.content_is_set
 
             # get total width of this cell and add height of resulting content
             width = self.__get_spanned_width(vrow, vcell)
