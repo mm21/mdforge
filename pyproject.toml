@@ -14,10 +14,6 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13"
 ]
-dependencies = [
-  "pyrollup>=0.1.0,<0.2.0",
-  "pyyaml>=6.0.2,<7.0.0"
-]
 description = "Pythonic multi-flavor Markdown generator"
 name = "mdforge"
 readme = "README.md"
@@ -33,6 +29,10 @@ requires = ["poetry-core>=1.0.0"]
 
 [tool.poetry]
 packages = [{include = "mdforge"}]
+
+[tool.poetry.dependencies]
+pyrollup = "^0.1.0"
+pyyaml = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "^2.3.1"
