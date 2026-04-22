@@ -21,7 +21,9 @@ ROOT_LEVEL: int = 1
 
 class Document(BaseLevelBlockContainer):
     """
-    Encapsulates a Markdown document. Add elements using the `+=` operator.
+    Encapsulates a Markdown document.
+
+    Add elements using the `+=` operator.
     """
 
     _level_inc: int = 0

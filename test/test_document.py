@@ -132,9 +132,7 @@ def test_images(doc: Document):
 def test_frontmatter(
     request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
 ):
-    doc = Document(
-        frontmatter={"title": "Doc 1"}, elements=Paragraph("Hello, world!")
-    )
+    doc = Document(frontmatter={"title": "Doc 1"}, elements=Paragraph("Hello, world!"))
 
     render_doc(doc, request, powerpack_comparison_files)
 
@@ -146,9 +144,7 @@ def test_attributes_copy():
         css_classes=["class1", "class2"],
         attrs={"attr1": "value1"},
     )
-    attributes_copy = attributes._copy(
-        css_classes="class3", attrs={"attr2": "value2"}
-    )
+    attributes_copy = attributes._copy(css_classes="class3", attrs={"attr2": "value2"})
 
     assert attributes_copy.html_id == "attrs-1"
     assert attributes_copy.css_classes == ["class1", "class2", "class3"]

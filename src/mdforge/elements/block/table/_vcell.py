@@ -12,9 +12,10 @@ if TYPE_CHECKING:
 
 class VirtualCell:
     """
-    Cell which encapsulates a `Cell` or a spanned cell thereof. Used to
-    simplify generation of cell content in that virtual cells have
-    consistent column counts.
+    Cell which encapsulates a `Cell` or a spanned cell thereof.
+
+    Used to simplify generation of cell content in that virtual cells have consistent
+    column counts.
     """
 
     context: BaseRenderContext
@@ -44,8 +45,7 @@ class VirtualCell:
 
     __origin_vcell: VirtualCell | None = None
     """
-    Original cell from which this cell is derived, only applicable to spanned
-    cells.
+    Original cell from which this cell is derived, only applicable to spanned cells.
     """
 
     __lines: list[str] | None = None
@@ -136,8 +136,9 @@ class VirtualCell:
     def lines(self) -> list[str]:
         """
         Get this cell's content as list of lines, ensuring it has been set.
-        If cell spans multiple rows/columns, this is a fragment of the content
-        in the origin cell.
+
+        If cell spans multiple rows/columns, this is a fragment of the content in the
+        origin cell.
         """
         assert self.__lines is not None
         return self.__lines
@@ -145,8 +146,8 @@ class VirtualCell:
     @property
     def dangling_line(self) -> str | None:
         """
-        Get this cell's dangling line, if any; only applicable for cells with
-        spanned rows.
+        Get this cell's dangling line, if any; only applicable for cells with spanned
+        rows.
         """
         return self.__dangling_line
 
@@ -171,7 +172,8 @@ class VirtualCell:
 
     def set_dangling_line(self, line: str):
         """
-        Set cell content line to occupy a segment of a separator line. Only
-        applicable to cells which span multiple rows.
+        Set cell content line to occupy a segment of a separator line.
+
+        Only applicable to cells which span multiple rows.
         """
         self.__dangling_line = line

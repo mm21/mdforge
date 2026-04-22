@@ -16,6 +16,6 @@ class ValidationError(Exception):
 
 class RenderError(Exception):
     """
-    Raised upon rendering if input is invalid, possibly dependent on the
-    flavor used for rendering.
+    Raised upon rendering if input is invalid, possibly dependent on the flavor used for
+    rendering.
     """

@@ -20,9 +20,7 @@ class BaseRenderContext[VariantT: BaseTableVariant](ABC):
     params: TableParams
     variant: VariantT
 
-    def __init__(
-        self, flavor: FlavorType, params: TableParams, variant: VariantT
-    ):
+    def __init__(self, flavor: FlavorType, params: TableParams, variant: VariantT):
         self.flavor = flavor
         self.params = params
         self.variant = variant

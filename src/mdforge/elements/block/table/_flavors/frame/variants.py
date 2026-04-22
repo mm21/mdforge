@@ -25,7 +25,7 @@ MULTILINE_VARIANT = FrameTableVariant(
     row_trailing_sep="",
 )
 """
-Pandoc multiline table. 
+Pandoc multiline table.
 
 For example:
 

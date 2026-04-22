@@ -26,8 +26,9 @@ class CoerceSpec[CoerceT]:
 
     to_type: Callable[[Any], CoerceT]
     """
-    Type to which to coerce, or a callable returning that type. Must take a 
-    single argument of one of the type(s) given in `from_types`.
+    Type to which to coerce, or a callable returning that type.
+
+    Must take a single argument of one of the type(s) given in `from_types`.
     """
 
     from_types: type[Any] | tuple[Any, ...]
@@ -38,11 +39,7 @@ class CoerceSpec[CoerceT]:
 
 def norm_obj[
     ExpectT, CoerceT
-](
-    obj: Any,
-    expect_type: type[ExpectT],
-    *coerce_specs: CoerceSpec[CoerceT],
-) -> ExpectT:
+](obj: Any, expect_type: type[ExpectT], *coerce_specs: CoerceSpec[CoerceT],) -> ExpectT:
     """
     Normalize object to the expected type, coercing if applicable.
     """
@@ -100,8 +97,6 @@ def norm_list[
     return [norm_obj(obj, expect_type, *coerce_specs) for obj in objs_list]
 
 
-def _err_str(
-    obj: Any, expect_type: type[ExpectT], note: str | None = None
-) -> str:
+def _err_str(obj: Any, expect_type: type[ExpectT], note: str | None = None) -> str:
     note_norm = f" {note}" if note else ""
     return f"Object {obj} of type {type(obj)} is not of expected type {expect_type}{note_norm}"

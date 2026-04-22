@@ -30,13 +30,9 @@ class InlineContainerMixin(BaseElement):
     __elements: list[BaseInlineElement]
     __auto_space: bool
 
-    def __init__(
-        self, *elements: BaseInlineElement | str, auto_space: bool = False
-    ):
+    def __init__(self, *elements: BaseInlineElement | str, auto_space: bool = False):
         def coerce(obj: str) -> BaseInlineElement:
-            return coerce_inline_text(
-                obj, allow_multiline=self._allow_multiline
-            )
+            return coerce_inline_text(obj, allow_multiline=self._allow_multiline)
 
         self.__elements = norm_list(
             elements, BaseInlineElement, CoerceSpec(coerce, str)
@@ -52,21 +48,15 @@ class InlineContainerMixin(BaseElement):
 
     def _render_elements(self, flavor: FlavorType) -> str:
         sep = " " if self.__auto_space else ""
-        return sep.join(
-            element._render_inline(flavor) for element in self.__elements
-        )
+        return sep.join(element._render_inline(flavor) for element in self.__elements)
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return (
-            _aggregate_extensions(self.__elements)
-            | super()._get_pandoc_extensions()
-        )
+        return _aggregate_extensions(self.__elements) | super()._get_pandoc_extensions()
 
 
 class InlineContainer(InlineContainerMixin, BaseInlineElement):
     """
-    Container for inline elements; wraps multiple inline elements in a single
-    one.
+    Container for inline elements; wraps multiple inline elements in a single one.
     """
 
     def _render_inline(self, flavor: FlavorType) -> str:
@@ -95,17 +85,11 @@ class BaseBlockContainer(BaseBlockElement):
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield "\n\n".join(
-            [
-                "\n".join(element._render_block(flavor))
-                for element in self.__elements
-            ]
+            ["\n".join(element._render_block(flavor)) for element in self.__elements]
         )
 
     def _get_pandoc_extensions(self) -> set[str]:
-        return (
-            _aggregate_extensions(self.__elements)
-            | super()._get_pandoc_extensions()
-        )
+        return _aggregate_extensions(self.__elements) | super()._get_pandoc_extensions()
 
     def _add_elements(self, elements: list[BaseBlockElement]):
         for element in elements:

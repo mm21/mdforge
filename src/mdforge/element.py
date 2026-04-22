@@ -25,15 +25,15 @@ __all__ = [
 
 class BaseElement(ABC):
     """
-    Base renderable markdown element, which may be a container of other
-    elements.
+    Base renderable markdown element, which may be a container of other elements.
     """
 
     __container: BaseLevelBlockContainer | None = None
     """
-    Container to which this element belongs. Must be added to a container in
-    order to be rendered in a document, but otherwise can still be rendered
-    standalone.
+    Container to which this element belongs.
+
+    Must be added to a container in order to be rendered in a document, but otherwise
+    can still be rendered standalone.
     """
 
     def render(self, *, flavor: FlavorType) -> str:
@@ -52,9 +52,8 @@ class BaseElement(ABC):
 
     def get_pandoc_extensions(self) -> list[str]:
         """
-        Get a list of extensions required to convert the resulting
-        markdown document in pandoc, assuming pandoc flavor is used for
-        rendering.
+        Get a list of extensions required to convert the resulting markdown document in
+        pandoc, assuming pandoc flavor is used for rendering.
         """
         return sorted(self._get_pandoc_extensions())
 
@@ -71,20 +70,16 @@ class BaseElement(ABC):
         """
         return set()
 
-    def _render_element_norm(
-        self, flavor: FlavorType
-    ) -> Generator[str, None, None]:
+    def _render_element_norm(self, flavor: FlavorType) -> Generator[str, None, None]:
         """
-        Render this element, splitting any newlines embedded in content and
-        stripping whitespace.
+        Render this element, splitting any newlines embedded in content and stripping
+        whitespace.
         """
         yield from "\n".join(self._render_element(flavor)).strip().split("\n")
 
     @property
     def _container(self) -> BaseLevelBlockContainer:
-        assert (
-            self.__container
-        ), f"Element has not been placed in a container: {self}"
+        assert self.__container, f"Element has not been placed in a container: {self}"
         return self.__container
 
     @_container.setter
@@ -105,9 +100,7 @@ class BaseInlineElement(BaseElement):
         """
         ...
 
-    def _render_element(
-        self, flavor: BaseElement
-    ) -> Generator[str, None, None]:
+    def _render_element(self, flavor: BaseElement) -> Generator[str, None, None]:
         yield self._render_inline(flavor)
 
 
@@ -130,8 +123,9 @@ class BaseBlockElement(BaseElement):
 @dataclass(kw_only=True)
 class Attributes:
     """
-    HTML attributes which can be associated with some elements. Only applicable
-    to pandoc flavor.
+    HTML attributes which can be associated with some elements.
+
+    Only applicable to pandoc flavor.
     """
 
     html_id: str | None = None
@@ -189,8 +183,9 @@ class Attributes:
 
 class AttributesMixin:
     """
-    Mixin to facilitate adding HTML attributes. Only supported for pandoc
-    flavor.
+    Mixin to facilitate adding HTML attributes.
+
+    Only supported for pandoc flavor.
     """
 
     __attributes: Attributes | None = None
@@ -223,6 +218,7 @@ class AttributesMixin:
     ) -> str:
         """
         Get string representing attributes, optionally prefixed with a space.
+
         For pandoc flavor only.
         """
 

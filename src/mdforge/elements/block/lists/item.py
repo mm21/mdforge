@@ -35,15 +35,14 @@ class ListItem:
         content: BaseElement | str,
         sub_items: list[ListItemType] | BaseItemList | None = None,
     ):
-        self.__element = norm_obj(
-            content, BaseElement, CoerceSpec(coerce_text, str)
-        )
+        self.__element = norm_obj(content, BaseElement, CoerceSpec(coerce_text, str))
         self.__sub_items = sub_items
 
     def _is_block(self, flavor: FlavorType) -> bool:
         """
-        Check whether this list item is a block element. Also consider raw
-        text which has a blank line separating multiple paragraphs.
+        Check whether this list item is a block element.
+
+        Also consider raw text which has a blank line separating multiple paragraphs.
         """
         return isinstance(self.__element, BaseBlockElement) or any(
             line.strip() == "" for line in self._render_text(flavor)
@@ -73,8 +72,8 @@ class ListItem:
         self, parent_list_cls: type[BaseItemList]
     ) -> BaseItemList | None:
         """
-        Get sub list from sub items, creating a new list object if items are
-        given as a plain list.
+        Get sub list from sub items, creating a new list object if items are given as a
+        plain list.
         """
         if not self.__sub_items:
             return None
@@ -178,8 +177,8 @@ class BaseItemList(BaseBlockElement, ABC):
 
     def __check_loose(self, flavor: FlavorType, items: list[ListItem]):
         """
-        Check if this list should be considered loose, either explicitly
-        or based on whether there are any block items.
+        Check if this list should be considered loose, either explicitly or based on
+        whether there are any block items.
         """
 
         if self.__loose:

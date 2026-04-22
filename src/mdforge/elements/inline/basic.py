@@ -17,8 +17,7 @@ __all__ = [
 
 class Span(AttributesMixin, BaseTextContainer):
     """
-    Span element; a container for inline elements which can have its own
-    attributes.
+    Span element; a container for inline elements which can have its own attributes.
     """
 
     def __init__(

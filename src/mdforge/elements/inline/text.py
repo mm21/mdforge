@@ -43,9 +43,7 @@ class Text(BaseInlineElement):
     def __init__(self, text: str):
 
         if "\n" in text:
-            raise ValidationError(
-                f"Raw text may not span multiple lines: {text}"
-            )
+            raise ValidationError(f"Raw text may not span multiple lines: {text}")
 
         self.__text = text
 
@@ -72,9 +70,7 @@ class Underline(AttributesMixin, BaseTextContainer):
         self._set_attrs(Attributes(css_classes="underline"))
 
     def _render_inline(self, flavor: FlavorType) -> str:
-        return (
-            f"[{super()._render_inline(flavor)}]{self._get_attrs_str(flavor)}"
-        )
+        return f"[{super()._render_inline(flavor)}]{self._get_attrs_str(flavor)}"
 
     def _get_pandoc_extensions(self) -> set[str]:
         return {"bracketed_spans"} | super()._get_pandoc_extensions()
@@ -118,9 +114,7 @@ class Ref(BaseInlineElement):
     def __init__(self, target: Heading | Section, text: str | None = None):
         assert isinstance(target, (Heading, Section))
 
-        self.__target = (
-            target if isinstance(target, Heading) else target._heading
-        )
+        self.__target = target if isinstance(target, Heading) else target._heading
         self.__text = text
 
     def _render_inline(self, _: FlavorType) -> str:
@@ -136,16 +130,15 @@ class Ref(BaseInlineElement):
 
     def _get_pandoc_extensions(self) -> set[str]:
         return (
-            {"implicit_header_references"}
-            if not self.__target._html_id
-            else set()
+            {"implicit_header_references"} if not self.__target._html_id else set()
         ) | super()._get_pandoc_extensions()
 
 
 class Newline(BaseInlineElement):
     """
-    Element to represent a newline. Used for inline containers which allow
-    multiple lines, e.g. paragraphs.
+    Element to represent a newline.
+
+    Used for inline containers which allow multiple lines, e.g. paragraphs.
     """
 
     def _render_inline(self, _: FlavorType) -> str:

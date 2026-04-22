@@ -18,12 +18,10 @@ def coerce_text(obj: str) -> BaseElement:
     return BlockText(obj) if "\n" in obj else Text(obj)
 
 
-def coerce_inline_text(
-    obj: str, allow_multiline: bool = False
-) -> BaseInlineElement:
+def coerce_inline_text(obj: str, allow_multiline: bool = False) -> BaseInlineElement:
     """
-    Wrap text with inline element, validating based on whether newlines
-    (non-consecutive only) are allowed.
+    Wrap text with inline element, validating based on whether newlines (non-consecutive
+    only) are allowed.
     """
     from .container import InlineContainer
     from .elements.inline.text import Newline, Text

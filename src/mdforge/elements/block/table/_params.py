@@ -28,12 +28,16 @@ class TableParams:
 
     header_rows: list[list[Cell]] | None
     """
-    Optional header. May contain multiple rows for `BlockTable` only.
+    Optional header.
+
+    May contain multiple rows for `BlockTable` only.
     """
 
     footer_rows: list[list[Cell]] | None
     """
-    Optional footer. May contain multiple rows for `BlockTable` only.
+    Optional footer.
+
+    May contain multiple rows for `BlockTable` only.
     """
 
     align: AlignType | list[AlignType] | None
@@ -43,8 +47,8 @@ class TableParams:
 
     widths: list[int] | None
     """
-    If provided, generated cells are sized to that number of characters
-    by padding or wrapping lines. Otherwise, widths are as small as possible.
+    If provided, generated cells are sized to that number of characters by padding or
+    wrapping lines. Otherwise, widths are as small as possible.
 
     Useful to generate consistently-sized tables for varying content length.
     """
@@ -66,9 +70,10 @@ class TableParams:
 
     loose: bool
     """
-    Whether cell content should always be wrapped in a paragraph in the
-    rendered output (HTML only). Ensures consistent padding if there are
-    any cells containing block content.
+    Whether cell content should always be wrapped in a paragraph in the rendered output
+    (HTML only).
+
+    Ensures consistent padding if there are any cells containing block content.
     """
 
     col_count: int
@@ -123,11 +128,7 @@ class TableParams:
         """
         Get overall rows, including any header / footer.
         """
-        return (
-            (self.header_rows or [])
-            + self.content_rows
-            + (self.footer_rows or [])
-        )
+        return (self.header_rows or []) + self.content_rows + (self.footer_rows or [])
 
     @cached_property
     def norm_content_rows(self) -> list[list[Cell]]:
@@ -141,22 +142,14 @@ class TableParams:
         """
         Get normalized header rows.
         """
-        return (
-            self.__normalize_rows(self.header_rows)
-            if self.header_rows
-            else None
-        )
+        return self.__normalize_rows(self.header_rows) if self.header_rows else None
 
     @cached_property
     def norm_footer_rows(self) -> list[list[Cell]]:
         """
         Get normalized footer rows.
         """
-        return (
-            self.__normalize_rows(self.footer_rows)
-            if self.footer_rows
-            else None
-        )
+        return self.__normalize_rows(self.footer_rows) if self.footer_rows else None
 
     @cached_property
     def norm_effective_rows(self) -> list[list[Cell]]:
@@ -196,10 +189,7 @@ class TableParams:
                     range(cell._rspan), range(cell._cspan)
                 ):
                     # should not be set yet
-                    assert (
-                        norm_rows[row_idx + row_offset][col_idx + col_offset]
-                        is None
-                    )
+                    assert norm_rows[row_idx + row_offset][col_idx + col_offset] is None
 
                     # set this cell
                     norm_rows[row_idx + row_offset][col_idx + col_offset] = cell
@@ -207,9 +197,7 @@ class TableParams:
                 col_idx += cell._cspan
 
         # validate: ensure each cell got set
-        for row_idx, col_idx in itertools.product(
-            range(row_count), range(col_count)
-        ):
+        for row_idx, col_idx in itertools.product(range(row_count), range(col_count)):
             assert isinstance(norm_rows[row_idx][col_idx], Cell)
 
         return cast(list[list[Cell]], norm_rows)

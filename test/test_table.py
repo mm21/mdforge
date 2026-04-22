@@ -18,10 +18,7 @@ ROWS = [
     [f"Cell\n{row_idx}-{col_idx}" for col_idx in range(COL_COUNT)]
     for row_idx in range(ROW_COUNT)
 ]
-HEADER = [
-    f"Header {col_idx},\nalign: {ALIGN[col_idx]}"
-    for col_idx in range(COL_COUNT)
-]
+HEADER = [f"Header {col_idx},\nalign: {ALIGN[col_idx]}" for col_idx in range(COL_COUNT)]
 FOOTER = [f"Footer\n{col_idx}" for col_idx in range(COL_COUNT)]
 WIDTHS = [15 + col_idx for col_idx in range(COL_COUNT)]
 
@@ -107,8 +104,7 @@ def test_widths(doc: Document):
     """
 
     rows = [
-        [f"{cell}, width={width}" for cell, width in zip(row, WIDTHS)]
-        for row in ROWS
+        [f"{cell}, width={width}" for cell, width in zip(row, WIDTHS)] for row in ROWS
     ]
 
     for block in [False, True]:
@@ -128,9 +124,7 @@ def test_widths_pct(doc: Document):
     # target 50/50 widths
     doc += [
         Heading("Simple case"),
-        Table(
-            [["Cell 0-0", "Cell 0-1 aaaaaaa"]], widths_pct=[50, 50], block=True
-        ),
+        Table([["Cell 0-0", "Cell 0-1 aaaaaaa"]], widths_pct=[50, 50], block=True),
     ]
 
     widths_pct = [10 * (i + 1) for i in range(len(WIDTHS) - 1)]
@@ -140,9 +134,7 @@ def test_widths_pct(doc: Document):
     rows = [
         [
             f"{cell} {'a'*(cell_idx+1)*5}, width_pct={width_pct}"
-            for cell, cell_idx, width_pct in zip(
-                row, range(COL_COUNT), widths_pct
-            )
+            for cell, cell_idx, width_pct in zip(row, range(COL_COUNT), widths_pct)
         ]
         for row in ROWS
     ]
@@ -158,8 +150,9 @@ def test_widths_pct(doc: Document):
 @compare_doc
 def test_wrap(doc: Document):
     """
-    Test cell content wrapping when explicit widths are given. Also tests
-    captions.
+    Test cell content wrapping when explicit widths are given.
+
+    Also tests captions.
     """
 
     rows = [
@@ -208,9 +201,7 @@ def test_span(doc: Document):
         ],
         ["Test 2-1", "Test 2-2"],
         [
-            Cell(
-                "Test cspan and rspan abc\n0123456789abcdef", cspan=2, rspan=2
-            ),
+            Cell("Test cspan and rspan abc\n0123456789abcdef", cspan=2, rspan=2),
             "Test 3-2",
         ],
         [Cell("Test 4-2\nand\nTest 5-2", rspan=2)],
@@ -257,8 +248,8 @@ def test_span(doc: Document):
 @compare_doc
 def test_loose(doc: Document):
     """
-    Test table with loose=True, inserting paragraphs for non-block elements
-    for consistent spacing.
+    Test table with loose=True, inserting paragraphs for non-block elements for
+    consistent spacing.
     """
 
     ROW_COUNT = 3

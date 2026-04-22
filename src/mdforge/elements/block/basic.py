@@ -7,12 +7,7 @@ from __future__ import annotations
 from typing import Generator
 
 from ..._norm import CoerceSpec, norm_obj
-from ...element import (
-    Attributes,
-    AttributesMixin,
-    BaseBlockElement,
-    BaseInlineElement,
-)
+from ...element import Attributes, AttributesMixin, BaseBlockElement, BaseInlineElement
 from ...exceptions import ValidationError
 from ...types import VALID_ALIGNS, AlignType, FlavorType
 from .._image import ImageMixin
@@ -25,8 +20,9 @@ __all__ = [
 
 class Heading(AttributesMixin, BaseBlockElement):
     """
-    Heading, e.g. `# My heading`. If `level` not provided, it is set
-    automatically based on nesting of container.
+    Heading, e.g. `# My heading`.
+
+    If `level` not provided, it is set automatically based on nesting of container.
     """
 
     __text: str
@@ -88,9 +84,7 @@ class BlockImage(BaseBlockElement, ImageMixin):
         if align and align != "default":
             attrs = {"fig-align": align}
             new_attributes = (
-                attributes._copy(attrs=attrs)
-                if attributes
-                else Attributes(attrs=attrs)
+                attributes._copy(attrs=attrs) if attributes else Attributes(attrs=attrs)
             )
         else:
             new_attributes = attributes

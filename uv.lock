@@ -211,6 +211,19 @@ wheels = [
 ]
 
 [[package]]
+name = "docformatter"
+version = "1.7.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "charset-normalizer" },
+    { name = "untokenize" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2a/7b/ee08cb5fe2627ed0b6f0cc4a1c6be6c9c71de5a3e9785de8174273fc3128/docformatter-1.7.7.tar.gz", hash = "sha256:ea0e1e8867e5af468dfc3f9e947b92230a55be9ec17cd1609556387bffac7978", size = 26587, upload-time = "2025-05-11T04:54:04.356Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dc/b4/a7ec1eaee86761a9dbfd339732b4706db3c6b65e970c12f0f56cfcce3dcf/docformatter-1.7.7-py3-none-any.whl", hash = "sha256:7af49f8a46346a77858f6651f431b882c503c2f4442c8b4524b920c863277834", size = 33525, upload-time = "2025-05-11T04:54:03.353Z" },
+]
+
+[[package]]
 name = "doit"
 version = "0.36.0"
 source = { registry = "https://pypi.org/simple" }
@@ -313,6 +326,7 @@ dependencies = [
 dev = [
     { name = "autoflake" },
     { name = "black" },
+    { name = "docformatter" },
     { name = "doit" },
     { name = "genbadge", extra = ["tests"] },
     { name = "isort" },
@@ -334,6 +348,7 @@ requires-dist = [
 dev = [
     { name = "autoflake", specifier = ">=2.3.1,<3" },
     { name = "black", specifier = ">=24.8.0,<25" },
+    { name = "docformatter", specifier = ">=1.7.7" },
     { name = "doit", specifier = ">=0.36.0,<0.37" },
     { name = "genbadge", extras = ["tests"], specifier = ">=1.1.1,<2" },
     { name = "isort", specifier = ">=5.13.2,<6" },
@@ -609,6 +624,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/df/db/f35a00659bc03fec3
 wheels = [
     { url = "https://files.pythonhosted.org/packages/26/9f/ad63fc0248c5379346306f8668cda6e2e2e9c95e01216d2b8ffd9ff037d0/typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d", size = 37438, upload-time = "2024-06-07T18:52:13.582Z" },
 ]
+
+[[package]]
+name = "untokenize"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/46/e7cea8159199096e1df52da20a57a6665da80c37fb8aeb848a3e47442c32/untokenize-0.1.1.tar.gz", hash = "sha256:3865dbbbb8efb4bb5eaa72f1be7f3e0be00ea8b7f125c69cbd1f5fda926f37a2", size = 3099, upload-time = "2014-02-08T16:30:40.631Z" }
 
 [[package]]
 name = "urllib3"

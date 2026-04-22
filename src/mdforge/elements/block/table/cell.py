@@ -25,8 +25,8 @@ type RowType = Iterable[CellType]
 
 class Cell:
     """
-    Represents a table cell which can span multiple rows/columns, if the
-    flavor supports it upon render.
+    Represents a table cell which can span multiple rows/columns, if the flavor supports
+    it upon render.
     """
 
     __content: BaseElement
@@ -44,12 +44,8 @@ class Cell:
     Column span.
     """
 
-    def __init__(
-        self, content: BaseElement | str, rspan: int = 1, cspan: int = 1
-    ):
-        self.__content = norm_obj(
-            content, BaseElement, CoerceSpec(coerce_text, str)
-        )
+    def __init__(self, content: BaseElement | str, rspan: int = 1, cspan: int = 1):
+        self.__content = norm_obj(content, BaseElement, CoerceSpec(coerce_text, str))
         self.__rspan = rspan
         self.__cspan = cspan
 
@@ -82,8 +78,7 @@ class Cell:
         self, flavor: FlavorType, loose: bool, width: int | None = None
     ) -> list[str]:
         """
-        Get this cell's content as a list of strings, wrapping words if
-        width provided.
+        Get this cell's content as a list of strings, wrapping words if width provided.
         """
 
         # render element
@@ -112,8 +107,7 @@ class Cell:
 
     def __wrap_line(self, line: str, width: int) -> list[str]:
         """
-        Wrap the provided line if necessary and return a list of resulting
-        lines.
+        Wrap the provided line if necessary and return a list of resulting lines.
         """
 
         if len(line) <= width:

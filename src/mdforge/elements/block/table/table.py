@@ -91,9 +91,7 @@ class Table(BaseBlockElement):
                     f"{var_name}={var} does not match col_count={col_count}"
                 )
             if not all(isinstance(width, int) for width in var):
-                raise ValidationError(
-                    f"{var_name}={var} must be passed as list of int"
-                )
+                raise ValidationError(f"{var_name}={var} must be passed as list of int")
 
         if widths_norm is not None:
             validate_widths(widths_norm, "widths")
@@ -125,9 +123,7 @@ class Table(BaseBlockElement):
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
 
         # create render context
-        context = create_render_context(
-            flavor, self._params, self._params.block
-        )
+        context = create_render_context(flavor, self._params, self._params.block)
 
         # start comment, required to disambiguate table caption in case of
         # back-to-back tables (caption can be before or after table)
@@ -158,9 +154,7 @@ class Table(BaseBlockElement):
         yield "\n<!-- table end -->"
 
     def _get_pandoc_extensions(self) -> set[str]:
-        table_ext = (
-            {"grid_tables"} if self._params.block else {"multiline_tables"}
-        )
+        table_ext = {"grid_tables"} if self._params.block else {"multiline_tables"}
         caption_ext = {"table_captions"} if self._params.caption else set()
         return table_ext | caption_ext | super()._get_pandoc_extensions()
 
@@ -191,10 +185,7 @@ def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
     rows_norm: list[list[Cell]] = []
     for row in rows_lists:
         rows_norm.append(
-            [
-                norm_obj(cell, Cell, CoerceSpec(Cell, (str, BaseElement)))
-                for cell in row
-            ]
+            [norm_obj(cell, Cell, CoerceSpec(Cell, (str, BaseElement))) for cell in row]
         )
 
     return rows_norm
@@ -202,8 +193,7 @@ def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
 
 def _get_col_count(rows: list[list[Cell]]) -> int:
     """
-    Get effective columns of the provided matrix, accounting for any
-    merged cells.
+    Get effective columns of the provided matrix, accounting for any merged cells.
     """
 
     # column counts per row

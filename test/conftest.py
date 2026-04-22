@@ -54,11 +54,11 @@ def doc() -> Document:
 
 def compare_doc(func: Callable):
     """
-    Decorator to render this document for pandoc flavor and compare against
-    the expected one.
+    Decorator to render this document for pandoc flavor and compare against the expected
+    one.
 
-    Could be done in the doc fixture during teardown, but this way the test
-    itself can fail rather than teardown.
+    Could be done in the doc fixture during teardown, but this way the test itself can
+    fail rather than teardown.
     """
 
     @mark.powerpack_compare_file("doc.md")
@@ -82,8 +82,8 @@ def render_doc(
     powerpack_comparison_files: ComparisonFiles,
 ):
     """
-    Render document for pandoc flavor, run pandoc based on command line flags,
-    and compare output.
+    Render document for pandoc flavor, run pandoc based on command line flags, and
+    compare output.
     """
     # just-in-time import so asserts can be rewritten
     import pytest_powerpack
@@ -109,9 +109,7 @@ def render_doc(
     pytest_powerpack.compare_files(powerpack_comparison_files)
 
 
-def _run_pandoc(
-    doc: Document, md_path: Path, *, html: bool, latex: bool, pdf: bool
-):
+def _run_pandoc(doc: Document, md_path: Path, *, html: bool, latex: bool, pdf: bool):
     """
     Run pandoc to generate the given artifacts.
     """

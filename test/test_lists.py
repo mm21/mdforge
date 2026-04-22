@@ -45,9 +45,7 @@ def test_nested(doc: Document):
     Test lists with nesting.
     """
 
-    for list_cls, name, idx in zip(
-        LIST_CLASSES, LIST_NAMES, range(len(LIST_CLASSES))
-    ):
+    for list_cls, name, idx in zip(LIST_CLASSES, LIST_NAMES, range(len(LIST_CLASSES))):
 
         other_list_cls = LIST_CLASSES[idx - 1]
         other_list_name = other_list_cls.__name__
@@ -241,12 +239,8 @@ def test_definition(doc: Document):
 
     inline_items = [
         DefinitionItem("Term A", "Definition A"),
-        DefinitionItem(
-            Strong("Term B (strong)"), Strong("Definition B (strong)")
-        ),
-        DefinitionItem(
-            "Term C", ["Definition C1", Strong("Definition C2 (strong)")]
-        ),
+        DefinitionItem(Strong("Term B (strong)"), Strong("Definition B (strong)")),
+        DefinitionItem("Term C", ["Definition C1", Strong("Definition C2 (strong)")]),
     ]
 
     # inline items (compact or non-compact)
@@ -264,9 +258,7 @@ def test_definition(doc: Document):
                 BulletList(["Definition A1", "Definition A2"]),
             ),
         ),
-        DefinitionItem(
-            "Term B", BulletList(["Definition B1", "Definition B2"])
-        ),
+        DefinitionItem("Term B", BulletList(["Definition B1", "Definition B2"])),
         DefinitionItem("Term C", "Definition C"),
     ]
 

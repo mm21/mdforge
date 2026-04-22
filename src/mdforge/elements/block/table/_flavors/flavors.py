@@ -26,9 +26,7 @@ class TableFlavorSpec:
 
 FLAVOR_MAP: dict[FlavorType, TableFlavorSpec] = {
     "pandoc": TableFlavorSpec(
-        variant_config=VariantConfig(
-            inline=MULTILINE_VARIANT, block=GRID_VARIANT
-        ),
+        variant_config=VariantConfig(inline=MULTILINE_VARIANT, block=GRID_VARIANT),
         render_context_cls=FrameRenderContext,
     )
 }
@@ -44,17 +42,13 @@ def create_render_context(
     Create a render context for the given markdown flavor and capabilities.
     """
 
-    err = (
-        f"Tables for flavor {flavor} with block={block} not currently supported"
-    )
+    err = f"Tables for flavor {flavor} with block={block} not currently supported"
 
     flavor_spec = FLAVOR_MAP.get(flavor)
     assert flavor_spec, err
 
     variant = (
-        flavor_spec.variant_config.block
-        if block
-        else flavor_spec.variant_config.inline
+        flavor_spec.variant_config.block if block else flavor_spec.variant_config.inline
     )
     assert variant, err
 

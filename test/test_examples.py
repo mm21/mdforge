@@ -67,14 +67,7 @@ def test_formatting(
     request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
 ):
 
-    from mdforge import (
-        Document,
-        Emph,
-        Paragraph,
-        Strikethrough,
-        Strong,
-        Underline,
-    )
+    from mdforge import Document, Emph, Paragraph, Strikethrough, Strong, Underline
 
     doc = Document()
 
@@ -101,9 +94,7 @@ def test_formatting(
 
 
 @mark.powerpack_compare_file("doc.md")
-def test_lists(
-    request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
-):
+def test_lists(request: FixtureRequest, powerpack_comparison_files: ComparisonFiles):
     from mdforge import (
         BulletList,
         DefinitionItem,
@@ -164,9 +155,7 @@ def test_lists(
 
 
 @mark.powerpack_compare_file("doc.md")
-def test_tables(
-    request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
-):
+def test_tables(request: FixtureRequest, powerpack_comparison_files: ComparisonFiles):
     from mdforge import BulletList, Cell, Document, Table
 
     doc = Document()
@@ -240,9 +229,7 @@ def test_tables(
 
 
 @mark.powerpack_compare_file("doc.md")
-def test_images(
-    request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
-):
+def test_images(request: FixtureRequest, powerpack_comparison_files: ComparisonFiles):
     from mdforge import BlockImage, Document, InlineImage, Paragraph
 
     doc = Document()

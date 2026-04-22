@@ -117,8 +117,7 @@ class FrameTableVariant(BaseTableVariant):
 
     wrap: bool = True
     """
-    Whether to wrap words when cell contents exceed fixed column
-    width.
+    Whether to wrap words when cell contents exceed fixed column width.
     """
 
     align_space: bool = False
@@ -128,8 +127,7 @@ class FrameTableVariant(BaseTableVariant):
 
     align_char: str | None = None
     """
-    Character used to indicate alignment within a separator, e.g. ":" for
-    `pandoc`.
+    Character used to indicate alignment within a separator, e.g. ":" for `pandoc`.
     """
 
     def validate_params(self, params: TableParams):

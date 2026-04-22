@@ -22,8 +22,8 @@ INDENT = 4
 
 class DefinitionItem:
     """
-    A definition entry in a definition list, consisting of a term and one
-    or more definitions.
+    A definition entry in a definition list, consisting of a term and one or more
+    definitions.
     """
 
     __term: BaseInlineElement
@@ -39,9 +39,7 @@ class DefinitionItem:
         :param definitions: One or more definitions; may be inline or block elements, but compact definition lists require that all definitions be inline only
         """
         self.__term = norm_obj(term, BaseInlineElement, CoerceSpec(Text, str))
-        self.__definitions = norm_list(
-            definitions, BaseElement, CoerceSpec(Text, str)
-        )
+        self.__definitions = norm_list(definitions, BaseElement, CoerceSpec(Text, str))
 
     def _validate(self, compact: bool):
         if compact:
@@ -51,9 +49,7 @@ class DefinitionItem:
                         f"Definition must be inline element for compact definition list: {definition} ({type(definition)})"
                     )
 
-    def _render(
-        self, flavor: FlavorType, compact: bool
-    ) -> Generator[str, None, None]:
+    def _render(self, flavor: FlavorType, compact: bool) -> Generator[str, None, None]:
 
         # term goes on line by itself
         yield self.__term._render_inline(flavor)
@@ -67,9 +63,7 @@ class DefinitionItem:
             is_last_def = def_idx == len(self.__definitions) - 1
 
             # render lines for this definition
-            for line_idx, line in enumerate(
-                definition._render_element_norm(flavor)
-            ):
+            for line_idx, line in enumerate(definition._render_element_norm(flavor)):
 
                 # include ":" for first line
                 is_first_line = line_idx == 0

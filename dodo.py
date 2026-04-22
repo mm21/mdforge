@@ -1,5 +1,6 @@
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from doit.task import Task
@@ -21,7 +22,52 @@ COV_HTML_PATH = COV_PATH / "html"
 COV_XML_PATH = COV_PATH / "coverage.xml"
 
 
-def task_pytest():
+def task_format() -> Task:
+    """
+    Run formatters.
+    """
+
+    autoflake_args = [
+        "autoflake",
+        ".",
+    ]
+
+    isort_args = [
+        "isort",
+        ".",
+    ]
+
+    docformatter_args = [
+        "docformatter",
+        ".",
+    ]
+
+    black_args = [
+        "black",
+        ".",
+    ]
+
+    toml_sort_args = [
+        "toml-sort",
+        "-i",
+        "pyproject.toml",
+    ]
+
+    return Task(
+        "format",
+        actions=[
+            (_run, (autoflake_args,)),
+            (_run, (isort_args,)),
+            (_run, (docformatter_args, {0, 3})),
+            (_run, (black_args,)),
+            (_run, (toml_sort_args,)),
+        ],
+        targets=[],
+        file_dep=[],
+    )
+
+
+def task_test():
     """
     Run pytest and generate coverage reports.
     """
@@ -35,7 +81,7 @@ def task_pytest():
     ]
 
     return Task(
-        "pytest",
+        "test",
         actions=[
             (create_folder, [COV_PATH]),
             # run pytest
@@ -85,49 +131,6 @@ def task_badges():
             JUNIT_PATH,
             COV_XML_PATH,
         ],
-    )
-
-
-def task_format() -> Task:
-    """
-    Run formatters.
-    """
-
-    autoflake_args = [
-        "autoflake",
-        "--remove-all-unused-imports",
-        "--remove-unused-variables",
-        "-i",
-        "-r",
-        ".",
-    ]
-
-    isort_args = [
-        "isort",
-        ".",
-    ]
-
-    black_args = [
-        "black",
-        ".",
-    ]
-
-    toml_sort_args = [
-        "toml-sort",
-        "-i",
-        "pyproject.toml",
-    ]
-
-    return Task(
-        "format",
-        actions=[
-            " ".join(autoflake_args),
-            " ".join(isort_args),
-            " ".join(black_args),
-            " ".join(toml_sort_args),
-        ],
-        targets=[],
-        file_dep=[],
     )
 
 
@@ -191,3 +194,11 @@ def task_doc() -> Task:
         targets=[],
         file_dep=[],
     )
+
+
+def _run(cmd: list[str], expect_rc: int | set[int] = 0):
+    expect_rcs = expect_rc if isinstance(expect_rc, set) else set((expect_rc,))
+    print(f"=== Running: {cmd[0]}")
+    rc = subprocess.call(cmd)
+    if not rc in expect_rcs:
+        sys.exit(f"{cmd[0]} failed: rc={rc}, cmd={cmd}")

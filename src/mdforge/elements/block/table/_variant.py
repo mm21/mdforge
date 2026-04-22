@@ -48,8 +48,8 @@ VariantT = TypeVar("VariantT", bound=BaseTableVariant)
 @dataclass(frozen=True)
 class VariantConfig[VariantT]:
     """
-    Encapsulates table configs for a specific Markdown flavor,
-    distinguishing between tables supporting block elements vs inline-only.
+    Encapsulates table configs for a specific Markdown flavor, distinguishing between
+    tables supporting block elements vs inline-only.
     """
 
     inline: VariantT

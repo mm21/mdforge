@@ -82,8 +82,9 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
     def col_widths(self) -> list[int]:
         """
         Get column widths based on params and variant, scaling as necessary.
-        Variant applies to calculation of merged cell widths based on the
-        configured cell separator.
+
+        Variant applies to calculation of merged cell widths based on the configured
+        cell separator.
         """
 
         widths_pct = self.params.widths_pct
@@ -96,24 +97,18 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         # get width percents for unscaled widths
         total_width = sum(unscaled_widths)
-        unscaled_widths_pct = [
-            100 * (width / total_width) for width in unscaled_widths
-        ]
+        unscaled_widths_pct = [100 * (width / total_width) for width in unscaled_widths]
 
         # get raw factors needed to achieve target percents
         raw_scale_factors = [
             width_pct / unscaled_width_pct
-            for width_pct, unscaled_width_pct in zip(
-                widths_pct, unscaled_widths_pct
-            )
+            for width_pct, unscaled_width_pct in zip(widths_pct, unscaled_widths_pct)
         ]
 
         # scale raw factors such that the smallest one is 1.0, keeping the
         # limiting width the same
         min_raw_scale_factor = min(raw_scale_factors)
-        scale_factors = [
-            factor / min_raw_scale_factor for factor in raw_scale_factors
-        ]
+        scale_factors = [factor / min_raw_scale_factor for factor in raw_scale_factors]
 
         # scale widths according to scale factors
         scaled_widths = [
@@ -135,8 +130,8 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         align_lower_sep: bool = False,
     ) -> Generator[str, None, None]:
         """
-        Yield lines for rows, separated by separator (between rows) and
-        optional upper/lower separators.
+        Yield lines for rows, separated by separator (between rows) and optional
+        upper/lower separators.
         """
 
         row_count = len(vrows)
@@ -162,9 +157,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             # render middle separator, if not last row or have a single row
             # with rows separated by spaces
             is_middle = row_idx != row_count - 1
-            has_trailing_line = (
-                section.middle_sep.line is None and row_count == 1
-            )
+            has_trailing_line = section.middle_sep.line is None and row_count == 1
 
             if is_middle or has_trailing_line:
 
@@ -195,9 +188,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
                 corner_overrides=corner_overrides,
             )
 
-    def __render_vrow(
-        self, vrow: list[VirtualCell]
-    ) -> Generator[str, None, None]:
+    def __render_vrow(self, vrow: list[VirtualCell]) -> Generator[str, None, None]:
         """
         Render a single row without any inter-row separator.
         """
@@ -260,8 +251,8 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         corner_overrides: list[bool] | None = None,
     ) -> str:
         """
-        Render row separator line based on configuration and table params.
-        If `do_align`, use alignment chars as applicable.
+        Render row separator line based on configuration and table params. If
+        `do_align`, use alignment chars as applicable.
 
         - `seg_overrides`: Used to override line segments with content for
           cells spanning multiple rows ("dangling lines")
@@ -286,14 +277,10 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         # set corners
         left_corner = (
-            sep.outer_corner_norm
-            if first_seg is None
-            else self.variant.row_leading_sep
+            sep.outer_corner_norm if first_seg is None else self.variant.row_leading_sep
         )
         right_corner = (
-            sep.outer_corner_norm
-            if last_seg is None
-            else self.variant.row_trailing_sep
+            sep.outer_corner_norm if last_seg is None else self.variant.row_trailing_sep
         )
 
         # start with left corner
@@ -307,9 +294,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             corner_overrides_,
         ):
             is_last_col = col_idx == self.params.col_count - 1
-            inner_corner = (
-                sep.line if corner_override else sep.inner_corner_norm
-            )
+            inner_corner = sep.line if corner_override else sep.inner_corner_norm
 
             if align_char and do_align:
                 # align based on alignment chars on either side of line
@@ -358,9 +343,10 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
     ) -> str:
         """
         Get line segment with alignment set by characters adjacent to corners.
-        Can only be used for line between header and content or (if no header)
-        the first line before content. Therefore this line cannot have any
-        dangling content segments.
+
+        Can only be used for line between header and content or (if no header) the first
+        line before content. Therefore this line cannot have any dangling content
+        segments.
         """
         line = sep.line
         assert line is not None
@@ -386,8 +372,8 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         vrow: list[VirtualCell] | None = None,
     ):
         """
-        Get separator line segment, either a solid line or dangling content
-        from a cell spanning multiple rows.
+        Get separator line segment, either a solid line or dangling content from a cell
+        spanning multiple rows.
         """
 
         line = sep.line
@@ -396,9 +382,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         seg_override = seg_overrides[col_idx]
 
         # get next override segment, if any
-        next_seg_override = (
-            seg_overrides[col_idx + 1] if not is_last_col else None
-        )
+        next_seg_override = seg_overrides[col_idx + 1] if not is_last_col else None
 
         # check if this segment spans to the next one
         span_next = (
@@ -414,9 +398,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             width += 2 if span_next or seg_override is None else 1
 
         # create segment of required width using line char or override
-        seg = (
-            line * width if seg_override is None else seg_override.ljust(width)
-        )
+        seg = line * width if seg_override is None else seg_override.ljust(width)
 
         # append next corner if necessary
         if not is_last_col and not span_next:
@@ -439,9 +421,9 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         next_vrow: list[VirtualCell] | None,
     ) -> list[bool]:
         """
-        Get list of which inner corners to override with a normal line in
-        case of the same columns being spanned before/after the line, or
-        the first/last row having any spanned columns.
+        Get list of which inner corners to override with a normal line in case of the
+        same columns being spanned before/after the line, or the first/last row having
+        any spanned columns.
 
         For example, required to go from this:
 
@@ -467,10 +449,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         def get_overrides(vrow: list[VirtualCell] | None) -> list[bool]:
             return (
-                [
-                    vcell.cell._cspan > 1 and not vcell.is_last_col_span
-                    for vcell in vrow
-                ]
+                [vcell.cell._cspan > 1 and not vcell.is_last_col_span for vcell in vrow]
                 if vrow
                 else [True] * self.params.col_count
             )
@@ -485,8 +464,8 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
     def __get_unscaled_widths(self) -> list[int]:
         """
-        Get widths accounting for widths from user or raw width of columns
-        with no other constraints.
+        Get widths accounting for widths from user or raw width of columns with no other
+        constraints.
         """
 
         if self.params.widths is not None:
@@ -548,9 +527,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         # for spanned columns, subtract the separator widths since there
         # won't be any separators between cells
-        cell_width = max(
-            1, cell_width - len(self.variant.cell_sep) * (cell._cspan - 1)
-        )
+        cell_width = max(1, cell_width - len(self.variant.cell_sep) * (cell._cspan - 1))
 
         # divide width amongst all the columns spanned
         div_width = math.ceil(cell_width / cell._cspan)
@@ -573,16 +550,11 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         # pre-allocate virtual rows with required dimensions
         vrows: list[list[VirtualCell]] = [
-            [
-                VirtualCell(self, row_idx, col_idx)
-                for col_idx in range(col_count)
-            ]
+            [VirtualCell(self, row_idx, col_idx) for col_idx in range(col_count)]
             for row_idx in range(row_count)
         ]
 
-        for row_idx, col_idx in itertools.product(
-            range(row_count), range(col_count)
-        ):
+        for row_idx, col_idx in itertools.product(range(row_count), range(col_count)):
             cell = rows[row_idx][col_idx]
 
             if vrows[row_idx][col_idx].cell_is_set:
@@ -606,9 +578,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
                 vcell.set_cell(cell, col_offset, origin_vcell)
 
         # validate: ensure each virtual cell got set
-        for row_idx, col_idx in itertools.product(
-            range(row_count), range(col_count)
-        ):
+        for row_idx, col_idx in itertools.product(range(row_count), range(col_count)):
             assert vrows[row_idx][col_idx].cell_is_set
 
         # set content lines
@@ -635,9 +605,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
                 self.__allocate_content(vrows, vcell, width)
 
         # validate: ensure contents got set
-        for row_idx, col_idx in itertools.product(
-            range(row_count), range(col_count)
-        ):
+        for row_idx, col_idx in itertools.product(range(row_count), range(col_count)):
             assert vrows[row_idx][
                 col_idx
             ].content_is_set, f"Not set at {row_idx}, {col_idx}"
@@ -653,9 +621,10 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
     def __get_vrow_height(self, vrow: list[VirtualCell]) -> int | None:
         """
-        Get max height (number of lines) of this row, based only on cells which
-        don't span multiple rows. Returns `None` if there are no such cells
-        constraining the height.
+        Get max height (number of lines) of this row, based only on cells which don't
+        span multiple rows.
+
+        Returns `None` if there are no such cells constraining the height.
         """
 
         # collect cells which don't span rows
@@ -678,9 +647,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             width = self.__get_spanned_width(vrow, vcell)
             heights.append(
                 len(
-                    vcell.cell._get_content(
-                        self.flavor, self.params.loose, width=width
-                    )
+                    vcell.cell._get_content(self.flavor, self.params.loose, width=width)
                 )
             )
 
@@ -693,8 +660,8 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         width: int,
     ):
         """
-        Allocate the content for this cell across all the rows/columns it
-        spans, wrapping content at the given width.
+        Allocate the content for this cell across all the rows/columns it spans,
+        wrapping content at the given width.
         """
         assert vcell.row_idx + vcell.cell._rspan <= len(vrows)
 
@@ -783,9 +750,10 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
 def _split_line(line: str, widths: list[int]) -> list[str]:
     """
-    Split line into segments of provided widths. If line is consumed before
-    all segments have been added with respective widths, the remaining widths
-    are truncated or set to empty strings.
+    Split line into segments of provided widths.
+
+    If line is consumed before all segments have been added with respective widths, the
+    remaining widths are truncated or set to empty strings.
     """
     assert len(line) <= sum(widths)
 

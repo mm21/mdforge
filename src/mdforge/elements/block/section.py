@@ -1,6 +1,5 @@
 """
-Section element to encapsulate user-defined sections with optional
-heading management.
+Section element to encapsulate user-defined sections with optional heading management.
 """
 
 from __future__ import annotations
@@ -19,9 +18,10 @@ __all__ = [
 
 class Section(BaseLevelBlockContainer):
     """
-    Encapsulates a logical document section, containing block elements with
-    an optional heading. Heading level is inferred by this section's nesting
-    level.
+    Encapsulates a logical document section, containing block elements with an optional
+    heading.
+
+    Heading level is inferred by this section's nesting level.
     """
 
     __heading: Heading | None = None
@@ -36,9 +36,7 @@ class Section(BaseLevelBlockContainer):
 
         # create heading if given and add as first element
         if heading:
-            self.__heading = norm_obj(
-                heading, Heading, CoerceSpec(Heading, str)
-            )
+            self.__heading = norm_obj(heading, Heading, CoerceSpec(Heading, str))
             self += self.__heading
 
         if elements:
