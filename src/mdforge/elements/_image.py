@@ -31,7 +31,7 @@ class ImageMixin(AttributesMixin, ABC):
         self._set_attrs(attributes)
 
     @abstractmethod
-    def _render_alt_text(self, _: FlavorType) -> str:
+    def _render_alt_text(self, flavor: FlavorType) -> str:
         """
         Implemented by concrete class to get alt text.
         """

@@ -3,9 +3,10 @@ Encapsulates table params, universal for all flavors.
 """
 
 import itertools
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Iterable, cast
+from typing import cast
 
 from ....types import VALID_ALIGNS, AlignType
 from .cell import Cell
@@ -107,21 +108,19 @@ class TableParams:
         """
         Get column alignments.
         """
-        match self.align:
-            case str() as align:
-                # single alignment given
-                assert align in VALID_ALIGNS
-                aligns = [align] * self.col_count
-            case iterable if isinstance(iterable, Iterable):
-                # alignments per column given
-                assert len(iterable) == self.col_count
-                assert all(a in VALID_ALIGNS for a in iterable)
-                aligns = iterable
-            case _:
-                # no alignment given
-                assert self.align is None
-                aligns = ["default"] * self.col_count
-        return aligns
+        if isinstance(self.align, str):
+            # single alignment given
+            assert self.align in VALID_ALIGNS
+            return [self.align] * self.col_count
+        elif isinstance(self.align, Sequence):
+            # alignments per column given
+            assert len(self.align) == self.col_count
+            assert all(a in VALID_ALIGNS for a in self.align)
+            return list(self.align)
+        else:
+            # no alignment given
+            assert self.align is None
+            return ["default"] * self.col_count
 
     @cached_property
     def effective_rows(self) -> list[list[Cell]]:
@@ -138,14 +137,14 @@ class TableParams:
         return self.__normalize_rows(self.content_rows)
 
     @cached_property
-    def norm_header_rows(self) -> list[list[Cell]]:
+    def norm_header_rows(self) -> list[list[Cell]] | None:
         """
         Get normalized header rows.
         """
         return self.__normalize_rows(self.header_rows) if self.header_rows else None
 
     @cached_property
-    def norm_footer_rows(self) -> list[list[Cell]]:
+    def norm_footer_rows(self) -> list[list[Cell]] | None:
         """
         Get normalized footer rows.
         """

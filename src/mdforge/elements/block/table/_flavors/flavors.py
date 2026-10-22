@@ -5,17 +5,18 @@ Listing of table flavors.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from .....types import FlavorType
 from .._context import BaseRenderContext
 from .._params import TableParams
-from .._variant import VariantConfig, VariantT
+from .._variant import BaseTableVariant, VariantConfig
 from .frame.context import FrameRenderContext
 from .frame.variants import GRID_VARIANT, MULTILINE_VARIANT
 
 
 @dataclass(frozen=True, kw_only=True)
-class TableFlavorSpec:
+class TableFlavorSpec[VariantT: BaseTableVariant]:
     """
     Specification of markdown table flavor.
     """
@@ -24,7 +25,7 @@ class TableFlavorSpec:
     render_context_cls: type[BaseRenderContext[VariantT]]
 
 
-FLAVOR_MAP: dict[FlavorType, TableFlavorSpec] = {
+FLAVOR_MAP: dict[FlavorType, TableFlavorSpec[Any]] = {
     "pandoc": TableFlavorSpec(
         variant_config=VariantConfig(inline=MULTILINE_VARIANT, block=GRID_VARIANT),
         render_context_cls=FrameRenderContext,

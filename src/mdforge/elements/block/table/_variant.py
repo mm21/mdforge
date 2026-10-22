@@ -10,12 +10,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypeVar
 
 from ._params import TableParams
-
-if TYPE_CHECKING:
-    pass
 
 __all__ = [
     "VariantConfig",
@@ -42,11 +38,8 @@ class BaseTableVariant(ABC):
         ...
 
 
-VariantT = TypeVar("VariantT", bound=BaseTableVariant)
-
-
 @dataclass(frozen=True)
-class VariantConfig[VariantT]:
+class VariantConfig[VariantT: BaseTableVariant]:
     """
     Encapsulates table configs for a specific Markdown flavor, distinguishing between
     tables supporting block elements vs inline-only.

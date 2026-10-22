@@ -47,7 +47,7 @@ class Text(BaseInlineElement):
 
         self.__text = text
 
-    def _render_inline(self, _: FlavorType) -> str:
+    def _render_inline(self, flavor: FlavorType) -> str:
         return self.__text
 
 
@@ -114,10 +114,14 @@ class Ref(BaseInlineElement):
     def __init__(self, target: Heading | Section, text: str | None = None):
         assert isinstance(target, (Heading, Section))
 
-        self.__target = target if isinstance(target, Heading) else target._heading
+        heading = target if isinstance(target, Heading) else target._heading
+        if heading is None:
+            raise ValidationError(f"Cannot reference section without heading: {target}")
+
+        self.__target = heading
         self.__text = text
 
-    def _render_inline(self, _: FlavorType) -> str:
+    def _render_inline(self, flavor: FlavorType) -> str:
 
         text = self.__text or self.__target._text
 
@@ -141,5 +145,5 @@ class Newline(BaseInlineElement):
     Used for inline containers which allow multiple lines, e.g. paragraphs.
     """
 
-    def _render_inline(self, _: FlavorType) -> str:
+    def _render_inline(self, flavor: FlavorType) -> str:
         return "\n"

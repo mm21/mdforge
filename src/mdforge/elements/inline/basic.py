@@ -57,7 +57,7 @@ class InlineImage(BaseInlineElement, ImageMixin):
         super().__init__(path, attributes=attributes)
         self.__alt_text = alt_text or ""
 
-    def _render_alt_text(self, _: FlavorType) -> str:
+    def _render_alt_text(self, flavor: FlavorType) -> str:
         # note: no markdown flavors support inline elements as alt text
         return self.__alt_text
 

@@ -191,7 +191,7 @@ class BaseLevelBlockContainer(BaseBlockContainer):
             container._level = self.__level + self._level_inc
 
 
-def _aggregate_extensions(elements: list[BaseElement]) -> set[str]:
+def _aggregate_extensions(elements: Iterable[BaseElement]) -> set[str]:
     """
     Aggregate extensions from elements.
     """

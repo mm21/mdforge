@@ -195,7 +195,7 @@ class BulletList(BaseItemList):
     Bullet point list.
     """
 
-    def _get_marker(self, _: FlavorType) -> str:
+    def _get_marker(self, flavor: FlavorType) -> str:
         return "-"
 
 
@@ -204,5 +204,5 @@ class NumberedList(BaseItemList):
     Numbered list.
     """
 
-    def _get_marker(self, _: FlavorType) -> str:
+    def _get_marker(self, flavor: FlavorType) -> str:
         return "1."

@@ -70,7 +70,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         return self.__get_vrows(self.params.norm_header_rows)
 
     @cached_property
-    def footer_vrows(self) -> list[list[VirtualCell]]:
+    def footer_vrows(self) -> list[list[VirtualCell]] | None:
         """
         Get footer rows as virtual cells.
         """
@@ -264,7 +264,9 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
 
         align_char = self.variant.align_char
 
-        seg_overrides_ = seg_overrides or [None] * self.params.col_count
+        seg_overrides_: list[str | None] = (
+            seg_overrides or [None] * self.params.col_count
+        )
         corner_overrides_ = corner_overrides or [False] * self.params.col_count
 
         assert len(self.col_widths) == self.params.col_count
@@ -714,11 +716,11 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             line = content.pop(0) if len(content) else ""
 
             # divide this line among each cell in row
-            segs = _split_line(line, vcell_widths)
+            line_segs = _split_line(line, vcell_widths)
 
             # append segments to each list of lines
-            assert len(vcell_lines) == len(segs)
-            for lines, seg in zip(vcell_lines, segs):
+            assert len(vcell_lines) == len(line_segs)
+            for lines, seg in zip(vcell_lines, line_segs):
                 lines.append(seg)
 
             if len(content) == 0:

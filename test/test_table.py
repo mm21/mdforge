@@ -1,10 +1,12 @@
 from mdforge import (
+    AlignType,
     BlockContainer,
     BulletList,
     Cell,
     Document,
     Heading,
     Paragraph,
+    RowType,
     Section,
     Table,
 )
@@ -13,7 +15,7 @@ from .conftest import compare_doc
 
 ROW_COUNT = 3
 COL_COUNT = 4
-ALIGN = ["left", "center", "right", "default"]
+ALIGN: list[AlignType] = ["left", "center", "right", "default"]
 ROWS = [
     [f"Cell\n{row_idx}-{col_idx}" for col_idx in range(COL_COUNT)]
     for row_idx in range(ROW_COUNT)
@@ -189,7 +191,7 @@ def test_span(doc: Document):
     ROW_COUNT = 7
     COL_COUNT = 3
 
-    rows = [
+    rows: list[RowType] = [
         [Cell(content="Test cspan", cspan=2), "Test 0-2"],
         [
             Cell(

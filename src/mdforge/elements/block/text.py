@@ -41,5 +41,5 @@ class BlockText(BaseBlockElement):
         """
         return any(line.strip() == "" for line in self.__lines)
 
-    def _render_block(self, _: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield from self.__lines

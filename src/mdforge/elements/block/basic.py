@@ -80,9 +80,11 @@ class BlockImage(BaseBlockElement, ImageMixin):
         if align and align not in VALID_ALIGNS:
             raise ValidationError(f"Invalid alignment: {align}")
 
+        new_attributes: Attributes | None
+
         # create new attributes to handle alignment in pandoc
         if align and align != "default":
-            attrs = {"fig-align": align}
+            attrs: dict[str, str] = {"fig-align": align}
             new_attributes = (
                 attributes._copy(attrs=attrs) if attributes else Attributes(attrs=attrs)
             )

@@ -4,6 +4,8 @@ Test validation of inputs.
 Thanks to [Claude](https://claude.ai/) for assisting with these tests.
 """
 
+from typing import Any
+
 from pytest import raises
 
 from mdforge import (
@@ -14,7 +16,9 @@ from mdforge import (
     DefinitionList,
     InlineContainer,
     Paragraph,
+    Ref,
     RenderError,
+    Section,
     Table,
     Text,
     ValidationError,
@@ -30,11 +34,15 @@ def test_text_elements():
     with raises(ValidationError):
         Paragraph("This paragraph has\n\na blank line")
 
+    # ref to a section without a heading
+    with raises(ValidationError):
+        Ref(Section())
+
 
 def test_block_elements():
 
     with raises(ValidationError):
-        BlockImage("./image.png", align="invalid")
+        BlockImage("./image.png", align="invalid")  # type: ignore[arg-type]
 
     # create a definition item with a block element
     def_item = DefinitionItem("Term", BulletList(["Item 1", "Item 2"]))
@@ -51,7 +59,7 @@ def test_tables():
     with raises(ValidationError):
         Table(
             [["Cell 1", "Cell 2", "Cell 3"]],
-            widths=[10, 10, None],
+            widths=[10, 10, None],  # type: ignore[list-item]
         )
 
     # both widths and widths_pct being provided
@@ -96,7 +104,7 @@ def test_tables():
 
     # invalid row type
     with raises(ValidationError):
-        Table([1, 2, 3])  # integers are not valid cell types
+        Table([1, 2, 3])  # type: ignore[list-item] # integers are not valid cell types
 
     # merged cells with inconsistent column counts
     with raises(ValidationError):
@@ -141,7 +149,7 @@ def test_containers():
 
     # inline container with block content
     with raises(ValueError):
-        InlineContainer("Text", block_element)
+        InlineContainer("Text", block_element)  # type: ignore[arg-type]
 
 
 def test_normalize():
@@ -151,7 +159,7 @@ def test_normalize():
         norm_obj(123, str)
 
     # coercion that fails
-    def bad_coercion(obj):
+    def bad_coercion(obj: int) -> Any:
         return None
 
     with raises(ValueError):

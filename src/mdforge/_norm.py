@@ -5,17 +5,13 @@ Utilities to normalize objects.
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, TypeVar
+from typing import Any, Callable, Iterable
 
 __all__ = [
     "CoerceSpec",
     "norm_obj",
     "norm_list",
 ]
-
-
-ExpectT = TypeVar("ExpectT")
-CoerceT = TypeVar("CoerceT", bound=ExpectT)
 
 
 @dataclass
@@ -37,14 +33,16 @@ class CoerceSpec[CoerceT]:
     """
 
 
-def norm_obj[ExpectT, CoerceT](
+def norm_obj[ExpectT](
     obj: Any,
-    expect_type: type[ExpectT],
-    *coerce_specs: CoerceSpec[CoerceT],
+    expect_type: type[ExpectT] | tuple[type[ExpectT], ...],
+    *coerce_specs: CoerceSpec[ExpectT],
 ) -> ExpectT:
     """
     Normalize object to the expected type, coercing if applicable.
     """
+
+    note: str | None
 
     if isinstance(obj, expect_type):
         # already have expected type
@@ -73,10 +71,10 @@ def norm_obj[ExpectT, CoerceT](
         raise ValueError(_err_str(obj, expect_type, note))
 
 
-def norm_list[ExpectT, CoerceT](
+def norm_list[ExpectT](
     objs: Any | Iterable[Any],
-    expect_type: type[ExpectT],
-    *coerce_specs: CoerceSpec[CoerceT],
+    expect_type: type[ExpectT] | tuple[type[ExpectT], ...],
+    *coerce_specs: CoerceSpec[ExpectT],
 ) -> list[ExpectT]:
     """
     Normalize object(s) to a list of the expected type, coercing if applicable.
@@ -97,6 +95,8 @@ def norm_list[ExpectT, CoerceT](
     return [norm_obj(obj, expect_type, *coerce_specs) for obj in objs_list]
 
 
-def _err_str(obj: Any, expect_type: type[ExpectT], note: str | None = None) -> str:
+def _err_str(
+    obj: Any, expect_type: type[Any] | tuple[type[Any], ...], note: str | None = None
+) -> str:
     note_norm = f" {note}" if note else ""
     return f"Object {obj} of type {type(obj)} is not of expected type {expect_type}{note_norm}"

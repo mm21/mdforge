@@ -100,7 +100,7 @@ class BaseInlineElement(BaseElement):
         """
         ...
 
-    def _render_element(self, flavor: BaseElement) -> Generator[str, None, None]:
+    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
         yield self._render_inline(flavor)
 
 
@@ -222,13 +222,14 @@ class AttributesMixin:
         For pandoc flavor only.
         """
 
+        attributes = self.__attributes
+
         # return if not applicable or no attributes set
-        if flavor != "pandoc" or not self._has_attrs:
+        if flavor != "pandoc" or not attributes:
             return ""
 
         parts: list[str] = []
 
-        attributes = self.__attributes
         if attributes.html_id:
             parts.append(f"#{attributes.html_id}")
         if css_classes := attributes._css_classes_norm:

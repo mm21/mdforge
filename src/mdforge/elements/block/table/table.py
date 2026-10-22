@@ -58,6 +58,7 @@ class Table(BaseBlockElement):
                 f"Ambiguous widths: cannot pass both widths={widths} and widths_pct={widths_pct}"
             )
 
+        align_norm = align if align is None or isinstance(align, str) else list(align)
         widths_norm = list(widths) if widths else None
         widths_pct_norm = list(widths_pct) if widths_pct else None
 
@@ -103,7 +104,7 @@ class Table(BaseBlockElement):
             content_rows=content_rows,
             header_rows=header_rows,
             footer_rows=footer_rows,
-            align=align,
+            align=align_norm,
             widths=widths_norm,
             widths_pct=widths_pct_norm,
             caption=caption,
@@ -164,10 +165,10 @@ def _normalize_cells(rows: RowType | Iterable[RowType]) -> list[list[Cell]]:
     Normalize given rows to a list of lists of cells.
     """
 
-    if not (isinstance(rows, Iterable) and len(rows)):
-        raise ValidationError(f"Invalid row specification: {rows}")
+    rows_list = list(rows) if isinstance(rows, Iterable) else []
 
-    rows_list = list(rows)
+    if not rows_list:
+        raise ValidationError(f"Invalid row specification: {rows}")
 
     # normalize to list of lists
     rows_lists: list[list[Any]]
