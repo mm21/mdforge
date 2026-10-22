@@ -3,7 +3,6 @@ Encapsulates table params, universal for all flavors.
 """
 
 import itertools
-from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from typing import cast
@@ -112,7 +111,7 @@ class TableParams:
             # single alignment given
             assert self.align in VALID_ALIGNS
             return [self.align] * self.col_count
-        elif isinstance(self.align, Sequence):
+        elif isinstance(self.align, list):
             # alignments per column given
             assert len(self.align) == self.col_count
             assert all(a in VALID_ALIGNS for a in self.align)

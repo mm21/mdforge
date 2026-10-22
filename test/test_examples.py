@@ -190,7 +190,7 @@ def test_tables(request: FixtureRequest, powerpack_comparison_files: ComparisonF
         ],
         header=[
             [Cell("Column 1", rspan=2), Cell("Columns 2 & 3", cspan=2)],
-            ["Column 2", "Column 3"],
+            [Cell("Column 2"), Cell("Column 3")],
         ],
         block=True,
     )
