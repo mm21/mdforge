@@ -30,7 +30,7 @@ homepage = "https://github.com/mm21/mdforge"
 
 [dependency-groups]
 dev = [
-  "pyprojkit[all]>=0.6.0,<0.7",
+  "pyprojkit[all]>=0.7.0,<0.8",
   "pytest-powerpack>=0.1.5,<0.2",
   "types-pyyaml>=6.0.12,<7"
 ]
@@ -78,8 +78,11 @@ quiet = true  # pyprojkit-managed
 
 [tool.mypy]
 check_untyped_defs = true  # pyprojkit-managed
-ignore_missing_imports = true  # pyprojkit-managed
 python_version = "3.12"  # pyprojkit-managed
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = ["pytest_powerpack", "pytest_powerpack.*"]
 
 [tool.nox]
 default_venv_backend = "uv"  # pyprojkit-managed
