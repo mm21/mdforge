@@ -2,13 +2,59 @@
 Block elements.
 """
 
-from pyrollup import rollup
+__submodules__ = [
+    "section",
+    "basic",
+    "text",
+    "lists",
+    "table",
+]
 
-from . import basic, lists, section, table, text
-from .basic import *  # noqa
-from .lists import *  # noqa
-from .section import *  # noqa
-from .table import *  # noqa
-from .text import *  # noqa
+# isort: off
+# <AUTOGEN_INIT>
+from .section import (
+    Section,
+)
+from .basic import (
+    Heading,
+    BlockImage,
+)
+from .text import (
+    Paragraph,
+    BlockText,
+)
+from .lists import (
+    ListItemType,
+    ListItem,
+    BulletList,
+    NumberedList,
+    BaseItemList,
+    DefinitionItem,
+    DefinitionList,
+)
+from .table import (
+    Table,
+    Cell,
+    CellType,
+    RowType,
+)
 
-__all__ = rollup(section, basic, text, lists, table)
+__all__ = [
+    "Section",
+    "Heading",
+    "BlockImage",
+    "Paragraph",
+    "BlockText",
+    "ListItemType",
+    "ListItem",
+    "BulletList",
+    "NumberedList",
+    "BaseItemList",
+    "DefinitionItem",
+    "DefinitionList",
+    "Table",
+    "Cell",
+    "CellType",
+    "RowType",
+]
+# </AUTOGEN_INIT>

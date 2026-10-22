@@ -2,14 +2,104 @@
 MDForge: Forge Markdown files in a Python way.
 """
 
-from pyrollup import rollup
+__submodules__ = [
+    "types",
+    "document",
+    "element",
+    "container",
+    "elements",
+    "exceptions",
+]
 
-from . import container, document, element, elements, exceptions, types
-from .container import *  # noqa
-from .document import *  # noqa
-from .element import *  # noqa
-from .elements import *  # noqa
-from .exceptions import *  # noqa
-from .types import *  # noqa
+# isort: off
+# <AUTOGEN_INIT>
+from .types import (
+    FlavorType,
+    AlignType,
+)
+from .document import (
+    Document,
+)
+from .element import (
+    BaseElement,
+    BaseInlineElement,
+    BaseBlockElement,
+    Attributes,
+)
+from .container import (
+    InlineContainer,
+    BlockContainer,
+)
+from .elements import (
+    Section,
+    Heading,
+    BlockImage,
+    Paragraph,
+    BlockText,
+    ListItemType,
+    ListItem,
+    BulletList,
+    NumberedList,
+    BaseItemList,
+    DefinitionItem,
+    DefinitionList,
+    Table,
+    Cell,
+    CellType,
+    RowType,
+    Text,
+    Emph,
+    Strong,
+    Underline,
+    Strikethrough,
+    Link,
+    Ref,
+    Newline,
+    Span,
+    InlineImage,
+)
+from .exceptions import (
+    ValidationError,
+    RenderError,
+)
 
-__all__ = rollup(types, document, element, container, elements, exceptions)
+__all__ = [
+    "FlavorType",
+    "AlignType",
+    "Document",
+    "BaseElement",
+    "BaseInlineElement",
+    "BaseBlockElement",
+    "Attributes",
+    "InlineContainer",
+    "BlockContainer",
+    "Section",
+    "Heading",
+    "BlockImage",
+    "Paragraph",
+    "BlockText",
+    "ListItemType",
+    "ListItem",
+    "BulletList",
+    "NumberedList",
+    "BaseItemList",
+    "DefinitionItem",
+    "DefinitionList",
+    "Table",
+    "Cell",
+    "CellType",
+    "RowType",
+    "Text",
+    "Emph",
+    "Strong",
+    "Underline",
+    "Strikethrough",
+    "Link",
+    "Ref",
+    "Newline",
+    "Span",
+    "InlineImage",
+    "ValidationError",
+    "RenderError",
+]
+# </AUTOGEN_INIT>

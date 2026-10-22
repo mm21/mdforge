@@ -2,10 +2,21 @@
 Table elements.
 """
 
-from pyrollup import rollup
+__submodules__ = [
+    "table",
+    "cell",
+]
 
-from . import cell, table
-from .cell import *  # noqa
-from .table import *  # noqa
+# isort: off
+# <AUTOGEN_INIT>
+from .table import (
+    Table,
+)
+from .cell import (
+    Cell,
+    CellType,
+    RowType,
+)
 
-__all__ = rollup(table, cell)
+__all__ = ["Table", "Cell", "CellType", "RowType"]
+# </AUTOGEN_INIT>

@@ -2,10 +2,32 @@
 List elements.
 """
 
-from pyrollup import rollup
+__submodules__ = [
+    "item",
+    "definition",
+]
 
-from . import item
-from .definition import *  # noqa
-from .item import *  # noqa
+# isort: off
+# <AUTOGEN_INIT>
+from .item import (
+    ListItemType,
+    ListItem,
+    BulletList,
+    NumberedList,
+    BaseItemList,
+)
+from .definition import (
+    DefinitionItem,
+    DefinitionList,
+)
 
-__all__ = rollup(item, definition)
+__all__ = [
+    "ListItemType",
+    "ListItem",
+    "BulletList",
+    "NumberedList",
+    "BaseItemList",
+    "DefinitionItem",
+    "DefinitionList",
+]
+# </AUTOGEN_INIT>

@@ -2,10 +2,70 @@
 Primitive Markdown elements which can be inserted into a document or section.
 """
 
-from pyrollup import rollup
+__submodules__ = [
+    "block",
+    "inline",
+]
 
-from . import block, inline
-from .block import *  # noqa
-from .inline import *  # noqa
+# isort: off
+# <AUTOGEN_INIT>
+from .block import (
+    Section,
+    Heading,
+    BlockImage,
+    Paragraph,
+    BlockText,
+    ListItemType,
+    ListItem,
+    BulletList,
+    NumberedList,
+    BaseItemList,
+    DefinitionItem,
+    DefinitionList,
+    Table,
+    Cell,
+    CellType,
+    RowType,
+)
+from .inline import (
+    Text,
+    Emph,
+    Strong,
+    Underline,
+    Strikethrough,
+    Link,
+    Ref,
+    Newline,
+    Span,
+    InlineImage,
+)
 
-__all__ = rollup(block, inline)
+__all__ = [
+    "Section",
+    "Heading",
+    "BlockImage",
+    "Paragraph",
+    "BlockText",
+    "ListItemType",
+    "ListItem",
+    "BulletList",
+    "NumberedList",
+    "BaseItemList",
+    "DefinitionItem",
+    "DefinitionList",
+    "Table",
+    "Cell",
+    "CellType",
+    "RowType",
+    "Text",
+    "Emph",
+    "Strong",
+    "Underline",
+    "Strikethrough",
+    "Link",
+    "Ref",
+    "Newline",
+    "Span",
+    "InlineImage",
+]
+# </AUTOGEN_INIT>

@@ -1,9 +1,9 @@
 """
 Table variants: describe table syntax per Markdown flavor.
 
-In general, a given syntax for a given flavor may or may not support block
-content like paragraphs, lists, etc. Therefore each flavor must specify
-which configurations to use for inline-only vs block-allowed syntaxes.
+In general, a given syntax for a given flavor may or may not support block content like
+paragraphs, lists, etc. Therefore each flavor must specify which configurations to use
+for inline-only vs block-allowed syntaxes.
 """
 
 from __future__ import annotations

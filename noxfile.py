@@ -1,20 +1,3 @@
-import nox
-from nox import Session
+from pyprojkit import NoxFactory
 
-PYTHON_VERSIONS = [
-    "3.12.13",
-    "3.13.13",
-]
-
-
-@nox.session(python=PYTHON_VERSIONS)
-def test(session: Session):
-    session.run_install(
-        "uv",
-        "sync",
-        "--group=dev",
-        "--frozen",
-        f"--python={session.python}",
-        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
-    )
-    session.run("pytest", *session.posargs)
+test = NoxFactory().create_test_session()

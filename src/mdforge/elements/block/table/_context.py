@@ -12,8 +12,7 @@ from ._variant import BaseTableVariant
 
 class BaseRenderContext[VariantT: BaseTableVariant](ABC):
     """
-    Encapsulates all state needed to render a table: immutable params and
-    variant info.
+    Encapsulates all state needed to render a table: immutable params and variant info.
     """
 
     flavor: FlavorType

@@ -2,10 +2,38 @@
 Inline elements.
 """
 
-from pyrollup import rollup
+__submodules__ = [
+    "text",
+    "basic",
+]
 
-from . import basic, text
-from .basic import *  # noqa
-from .text import *  # noqa
+# isort: off
+# <AUTOGEN_INIT>
+from .text import (
+    Text,
+    Emph,
+    Strong,
+    Underline,
+    Strikethrough,
+    Link,
+    Ref,
+    Newline,
+)
+from .basic import (
+    Span,
+    InlineImage,
+)
 
-__all__ = rollup(text, basic)
+__all__ = [
+    "Text",
+    "Emph",
+    "Strong",
+    "Underline",
+    "Strikethrough",
+    "Link",
+    "Ref",
+    "Newline",
+    "Span",
+    "InlineImage",
+]
+# </AUTOGEN_INIT>
