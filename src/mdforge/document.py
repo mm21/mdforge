@@ -40,10 +40,12 @@ class Document(BaseLevelBlockContainer):
     ):
         super().__init__()
         self.__frontmatter = frontmatter
-        self._level = ROOT_LEVEL
 
         if elements:
             self += elements
+
+    def _get_level(self) -> int:
+        return ROOT_LEVEL
 
     def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield from self.__render_frontmatter()

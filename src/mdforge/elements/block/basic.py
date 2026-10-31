@@ -57,7 +57,7 @@ class Heading(AttributesMixin, BaseBlockElement):
         return self.__text
 
     def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
-        level = self.__level or self._container._level
+        level = self.__level or self._container._get_level()
         yield f"{'#' * level} {self.__text}{self._get_attrs_str(context, space_prefix=True)}"
 
     def _get_pandoc_extensions(self) -> set[str]:

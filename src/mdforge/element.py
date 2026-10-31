@@ -13,7 +13,7 @@ from ._norm import norm_list
 from .types import FlavorType
 
 if TYPE_CHECKING:
-    from .container import BaseLevelBlockContainer
+    from .container import BaseBlockContainer
 
 __all__ = [
     "BaseElement",
@@ -40,7 +40,7 @@ class BaseElement(ABC):
     Base renderable markdown element, which may be a container of other elements.
     """
 
-    __container: BaseLevelBlockContainer | None = None
+    __container: BaseBlockContainer | None = None
     """
     Container to which this element belongs.
 
@@ -93,12 +93,12 @@ class BaseElement(ABC):
         yield from "\n".join(self._render_element(context)).strip().split("\n")
 
     @property
-    def _container(self) -> BaseLevelBlockContainer:
+    def _container(self) -> BaseBlockContainer:
         assert self.__container, f"Element has not been placed in a container: {self}"
         return self.__container
 
     @_container.setter
-    def _container(self, container: BaseLevelBlockContainer):
+    def _container(self, container: BaseBlockContainer):
         assert self.__container is None
         self.__container = container
 

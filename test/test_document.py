@@ -4,6 +4,7 @@ from pytest_powerpack import ComparisonFiles
 from mdforge import (
     AlignType,
     Attributes,
+    BlockContainer,
     BlockImage,
     BulletList,
     Document,
@@ -126,6 +127,26 @@ def test_images(doc: Document):
                 ),
             ),
         ]
+
+
+@compare_doc
+def test_section_in_container(doc: Document):
+    """
+    Test sections nested in plain block containers.
+    """
+
+    sec1 = Section("Section 1")
+    sec1 += BlockContainer(
+        Section("Section 1-1", elements="Hello, world!"),
+        Section("Section 1-2"),
+    )
+
+    # container added to section before section is added to document
+    container = BlockContainer(Section("Section 2-1-1"))
+    sec21 = Section("Section 2-1", elements=container)
+    sec2 = Section("Section 2", elements=BlockContainer(sec21))
+
+    doc += [sec1, sec2, BlockContainer(Section("Section 3"))]
 
 
 @mark.powerpack_compare_file("doc.md")

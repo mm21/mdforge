@@ -82,6 +82,19 @@ class BaseBlockContainer(BaseBlockElement):
         self._add_elements(self._norm_elements(elements))
         return self
 
+    def _get_level(self) -> int:
+        """
+        Get nesting level of this container by traversing its ancestors; passed through
+        from the parent container since a plain block container doesn't affect nesting.
+        """
+        return self._container._get_level()
+
+    def _get_child_level(self) -> int:
+        """
+        Get nesting level of level containers nested in this one.
+        """
+        return self._container._get_child_level()
+
     def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield "\n\n".join(
             ["\n".join(element._render_block(context)) for element in self.__elements]
@@ -91,8 +104,12 @@ class BaseBlockContainer(BaseBlockElement):
         return _aggregate_extensions(self.__elements) | super()._get_pandoc_extensions()
 
     def _add_elements(self, elements: list[BaseBlockElement]):
+        """
+        Add elements to container and set this as their container.
+        """
         for element in elements:
             assert isinstance(element, BaseBlockElement)
+            element._container = self
             self.__elements.append(element)
 
     def _norm_elements(
@@ -134,60 +151,11 @@ class BaseLevelBlockContainer(BaseBlockContainer):
     Amount by which to increment level of nested containers.
     """
 
-    __level: int | None = None
-    """
-    Nesting level of this container.
-    """
+    def _get_level(self) -> int:
+        return self._container._get_child_level()
 
-    __containers: list[BaseLevelBlockContainer]
-    """
-    List of nested containers; a subset of nested elements.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.__containers = []
-
-    @property
-    def _level(self) -> int:
-        assert self.__level is not None
-        return self.__level
-
-    @_level.setter
-    def _level(self, level: int):
-        """
-        Set level and propagate recursively.
-        """
-        assert self.__level is None
-        self.__level = level
-
-        for container in self.__containers:
-            container._level = level + self._level_inc
-
-    def _add_elements(self, elements: list[BaseBlockElement]):
-        """
-        Add elements to container and additionally bind them.
-        """
-        super()._add_elements(elements)
-
-        for element in elements:
-
-            # set element's container
-            element._container = self
-
-            # if element is also a block container, bind it
-            if isinstance(element, BaseLevelBlockContainer):
-                self.__bind_container(element)
-
-    def __bind_container(self, container: BaseLevelBlockContainer):
-        """
-        Bind another container to this one.
-        """
-        self.__containers.append(container)
-
-        # propagate level, if set
-        if self.__level is not None:
-            container._level = self.__level + self._level_inc
+    def _get_child_level(self) -> int:
+        return self._get_level() + self._level_inc
 
 
 def _aggregate_extensions(elements: Iterable[BaseElement]) -> set[str]:
