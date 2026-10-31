@@ -143,9 +143,30 @@ Note the following observations:
 
 - Headings are created from section titles; content belonging to a heading is placed in its section
 - Sections can be nested in other sections, with optional titles
-- Heading levels for sections are automatically set by their placement in the hierarchy
+- Heading levels for sections are automatically set by their placement in the hierarchy; see [Heading levels](#heading-levels)
 - Strings added to a document or section via `+=` are treated as raw text
 - A comment is placed at the end of each list; this disambiguates the end of one list and the start of the next, in case there are no other elements in between
+
+### Heading levels
+
+By default (`level=None`), the level of a section is relative to the render root: the element on which `render()` is called. The render root is level 1 and each nested section is one level deeper.
+
+As a result, a section rendered by itself is a self-contained tree starting at level 1, even if it's also placed in a document.
+
+To generate a fragment to be placed in a larger document, pass an explicit `level`. Explicit levels are invariant of placement, and nested sections are relative to it:
+
+```python
+from mdforge import Section
+
+fragment = Section("Fragment", level=3, elements=Section("Subsection"))
+
+assert fragment.render(flavor="pandoc") == "### Fragment\n\n#### Subsection"
+```
+
+When an element with an explicit level is rendered as part of a larger tree, its level is checked against its placement:
+
+- A level not nested in the containing level, e.g. `level=1` in a level-1 section, raises `RenderError`
+- A level which skips levels, e.g. `level=3` in a level-1 section, issues `RenderWarning`
 
 ## Pythonic Markdown elements
 

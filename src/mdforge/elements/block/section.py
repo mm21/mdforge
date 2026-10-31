@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Generator, Iterable
 
 from ..._norm import CoerceSpec, norm_obj
+from ..._utils import MAX_LEVEL
 from ...container import BaseLevelBlockContainer
 from ...element import (
     Attributes,
@@ -15,7 +16,7 @@ from ...element import (
     BaseInlineElement,
     RenderContext,
 )
-from ...exceptions import ValidationError
+from ...exceptions import RenderError, ValidationError
 
 __all__ = [
     "Section",
@@ -27,8 +28,9 @@ class Section(AttributesMixin, BaseLevelBlockContainer):
     Encapsulates a logical document section, containing block elements with an optional
     title rendered as its heading, e.g. `# My section`.
 
-    Level is inferred by this section's nesting; nested sections are placed at the next
-    level.
+    Level is inferred by this section's nesting relative to the render root, unless
+    given explicitly e.g. when generating a fragment to be placed in a larger document.
+    Nested sections are placed at the next level.
     """
 
     __title: BaseInlineElement | None = None
@@ -37,19 +39,21 @@ class Section(AttributesMixin, BaseLevelBlockContainer):
         self,
         title: BaseInlineElement | str | None = None,
         *,
+        level: int | None = None,
         html_id: str | None = None,
         attributes: Attributes | None = None,
         elements: BaseElement | str | Iterable[BaseElement | str] | None = None,
     ):
         """
         :param title: Title rendered as heading, or `None` for a section without heading
+        :param level: Explicit level, invariant of placement, e.g. for a fragment to be placed in a larger document; if `None`, the level is inferred from placement relative to the render root (the element on which `render()` is called), where the root is level 1
         :param html_id: HTML id of heading, used as the target of references; shorthand for `attributes.html_id`
         :param attributes: HTML attributes of heading
         :param elements: Elements to add
         """
         from ..inline.text import Text
 
-        super().__init__()
+        super().__init__(level)
 
         if title is None and (html_id is not None or attributes):
             raise ValidationError(
@@ -91,7 +95,12 @@ class Section(AttributesMixin, BaseLevelBlockContainer):
         blocks: list[str] = []
 
         if self.__title is not None:
-            level = self._get_level()
+            level = self._get_level(context)
+            if level > MAX_LEVEL:
+                raise RenderError(
+                    f"Level {level} of {self._get_desc(context)} exceeds maximum of {MAX_LEVEL}"
+                )
+
             attrs = self._get_attrs_str(context, space_prefix=True)
             blocks.append(f"{'#' * level} {self._render_title(context)}{attrs}")
 
@@ -106,3 +115,8 @@ class Section(AttributesMixin, BaseLevelBlockContainer):
         )
         attrs_extensions = {"header_attributes"} if self._has_attrs else set()
         return title_extensions | attrs_extensions | super()._get_pandoc_extensions()
+
+    def _get_desc(self, context: RenderContext) -> str:
+        if self.__title is None:
+            return super()._get_desc(context)
+        return f"section '{self._render_title(context)}'"

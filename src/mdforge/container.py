@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Generator, Iterable, Self
 
 from ._norm import CoerceSpec, norm_list
-from ._utils import coerce_inline_text
+from ._utils import check_level, coerce_inline_text, validate_level
 from .element import (
     BaseBlockElement,
     BaseElement,
@@ -21,6 +21,12 @@ __all__ = [
     "InlineContainer",
     "BlockContainer",
 ]
+
+ROOT_LEVEL: int = 1
+"""
+Nesting level of the element being rendered, e.g. a document or a standalone section,
+unless it has an explicit level.
+"""
 
 
 class InlineContainerMixin(BaseElement):
@@ -101,18 +107,23 @@ class BaseBlockContainer(BaseBlockElement):
             if isinstance(element, BaseBlockContainer):
                 yield from element._get_descendants()
 
-    def _get_level(self) -> int:
+    def _get_level(self, context: RenderContext) -> int:
         """
-        Get nesting level of this container by traversing its ancestors; passed through
-        from the parent container since a plain block container doesn't affect nesting.
+        Get nesting level of this container by traversing its ancestors up to the
+        element being rendered; passed through from the parent container since a plain
+        block container doesn't affect nesting.
         """
-        return self._container._get_level()
+        if self is context.root:
+            return ROOT_LEVEL
+        return self._container._get_level(context)
 
-    def _get_child_level(self) -> int:
+    def _get_child_level(self, context: RenderContext) -> int:
         """
         Get nesting level of level containers nested in this one.
         """
-        return self._container._get_child_level()
+        if self is context.root:
+            return ROOT_LEVEL
+        return self._container._get_child_level(context)
 
     def _validate_parent(self, parent: BaseNode):
         """
@@ -183,11 +194,41 @@ class BaseLevelBlockContainer(BaseBlockContainer):
     Amount by which to increment level of nested containers.
     """
 
-    def _get_level(self) -> int:
-        return self._container._get_child_level()
+    __level: int | None
+    """
+    Explicit level, invariant of placement, or `None` to infer from placement relative
+    to the render root.
+    """
 
-    def _get_child_level(self) -> int:
-        return self._get_level() + self._level_inc
+    def __init__(self, level: int | None = None):
+        super().__init__()
+        validate_level(level)
+        self.__level = level
+
+    def _get_level(self, context: RenderContext) -> int:
+        if self.__level is not None:
+            return self.__level
+        if self is context.root:
+            return ROOT_LEVEL
+        return self._container._get_child_level(context)
+
+    def _get_child_level(self, context: RenderContext) -> int:
+        return self._get_level(context) + self._level_inc
+
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
+        if self.__level is not None and self is not context.root:
+            check_level(
+                self._get_desc(context),
+                self.__level,
+                self._container._get_child_level(context),
+            )
+        yield from super()._render_block(context)
+
+    def _get_desc(self, context: RenderContext) -> str:
+        """
+        Get description of this container for error messages.
+        """
+        return str(self)
 
 
 def _aggregate_extensions(elements: Iterable[BaseElement]) -> set[str]:

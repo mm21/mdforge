@@ -93,6 +93,12 @@ class RenderContext:
     Markdown flavor to render.
     """
 
+    root: BaseElement
+    """
+    Element being rendered, e.g. a document or a standalone section, used to resolve
+    references.
+    """
+
 
 class BaseElement(BaseNode, ABC):
     """
@@ -106,7 +112,7 @@ class BaseElement(BaseNode, ABC):
         """
         Return element as a string using the provided flavor.
         """
-        context = RenderContext(flavor=flavor)
+        context = RenderContext(flavor=flavor, root=self)
         return "\n".join(self._render_element(context))
 
     def render_file(self, path: Path | str, *, flavor: FlavorType):

@@ -302,3 +302,11 @@ def test_pandoc_extensions():
     # get required pandoc extensions
     extensions = doc.get_pandoc_extensions()
     assert extensions == ["header_attributes", "strikeout"]
+
+
+def test_heading_levels():
+    from mdforge import Section
+
+    fragment = Section("Fragment", level=3, elements=Section("Subsection"))
+
+    assert fragment.render(flavor="pandoc") == "### Fragment\n\n#### Subsection"

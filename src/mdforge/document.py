@@ -15,8 +15,6 @@ __all__ = [
     "Document",
 ]
 
-ROOT_LEVEL: int = 1
-
 
 class Document(BaseLevelBlockContainer):
     """
@@ -43,9 +41,6 @@ class Document(BaseLevelBlockContainer):
 
         if elements:
             self += elements
-
-    def _get_level(self) -> int:
-        return ROOT_LEVEL
 
     def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield from self.__render_frontmatter()

@@ -176,6 +176,11 @@ def test_ids():
     with raises(ValidationError):
         Section("Section", html_id="id-1", attributes=Attributes(html_id="id-2"))
 
+    # invalid levels
+    for level in [0, 7]:
+        with raises(ValidationError):
+            Section("Section", level=level)
+
     # id and attributes require title
     with raises(ValidationError):
         Section(html_id="id-1")

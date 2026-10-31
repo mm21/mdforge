@@ -60,6 +60,7 @@ from .elements import (
 from .exceptions import (
     ValidationError,
     RenderError,
+    RenderWarning,
 )
 
 __all__ = [
@@ -99,5 +100,6 @@ __all__ = [
     "InlineImage",
     "ValidationError",
     "RenderError",
+    "RenderWarning",
 ]
 # </AUTOGEN_INIT>

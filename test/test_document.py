@@ -1,9 +1,12 @@
-from pytest import FixtureRequest, mark
+import warnings
+
+from pytest import FixtureRequest, mark, raises, warns
 from pytest_powerpack import ComparisonFiles
 
 from mdforge import (
     AlignType,
     Attributes,
+    BaseElement,
     BlockContainer,
     BlockImage,
     BulletList,
@@ -12,6 +15,8 @@ from mdforge import (
     InlineImage,
     Paragraph,
     Ref,
+    RenderError,
+    RenderWarning,
     Section,
     Strong,
 )
@@ -174,3 +179,63 @@ def test_attributes_copy():
     assert attributes_copy.html_id == "attrs-1"
     assert attributes_copy.css_classes == ["class1", "class2", "class3"]
     assert attributes_copy.attrs == {"attr1": "value1", "attr2": "value2"}
+
+
+def test_standalone():
+    """
+    Test rendering elements standalone, outside of a document.
+    """
+
+    section = Section("Section 1", elements=Section("Section 1-1"))
+    assert section.render(flavor="pandoc") == "# Section 1\n\n## Section 1-1"
+
+    container = BlockContainer(Section("Section 1"), Section("Section 2"))
+    assert container.render(flavor="pandoc") == "# Section 1\n\n# Section 2"
+
+    # section without title
+    assert Section(elements="Text").render(flavor="pandoc") == "Text"
+
+
+def test_levels():
+    """
+    Test inferred and explicit levels.
+    """
+
+    def render(element: BaseElement) -> str:
+        # fail upon any warnings, e.g. skipped level
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            return element.render(flavor="pandoc")
+
+    # nested section rendered standalone is relative to itself
+    inner = Section("Inner", elements=Section("Sub"))
+    Document(elements=Section("Outer", elements=inner))
+    assert render(inner) == "# Inner\n\n## Sub"
+
+    # explicit level for fragment, propagated to nested sections
+    fragment = Section("Fragment", level=3, elements=Section("Sub"))
+    assert render(fragment) == "### Fragment\n\n#### Sub"
+
+    # explicit level matching placement, including through untitled section
+    doc = Document(
+        elements=Section(
+            "Section 1",
+            elements=Section(elements=Section("Section 1-1-1", level=3)),
+        )
+    )
+    assert render(doc) == "# Section 1\n\n### Section 1-1-1\n"
+
+    # explicit level not nested in containing level
+    doc = Document(elements=Section("Section 1", elements=Section("1-1", level=1)))
+    with raises(RenderError):
+        doc.render(flavor="pandoc")
+
+    # explicit level skipping a level
+    doc = Document(elements=Section("Section 1", elements=Section("1-1", level=3)))
+    with warns(RenderWarning):
+        doc.render(flavor="pandoc")
+
+    # inferred level exceeding maximum
+    section = Section("Section", level=6, elements=Section("Sub"))
+    with raises(RenderError):
+        section.render(flavor="pandoc")
