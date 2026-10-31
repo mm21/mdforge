@@ -19,6 +19,7 @@ from mdforge import (
     RenderWarning,
     Section,
     Strong,
+    Table,
 )
 
 from .conftest import compare_doc, render_doc
@@ -93,9 +94,27 @@ def test_ref(doc: Document):
     doc += section_4
     section_4 += Ref(section_4)
 
+    # refs by id
+    refs = Section("Refs by id")
+    doc += refs
+    refs += Ref("section-4", "Link to section 4 by id")
+    refs += Ref("#section-1", "Link to section 1 by id")
+
+    # refs by id w/text looked up from section, including forward ref and ref in
+    # table cell
+    refs += Ref("section-4")
+    refs += Ref("section-5")
+    refs += Table([[Ref("section-1")]])
+
+    section_5 = Section("Test section 5", html_id="section-5")
+    section_5 += Section("Test section 5-1", html_id="section-5-1")
+    section_5 += Ref("section-5-1")
+    doc += section_5
+
     assert doc.get_pandoc_extensions() == [
         "header_attributes",
         "implicit_header_references",
+        "multiline_tables",
     ]
 
 
@@ -186,8 +205,19 @@ def test_standalone():
     Test rendering elements standalone, outside of a document.
     """
 
-    section = Section("Section 1", elements=Section("Section 1-1"))
-    assert section.render(flavor="pandoc") == "# Section 1\n\n## Section 1-1"
+    section = Section("Section 1", html_id="section-1")
+    section += Ref("section-1-1")
+    section += Section("Section 1-1", html_id="section-1-1")
+
+    assert section.render(flavor="pandoc") == "\n".join(
+        [
+            "# Section 1 {#section-1}",
+            "",
+            "[Section 1-1](#section-1-1)",
+            "",
+            "## Section 1-1 {#section-1-1}",
+        ]
+    )
 
     container = BlockContainer(Section("Section 1"), Section("Section 2"))
     assert container.render(flavor="pandoc") == "# Section 1\n\n# Section 2"

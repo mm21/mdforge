@@ -580,8 +580,9 @@ my_section += Span(
     attributes=Attributes(html_id="my-span", css_classes="class1"),
 )
 
-# reference to section
+# references to section, by object and by id
 my_section += Ref(my_section, "See this section")
+my_section += Ref("my-section")
 
 doc.render_file("doc.md", flavor="pandoc")
 ```
@@ -594,6 +595,8 @@ This is rendered as:
 [Text with attributes]{#my-span .class1}
 
 [See this section](#my-section)
+
+[Section with attributes](#my-section)
 
 ```
 

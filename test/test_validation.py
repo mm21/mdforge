@@ -188,6 +188,38 @@ def test_ids():
         Section(attributes=Attributes(css_classes="class1"))
 
 
+def test_ref_by_id():
+
+    # ref by id not found
+    doc = Document(elements=Ref("id-1"))
+    with raises(RenderError):
+        doc.render(flavor="pandoc")
+
+    # ref by id w/duplicate ids
+    doc = Document(
+        elements=[
+            Ref("id-1"),
+            Section("Section 1", html_id="id-1"),
+            Section("Section 2", html_id="id-1"),
+        ]
+    )
+    with raises(RenderError):
+        doc.render(flavor="pandoc")
+
+    # ref by id rendered standalone
+    with raises(RenderError):
+        Ref("id-1").render(flavor="pandoc")
+
+    # ref by id to section outside of section rendered standalone
+    section = Section("Section", elements=Ref("id-1"))
+    Document(elements=[Section("Section 1", html_id="id-1"), section])
+    with raises(RenderError):
+        section.render(flavor="pandoc")
+
+    # ref by id w/text doesn't require lookup
+    assert Ref("id-1", "Text").render(flavor="pandoc") == "[Text](#id-1)"
+
+
 def test_sections_disallowed():
 
     section = Section("Section")

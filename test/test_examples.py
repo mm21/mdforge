@@ -282,8 +282,9 @@ def test_html_attributes(
         attributes=Attributes(html_id="my-span", css_classes="class1"),
     )
 
-    # reference to section
+    # references to section, by object and by id
     my_section += Ref(my_section, "See this section")
+    my_section += Ref("my-section")
 
     render_doc(doc, request, powerpack_comparison_files)
 

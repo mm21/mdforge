@@ -3,3 +3,5 @@
 [Text with attributes]{#my-span .class1}
 
 [See this section](#my-section)
+
+[Section with attributes](#my-section)
