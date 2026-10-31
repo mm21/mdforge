@@ -7,8 +7,7 @@ from __future__ import annotations
 from typing import Generator
 
 from ...container import InlineContainerMixin
-from ...element import BaseBlockElement
-from ...types import FlavorType
+from ...element import BaseBlockElement, RenderContext
 
 __all__ = [
     "Paragraph",
@@ -20,8 +19,8 @@ class Paragraph(InlineContainerMixin, BaseBlockElement):
 
     _allow_multiline = True
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield self._render_elements(flavor)
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
+        yield self._render_elements(context)
 
 
 class BlockText(BaseBlockElement):
@@ -41,5 +40,5 @@ class BlockText(BaseBlockElement):
         """
         return any(line.strip() == "" for line in self.__lines)
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield from self.__lines

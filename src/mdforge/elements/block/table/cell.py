@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Iterable
 
 from ...._norm import CoerceSpec, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
-from ....element import BaseElement, BaseInlineElement
+from ....element import BaseElement, BaseInlineElement, RenderContext
 from ....exceptions import RenderError
-from ....types import FlavorType
 from ..text import BlockText
 
 if TYPE_CHECKING:
@@ -75,14 +74,14 @@ class Cell:
 
     @cache
     def _get_content(
-        self, flavor: FlavorType, loose: bool, width: int | None = None
+        self, context: RenderContext, loose: bool, width: int | None = None
     ) -> list[str]:
         """
         Get this cell's content as a list of strings, wrapping words if width provided.
         """
 
         # render element
-        lines = list(self.__content._render_element_norm(flavor))
+        lines = list(self.__content._render_element_norm(context))
 
         # if loose and no blank lines, wrap in paragraph
         if loose:
@@ -99,11 +98,11 @@ class Cell:
         else:
             return lines
 
-    def _get_raw_width(self, flavor: FlavorType, loose: bool) -> int:
+    def _get_raw_width(self, context: RenderContext, loose: bool) -> int:
         """
         Get width of this cell with no wrapping or explicit width from user.
         """
-        return max(len(line) for line in self._get_content(flavor, loose))
+        return max(len(line) for line in self._get_content(context, loose))
 
     def __wrap_line(self, line: str, width: int) -> list[str]:
         """

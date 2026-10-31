@@ -9,8 +9,7 @@ from typing import Any, Generator, Iterable, Mapping
 import yaml
 
 from .container import BaseLevelBlockContainer
-from .element import BaseElement
-from .types import FlavorType
+from .element import BaseElement, RenderContext
 
 __all__ = [
     "Document",
@@ -46,9 +45,9 @@ class Document(BaseLevelBlockContainer):
         if elements:
             self += elements
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield from self.__render_frontmatter()
-        yield from super()._render_block(flavor)
+        yield from super()._render_block(context)
         yield ""
 
     def __render_frontmatter(self) -> Generator[str, None, None]:

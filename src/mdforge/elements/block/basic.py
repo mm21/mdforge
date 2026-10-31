@@ -7,9 +7,15 @@ from __future__ import annotations
 from typing import Generator
 
 from ..._norm import CoerceSpec, norm_obj
-from ...element import Attributes, AttributesMixin, BaseBlockElement, BaseInlineElement
+from ...element import (
+    Attributes,
+    AttributesMixin,
+    BaseBlockElement,
+    BaseInlineElement,
+    RenderContext,
+)
 from ...exceptions import ValidationError
-from ...types import VALID_ALIGNS, AlignType, FlavorType
+from ...types import VALID_ALIGNS, AlignType
 from .._image import ImageMixin
 
 __all__ = [
@@ -50,9 +56,9 @@ class Heading(AttributesMixin, BaseBlockElement):
     def _text(self) -> str:
         return self.__text
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         level = self.__level or self._container._level
-        yield f"{'#' * level} {self.__text}{self._get_attrs_str(flavor, space_prefix=True)}"
+        yield f"{'#' * level} {self.__text}{self._get_attrs_str(context, space_prefix=True)}"
 
     def _get_pandoc_extensions(self) -> set[str]:
         return (
@@ -96,10 +102,10 @@ class BlockImage(BaseBlockElement, ImageMixin):
             caption or "", BaseInlineElement, CoerceSpec(Text, str)
         )
 
-    def _render_alt_text(self, flavor: FlavorType) -> str:
+    def _render_alt_text(self, context: RenderContext) -> str:
         # note: only pandoc supports inline elements as alt text, which becomes
         # the image caption
-        return self.__caption._render_inline(flavor)
+        return self.__caption._render_inline(context)
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield self._render_commonmark_image(flavor)
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
+        yield self._render_commonmark_image(context)

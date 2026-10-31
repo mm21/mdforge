@@ -6,9 +6,8 @@ from __future__ import annotations
 
 from ..._norm import CoerceSpec, norm_obj
 from ...container import InlineContainerMixin
-from ...element import Attributes, AttributesMixin, BaseInlineElement
+from ...element import Attributes, AttributesMixin, BaseInlineElement, RenderContext
 from ...exceptions import ValidationError
-from ...types import FlavorType
 from ..block.basic import Heading
 from ..block.section import Section
 
@@ -29,8 +28,8 @@ class BaseTextContainer(InlineContainerMixin, BaseInlineElement):
     Inline element containing text or a list of inline elements.
     """
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return self._render_elements(flavor)
+    def _render_inline(self, context: RenderContext) -> str:
+        return self._render_elements(context)
 
 
 class Text(BaseInlineElement):
@@ -47,20 +46,20 @@ class Text(BaseInlineElement):
 
         self.__text = text
 
-    def _render_inline(self, flavor: FlavorType) -> str:
+    def _render_inline(self, context: RenderContext) -> str:
         return self.__text
 
 
 class Emph(BaseTextContainer):
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return f"_{super()._render_inline(flavor)}_"
+    def _render_inline(self, context: RenderContext) -> str:
+        return f"_{super()._render_inline(context)}_"
 
 
 class Strong(BaseTextContainer):
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return f"**{super()._render_inline(flavor)}**"
+    def _render_inline(self, context: RenderContext) -> str:
+        return f"**{super()._render_inline(context)}**"
 
 
 class Underline(AttributesMixin, BaseTextContainer):
@@ -69,8 +68,8 @@ class Underline(AttributesMixin, BaseTextContainer):
         # add underline class, only relevant for pandoc flavor
         self._set_attrs(Attributes(css_classes="underline"))
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return f"[{super()._render_inline(flavor)}]{self._get_attrs_str(flavor)}"
+    def _render_inline(self, context: RenderContext) -> str:
+        return f"[{super()._render_inline(context)}]{self._get_attrs_str(context)}"
 
     def _get_pandoc_extensions(self) -> set[str]:
         return {"bracketed_spans"} | super()._get_pandoc_extensions()
@@ -78,8 +77,8 @@ class Underline(AttributesMixin, BaseTextContainer):
 
 class Strikethrough(BaseTextContainer):
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return f"~~{super()._render_inline(flavor)}~~"
+    def _render_inline(self, context: RenderContext) -> str:
+        return f"~~{super()._render_inline(context)}~~"
 
     def _get_pandoc_extensions(self) -> set[str]:
         return {"strikeout"} | super()._get_pandoc_extensions()
@@ -97,8 +96,8 @@ class Link(BaseInlineElement):
         self.__text = norm_obj(text, BaseInlineElement, CoerceSpec(Text, str))
         self.__url = url
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return f"[{self.__text._render_inline(flavor)}]({self.__url})"
+    def _render_inline(self, context: RenderContext) -> str:
+        return f"[{self.__text._render_inline(context)}]({self.__url})"
 
 
 class Ref(BaseInlineElement):
@@ -121,7 +120,7 @@ class Ref(BaseInlineElement):
         self.__target = heading
         self.__text = text
 
-    def _render_inline(self, flavor: FlavorType) -> str:
+    def _render_inline(self, context: RenderContext) -> str:
 
         text = self.__text or self.__target._text
 
@@ -145,5 +144,5 @@ class Newline(BaseInlineElement):
     Used for inline containers which allow multiple lines, e.g. paragraphs.
     """
 
-    def _render_inline(self, flavor: FlavorType) -> str:
+    def _render_inline(self, context: RenderContext) -> str:
         return "\n"

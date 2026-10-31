@@ -7,9 +7,8 @@ from __future__ import annotations
 from typing import Generator, Iterable, Sequence
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
-from ....element import BaseBlockElement, BaseElement, BaseInlineElement
+from ....element import BaseBlockElement, BaseElement, BaseInlineElement, RenderContext
 from ....exceptions import ValidationError
-from ....types import FlavorType
 from ...inline.text import Text
 
 __all__ = [
@@ -49,10 +48,12 @@ class DefinitionItem:
                         f"Definition must be inline element for compact definition list: {definition} ({type(definition)})"
                     )
 
-    def _render(self, flavor: FlavorType, compact: bool) -> Generator[str, None, None]:
+    def _render(
+        self, context: RenderContext, compact: bool
+    ) -> Generator[str, None, None]:
 
         # term goes on line by itself
-        yield self.__term._render_inline(flavor)
+        yield self.__term._render_inline(context)
 
         if not compact:
             # insert blank line for non-compact list
@@ -63,7 +64,7 @@ class DefinitionItem:
             is_last_def = def_idx == len(self.__definitions) - 1
 
             # render lines for this definition
-            for line_idx, line in enumerate(definition._render_element_norm(flavor)):
+            for line_idx, line in enumerate(definition._render_element_norm(context)):
 
                 # include ":" for first line
                 is_first_line = line_idx == 0
@@ -104,13 +105,13 @@ class DefinitionList(BaseBlockElement):
         self.__items = items_norm
         self.__compact = compact
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
 
         for item_idx, item in enumerate(self.__items):
             is_last_item = item_idx == len(self.__items)
 
             # render this item
-            yield from item._render(flavor, self.__compact)
+            yield from item._render(context, self.__compact)
 
             # render blank line between items
             if not is_last_item:

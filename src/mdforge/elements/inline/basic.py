@@ -4,8 +4,7 @@ Common inline elements.
 
 from __future__ import annotations
 
-from ...element import Attributes, AttributesMixin, BaseInlineElement
-from ...types import FlavorType
+from ...element import Attributes, AttributesMixin, BaseInlineElement, RenderContext
 from .._image import ImageMixin
 from .text import BaseTextContainer
 
@@ -29,9 +28,9 @@ class Span(AttributesMixin, BaseTextContainer):
         super().__init__(*elements, auto_space=auto_space)
         self._set_attrs(attributes)
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        text = super()._render_inline(flavor)
-        attrs = self._get_attrs_str(flavor)
+    def _render_inline(self, context: RenderContext) -> str:
+        text = super()._render_inline(context)
+        attrs = self._get_attrs_str(context)
         return f"[{text}]{attrs}" if attrs else text
 
     def _get_pandoc_extensions(self) -> set[str]:
@@ -57,9 +56,9 @@ class InlineImage(BaseInlineElement, ImageMixin):
         super().__init__(path, attributes=attributes)
         self.__alt_text = alt_text or ""
 
-    def _render_alt_text(self, flavor: FlavorType) -> str:
+    def _render_alt_text(self, context: RenderContext) -> str:
         # note: no markdown flavors support inline elements as alt text
         return self.__alt_text
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return self._render_commonmark_image(flavor)
+    def _render_inline(self, context: RenderContext) -> str:
+        return self._render_commonmark_image(context)

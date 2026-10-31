@@ -8,8 +8,7 @@ from typing import Generator, Iterable, Self
 
 from ._norm import CoerceSpec, norm_list
 from ._utils import coerce_inline_text
-from .element import BaseBlockElement, BaseElement, BaseInlineElement
-from .types import FlavorType
+from .element import BaseBlockElement, BaseElement, BaseInlineElement, RenderContext
 
 __all__ = [
     "InlineContainer",
@@ -46,9 +45,9 @@ class InlineContainerMixin(BaseElement):
         Optionally overridden by subclass to perform additional init.
         """
 
-    def _render_elements(self, flavor: FlavorType) -> str:
+    def _render_elements(self, context: RenderContext) -> str:
         sep = " " if self.__auto_space else ""
-        return sep.join(element._render_inline(flavor) for element in self.__elements)
+        return sep.join(element._render_inline(context) for element in self.__elements)
 
     def _get_pandoc_extensions(self) -> set[str]:
         return _aggregate_extensions(self.__elements) | super()._get_pandoc_extensions()
@@ -59,8 +58,8 @@ class InlineContainer(InlineContainerMixin, BaseInlineElement):
     Container for inline elements; wraps multiple inline elements in a single one.
     """
 
-    def _render_inline(self, flavor: FlavorType) -> str:
-        return self._render_elements(flavor)
+    def _render_inline(self, context: RenderContext) -> str:
+        return self._render_elements(context)
 
 
 class BaseBlockContainer(BaseBlockElement):
@@ -83,9 +82,9 @@ class BaseBlockContainer(BaseBlockElement):
         self._add_elements(self._norm_elements(elements))
         return self
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield "\n\n".join(
-            ["\n".join(element._render_block(flavor)) for element in self.__elements]
+            ["\n".join(element._render_block(context)) for element in self.__elements]
         )
 
     def _get_pandoc_extensions(self) -> set[str]:

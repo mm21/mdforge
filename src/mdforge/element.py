@@ -23,6 +23,18 @@ __all__ = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class RenderContext:
+    """
+    Context passed to elements upon rendering.
+    """
+
+    flavor: FlavorType
+    """
+    Markdown flavor to render.
+    """
+
+
 class BaseElement(ABC):
     """
     Base renderable markdown element, which may be a container of other elements.
@@ -40,7 +52,8 @@ class BaseElement(ABC):
         """
         Return element as a string using the provided flavor.
         """
-        return "\n".join(self._render_element(flavor))
+        context = RenderContext(flavor=flavor)
+        return "\n".join(self._render_element(context))
 
     def render_file(self, path: Path | str, *, flavor: FlavorType):
         """
@@ -58,7 +71,7 @@ class BaseElement(ABC):
         return sorted(self._get_pandoc_extensions())
 
     @abstractmethod
-    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_element(self, context: RenderContext) -> Generator[str, None, None]:
         """
         Render this element, agnostic of concrete class.
         """
@@ -70,12 +83,14 @@ class BaseElement(ABC):
         """
         return set()
 
-    def _render_element_norm(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_element_norm(
+        self, context: RenderContext
+    ) -> Generator[str, None, None]:
         """
         Render this element, splitting any newlines embedded in content and stripping
         whitespace.
         """
-        yield from "\n".join(self._render_element(flavor)).strip().split("\n")
+        yield from "\n".join(self._render_element(context)).strip().split("\n")
 
     @property
     def _container(self) -> BaseLevelBlockContainer:
@@ -94,14 +109,14 @@ class BaseInlineElement(BaseElement):
     """
 
     @abstractmethod
-    def _render_inline(self, flavor: FlavorType) -> str:
+    def _render_inline(self, context: RenderContext) -> str:
         """
         Render by returning a single string.
         """
         ...
 
-    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield self._render_inline(flavor)
+    def _render_element(self, context: RenderContext) -> Generator[str, None, None]:
+        yield self._render_inline(context)
 
 
 class BaseBlockElement(BaseElement):
@@ -110,14 +125,14 @@ class BaseBlockElement(BaseElement):
     """
 
     @abstractmethod
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         """
         Render by yielding each line.
         """
         ...
 
-    def _render_element(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield from self._render_block(flavor)
+    def _render_element(self, context: RenderContext) -> Generator[str, None, None]:
+        yield from self._render_block(context)
 
 
 @dataclass(kw_only=True)
@@ -212,7 +227,7 @@ class AttributesMixin:
 
     def _get_attrs_str(
         self,
-        flavor: FlavorType,
+        context: RenderContext,
         space_prefix: bool = False,
         space_suffix: bool = False,
     ) -> str:
@@ -225,7 +240,7 @@ class AttributesMixin:
         attributes = self.__attributes
 
         # return if not applicable or no attributes set
-        if flavor != "pandoc" or not attributes:
+        if context.flavor != "pandoc" or not attributes:
             return ""
 
         parts: list[str] = []

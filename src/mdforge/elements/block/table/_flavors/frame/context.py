@@ -521,7 +521,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         """
 
         # get raw width of original cell
-        cell_width = cell._get_raw_width(self.flavor, self.params.loose)
+        cell_width = cell._get_raw_width(self.context, self.params.loose)
 
         # if no spanned columns, just return raw cell width
         if cell._cspan == 1:
@@ -591,7 +591,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
                     # no spanned cells, just set content
                     vcell.set_lines(
                         vcell.cell._get_content(
-                            self.flavor,
+                            self.context,
                             self.params.loose,
                             width=vcell.effective_width,
                         )
@@ -649,7 +649,9 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
             width = self.__get_spanned_width(vrow, vcell)
             heights.append(
                 len(
-                    vcell.cell._get_content(self.flavor, self.params.loose, width=width)
+                    vcell.cell._get_content(
+                        self.context, self.params.loose, width=width
+                    )
                 )
             )
 
@@ -670,7 +672,7 @@ class FrameRenderContext(BaseRenderContext[FrameTableVariant]):
         # get content, possibly wrapping at width of all spanned cells
         # - content is cached, so need to make copy
         content = vcell.cell._get_content(
-            self.flavor, self.params.loose, width=width
+            self.context, self.params.loose, width=width
         ).copy()
 
         # traverse each virtual row

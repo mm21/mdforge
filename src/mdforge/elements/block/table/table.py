@@ -8,9 +8,9 @@ from typing import Any, Generator, Iterable, cast
 
 from mdforge._norm import CoerceSpec, norm_obj
 
-from ....element import BaseBlockElement, BaseElement
+from ....element import BaseBlockElement, BaseElement, RenderContext
 from ....exceptions import ValidationError
-from ....types import AlignType, FlavorType
+from ....types import AlignType
 from ._flavors.flavors import create_render_context
 from ._params import TableParams
 from .cell import Cell, RowType
@@ -122,10 +122,10 @@ class Table(BaseBlockElement):
                         f"Inline-only table contains a block element: {cell._element}"
                     )
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
 
-        # create render context
-        context = create_render_context(flavor, self._params, self._params.block)
+        # create table render context
+        table_context = create_render_context(context, self._params, self._params.block)
 
         # start comment, required to disambiguate table caption in case of
         # back-to-back tables (caption can be before or after table)
@@ -151,7 +151,7 @@ class Table(BaseBlockElement):
             yield f": {caption}\n"
 
         # render based on variant
-        yield from context.render()
+        yield from table_context.render()
 
         yield "\n<!-- table end -->"
 

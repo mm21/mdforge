@@ -135,12 +135,12 @@ def test_tables():
             [[very_long_word]],
             widths=[10],  # too small for the long word
         )
-        list(table._render_block("pandoc"))
+        table.render(flavor="pandoc")
 
     # multiline table with footer
     with raises(RenderError):
         table = Table([["Cell 1", "Cell 2"]], footer=["Footer 1", "Footer 2"])
-        list(table._render_block("pandoc"))
+        table.render(flavor="pandoc")
 
 
 def test_containers():

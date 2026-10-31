@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .....element import RenderContext
 from .....types import FlavorType
 from .._context import BaseRenderContext
 from .._params import TableParams
@@ -37,12 +38,13 @@ Mapping of markdown flavor to table config.
 
 
 def create_render_context(
-    flavor: FlavorType, params: TableParams, block: bool
+    context: RenderContext, params: TableParams, block: bool
 ) -> BaseRenderContext:
     """
-    Create a render context for the given markdown flavor and capabilities.
+    Create a table render context for the given markdown flavor and capabilities.
     """
 
+    flavor = context.flavor
     err = f"Tables for flavor {flavor} with block={block} not currently supported"
 
     flavor_spec = FLAVOR_MAP.get(flavor)
@@ -55,5 +57,5 @@ def create_render_context(
 
     variant.validate_params(params)
 
-    render_context = flavor_spec.render_context_cls(flavor, params, variant)
+    render_context = flavor_spec.render_context_cls(context, params, variant)
     return render_context

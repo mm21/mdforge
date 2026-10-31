@@ -10,8 +10,7 @@ from typing import Generator, Sequence
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
-from ....element import BaseBlockElement, BaseElement
-from ....types import FlavorType
+from ....element import BaseBlockElement, BaseElement, RenderContext
 
 __all__ = [
     "ListItemType",
@@ -42,35 +41,35 @@ class ListItem:
             else _norm_items(sub_items)
         )
 
-    def _is_block(self, flavor: FlavorType) -> bool:
+    def _is_block(self, context: RenderContext) -> bool:
         """
         Check whether this list item is a block element.
 
         Also consider raw text which has a blank line separating multiple paragraphs.
         """
         return isinstance(self.__element, BaseBlockElement) or any(
-            line.strip() == "" for line in self._render_text(flavor)
+            line.strip() == "" for line in self._render_text(context)
         )
 
     @cache
-    def _render_text(self, flavor: FlavorType) -> list[str]:
+    def _render_text(self, context: RenderContext) -> list[str]:
         """
         Get text, rendering element.
         """
-        return list(self.__element._render_element_norm(flavor))
+        return list(self.__element._render_element_norm(context))
 
     def _render_sub_items(
-        self, flavor: FlavorType, indent_spaces: int, parent_list: BaseItemList
+        self, context: RenderContext, indent_spaces: int, parent_list: BaseItemList
     ) -> Generator[str, None, None]:
         """
         Render sub-items, if any. If given as a plain list, they're rendered in the same
         style as the parent list.
         """
         if isinstance(self.__sub_items, BaseItemList):
-            yield from self.__sub_items._render_list(flavor, indent_spaces)
+            yield from self.__sub_items._render_list(context, indent_spaces)
         elif self.__sub_items:
             yield from parent_list._render_items(
-                flavor, indent_spaces, self.__sub_items, loose=False
+                context, indent_spaces, self.__sub_items, loose=False
             )
 
 
@@ -99,28 +98,28 @@ class BaseItemList(BaseBlockElement, ABC):
         self.__loose = loose
 
     @abstractmethod
-    def _get_marker(self, flavor: FlavorType) -> str:
+    def _get_marker(self, context: RenderContext) -> str:
         """
         Get character to indicate an item.
         """
         ...
 
-    def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield from self._render_list(flavor, 0)
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
+        yield from self._render_list(context, 0)
 
     def _render_list(
-        self, flavor: FlavorType, indent_spaces: int
+        self, context: RenderContext, indent_spaces: int
     ) -> Generator[str, None, None]:
         """
         Render this list's items at the given indentation.
         """
         yield from self._render_items(
-            flavor, indent_spaces, self.__items, loose=self.__loose
+            context, indent_spaces, self.__items, loose=self.__loose
         )
 
     def _render_items(
         self,
-        flavor: FlavorType,
+        context: RenderContext,
         indent_spaces: int,
         items: list[ListItem],
         *,
@@ -130,10 +129,10 @@ class BaseItemList(BaseBlockElement, ABC):
         Render the given items at the given indentation in the style of this list.
         """
 
-        marker = self._get_marker(flavor)
+        marker = self._get_marker(context)
         indent_str = " " * indent_spaces
         next_indent_spaces = indent_spaces + len(marker) + 1
-        is_loose = loose or any(item._is_block(flavor) for item in items)
+        is_loose = loose or any(item._is_block(context) for item in items)
 
         # if there is a single item without multiple paragraphs in a list
         # specified to be loose, there would be no way for parsers to
@@ -145,7 +144,7 @@ class BaseItemList(BaseBlockElement, ABC):
         for item in items:
 
             # get item text
-            text: list[str] = item._render_text(flavor)
+            text: list[str] = item._render_text(context)
             assert len(text)
 
             # wrap in paragraph if needed
@@ -161,7 +160,7 @@ class BaseItemList(BaseBlockElement, ABC):
                 yield f"{indent_str}{marker_} {line}"
 
             # render sub-items
-            yield from item._render_sub_items(flavor, next_indent_spaces, self)
+            yield from item._render_sub_items(context, next_indent_spaces, self)
 
             if is_loose:
                 # insert additional space between this item and next
@@ -179,7 +178,7 @@ class BulletList(BaseItemList):
     Bullet point list.
     """
 
-    def _get_marker(self, flavor: FlavorType) -> str:
+    def _get_marker(self, context: RenderContext) -> str:
         return "-"
 
 
@@ -188,7 +187,7 @@ class NumberedList(BaseItemList):
     Numbered list.
     """
 
-    def _get_marker(self, flavor: FlavorType) -> str:
+    def _get_marker(self, context: RenderContext) -> str:
         return "1."
 
 
