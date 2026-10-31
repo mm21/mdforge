@@ -14,16 +14,16 @@ from .conftest import render_doc
 def test_getting_started(
     request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
 ):
-    from mdforge import Document, Heading, Paragraph, Strong
+    from mdforge import Document, Paragraph, Section, Strong
 
     # create a document
     doc = Document()
 
     # add elements
-    doc += [
-        Heading("My first MDForge document"),
-        Paragraph("Hello, ", Strong("world"), "!"),
-    ]
+    doc += Section(
+        "My first MDForge document",
+        elements=Paragraph("Hello, ", Strong("world"), "!"),
+    )
 
     render_doc(doc, request, powerpack_comparison_files)
 
@@ -261,40 +261,40 @@ def test_html_attributes(
     request: FixtureRequest, powerpack_comparison_files: ComparisonFiles
 ):
 
-    from mdforge import Attributes, Document, Heading, Ref, Span
+    from mdforge import Attributes, Document, Ref, Section, Span
 
     doc = Document()
 
-    # heading with ID, classes, and custom attributes
-    my_heading = Heading(
-        "Heading with attributes",
+    # section with heading ID, classes, and custom attributes
+    my_section = Section(
+        "Section with attributes",
         attributes=Attributes(
-            html_id="my-heading",
+            html_id="my-section",
             css_classes=["class1", "class2"],
             attrs={"style": "color: blue;"},
         ),
     )
-    doc += my_heading
+    doc += my_section
 
     # span with attributes
-    doc += Span(
+    my_section += Span(
         "Text with attributes",
         attributes=Attributes(html_id="my-span", css_classes="class1"),
     )
 
-    # reference to heading by id
-    doc += Ref(my_heading, "See previous heading")
+    # reference to section
+    my_section += Ref(my_section, "See this section")
 
     render_doc(doc, request, powerpack_comparison_files)
 
 
 def test_pandoc_extensions():
-    from mdforge import Attributes, Document, Heading, Strikethrough
+    from mdforge import Attributes, Document, Section, Strikethrough
 
     doc = Document()
 
     # requires "header_attributes"
-    doc += Heading("Heading 1", attributes=Attributes(html_id="heading-1"))
+    doc += Section("Section 1", attributes=Attributes(html_id="section-1"))
 
     # requires "strikeout"
     doc += Strikethrough("This text is struck through")

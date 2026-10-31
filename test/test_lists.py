@@ -8,10 +8,10 @@ from mdforge import (
     DefinitionList,
     Document,
     Emph,
-    Heading,
     ListItem,
     NumberedList,
     Paragraph,
+    Section,
     Strong,
 )
 
@@ -29,8 +29,9 @@ def test_flat(doc: Document):
 
     for list_cls, name in zip(LIST_CLASSES, LIST_NAMES):
 
-        doc += Heading(name)
-        doc += list_cls(
+        section = Section(name)
+        doc += section
+        section += list_cls(
             [
                 "a",
                 "b",
@@ -50,8 +51,9 @@ def test_nested(doc: Document):
         other_list_cls = LIST_CLASSES[idx - 1]
         other_list_name = other_list_cls.__name__
 
-        doc += Heading(name)
-        doc += list_cls(
+        section = Section(name)
+        doc += section
+        section += list_cls(
             [
                 "a",
                 ListItem(
@@ -105,14 +107,17 @@ def test_tight(doc: Document):
     """
 
     for list_cls, name in zip(LIST_CLASSES, LIST_NAMES):
-        doc += Heading(f"{name}, 1 element")
-        doc += list_cls(["a"])
+        section = Section(f"{name}, 1 element")
+        doc += section
+        section += list_cls(["a"])
 
-        doc += Heading(f"{name}, 3 elements")
-        doc += list_cls(["a", "b", "c"])
+        section = Section(f"{name}, 3 elements")
+        doc += section
+        section += list_cls(["a", "b", "c"])
 
-        doc += Heading(f"{name}, 3 elements w/nesting")
-        doc += list_cls(
+        section = Section(f"{name}, 3 elements w/nesting")
+        doc += section
+        section += list_cls(
             [
                 ListItem("a", ["a1", "a2", "a3"]),
                 ListItem("b", ["b1", "b2", "b3"]),
@@ -129,14 +134,17 @@ def test_loose(doc: Document):
 
     for list_cls, name in zip(LIST_CLASSES, LIST_NAMES):
 
-        doc += Heading(f"{name}, 1 element")
-        doc += list_cls(["a"], loose=True)
+        section = Section(f"{name}, 1 element")
+        doc += section
+        section += list_cls(["a"], loose=True)
 
-        doc += Heading(f"{name}, 1 element (w/paragraph)")
-        doc += list_cls(["a\n\nb"], loose=True)
+        section = Section(f"{name}, 1 element (w/paragraph)")
+        doc += section
+        section += list_cls(["a\n\nb"], loose=True)
 
-        doc += Heading(f"{name}, implicit loose (paragraphs)")
-        doc += list_cls(
+        section = Section(f"{name}, implicit loose (paragraphs)")
+        doc += section
+        section += list_cls(
             [
                 "a",
                 BlockContainer(
@@ -145,8 +153,9 @@ def test_loose(doc: Document):
             ],
         )
 
-        doc += Heading(f"{name}, implicit loose (paragraph, list)")
-        doc += list_cls(
+        section = Section(f"{name}, implicit loose (paragraph, list)")
+        doc += section
+        section += list_cls(
             [
                 "a",
                 BlockContainer(
@@ -155,16 +164,18 @@ def test_loose(doc: Document):
             ],
         )
 
-        doc += Heading(f"{name}, implicit loose (nested list)")
-        doc += list_cls(
+        section = Section(f"{name}, implicit loose (nested list)")
+        doc += section
+        section += list_cls(
             [
                 "a",
                 list_cls(["b1", "b2", "b3"]),
             ],
         )
 
-        doc += Heading(f"{name}, 4 elements")
-        doc += list_cls(
+        section = Section(f"{name}, 4 elements")
+        doc += section
+        section += list_cls(
             [
                 "a",
                 "b",
@@ -183,8 +194,9 @@ def test_elements(doc: Document):
 
     for list_cls, name in zip(LIST_CLASSES, LIST_NAMES):
 
-        doc += Heading(f"{name}, inline")
-        doc += list_cls(
+        section = Section(f"{name}, inline")
+        doc += section
+        section += list_cls(
             [
                 Strong("a (strong)"),
                 ListItem(
@@ -199,8 +211,9 @@ def test_elements(doc: Document):
             ]
         )
 
-        doc += Heading(f"{name}, block")
-        doc += list_cls(
+        section = Section(f"{name}, block")
+        doc += section
+        section += list_cls(
             [
                 Strong("a (strong)"),
                 ListItem(
@@ -217,8 +230,9 @@ def test_elements(doc: Document):
             ]
         )
 
-        doc += Heading(f"{name}, block (inferred)")
-        doc += list_cls(
+        section = Section(f"{name}, block (inferred)")
+        doc += section
+        section += list_cls(
             [
                 "a",
                 ListItem(
@@ -248,10 +262,10 @@ def test_definition(doc: Document):
 
     # inline items (compact or non-compact)
     for compact in [False, True]:
-        doc += [
-            Heading(f"Definition list w/inline items, compact={compact}"),
-            DefinitionList(inline_items(), compact=compact),
-        ]
+        doc += Section(
+            f"Definition list w/inline items, compact={compact}",
+            elements=DefinitionList(inline_items(), compact=compact),
+        )
 
     block_items = [
         DefinitionItem(
@@ -266,9 +280,8 @@ def test_definition(doc: Document):
     ]
 
     # block items (non-compact only)
-    doc += [
-        Heading("Definition list w/block items"),
-        DefinitionList(block_items),
-    ]
+    doc += Section(
+        "Definition list w/block items", elements=DefinitionList(block_items)
+    )
 
     assert doc.get_pandoc_extensions() == ["definition_lists"]

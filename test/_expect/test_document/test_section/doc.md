@@ -13,4 +13,4 @@ Hello, world!
 
 Hello, world 2!
 
-# Heading 3
+# Section 3

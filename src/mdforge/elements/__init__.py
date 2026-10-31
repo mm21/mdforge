@@ -11,7 +11,6 @@ __submodules__ = [
 # <AUTOGEN_INIT>
 from .block import (
     Section,
-    Heading,
     BlockImage,
     Paragraph,
     BlockText,
@@ -42,7 +41,6 @@ from .inline import (
 
 __all__ = [
     "Section",
-    "Heading",
     "BlockImage",
     "Paragraph",
     "BlockText",

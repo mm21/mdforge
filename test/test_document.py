@@ -8,7 +8,6 @@ from mdforge import (
     BlockImage,
     BulletList,
     Document,
-    Heading,
     InlineContainer,
     InlineImage,
     Paragraph,
@@ -23,16 +22,17 @@ from .conftest import compare_doc, render_doc
 @compare_doc
 def test_basic(doc: Document):
 
-    doc += Heading("Basic test")
-    doc += Paragraph("Hello, world paragraph!")
-    doc += Paragraph("Hello, world\nmultiline paragraph!")
-    doc += Paragraph("Hello, world\nmultiline paragraph  \nwith line break!")
-    doc += "Hello, world text!"
-    doc += [
+    section = Section("Basic test")
+    doc += section
+    section += Paragraph("Hello, world paragraph!")
+    section += Paragraph("Hello, world\nmultiline paragraph!")
+    section += Paragraph("Hello, world\nmultiline paragraph  \nwith line break!")
+    section += "Hello, world text!"
+    section += [
         "Hello, world text 2!",
         "Hello, world\nblock text!",
     ]
-    doc += Strong("Hello, world strong!")
+    section += Strong("Hello, world strong!")
 
 
 @compare_doc
@@ -48,41 +48,45 @@ def test_section(doc: Document):
     sec2 = Section("Section 2")
     sec2 += Paragraph("Hello, world 2!")
 
-    h3 = Heading("Heading 3")
+    sec3 = Section("Section 3")
 
-    doc += [sec1, sec2, h3]
+    doc += [sec1, sec2, sec3]
 
 
 @compare_doc
 def test_ref(doc: Document):
     """
-    Test headings and references to them.
+    Test sections and references to them.
     """
 
-    # heading w/attributes
-    heading_1 = Heading(
-        "Test heading 1",
+    # section w/attributes
+    section_1 = Section(
+        "Test section 1",
         attributes=Attributes(
-            html_id="heading-1",
+            html_id="section-1",
             css_classes=["class1", "class2"],
             attrs={"style": "color: blue;"},
         ),
     )
-    doc += heading_1
-    doc += Ref(heading_1)
-    doc += Ref(heading_1, "Link to heading 1")
-
-    # heading w/implicit id
-    heading_2 = Heading("Test heading 2")
-    doc += heading_2
-    doc += Ref(heading_2)
-    doc += Ref(heading_2, "Link to heading 2")
-
-    # section
-    section_1 = Section(heading="Test section 1")
     doc += section_1
-    doc += Ref(section_1)
-    doc += Ref(section_1, "Link to section 1")
+    section_1 += Ref(section_1)
+    section_1 += Ref(section_1, "Link to section 1")
+
+    # section w/implicit id
+    section_2 = Section("Test section 2")
+    doc += section_2
+    section_2 += Ref(section_2)
+    section_2 += Ref(section_2, "Link to section 2")
+
+    # section w/formatted title and implicit id
+    section_3 = Section(InlineContainer(Strong("Test"), " section 3"))
+    doc += section_3
+    section_3 += Ref(section_3)
+
+    # section w/id
+    section_4 = Section("Test section 4", html_id="section-4")
+    doc += section_4
+    section_4 += Ref(section_4)
 
     assert doc.get_pandoc_extensions() == [
         "header_attributes",

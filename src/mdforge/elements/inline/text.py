@@ -8,7 +8,6 @@ from ..._norm import CoerceSpec, norm_obj
 from ...container import InlineContainerMixin
 from ...element import Attributes, AttributesMixin, BaseInlineElement, RenderContext
 from ...exceptions import ValidationError
-from ..block.basic import Heading
 from ..block.section import Section
 
 __all__ = [
@@ -103,34 +102,38 @@ class Link(BaseInlineElement):
 
 class Ref(BaseInlineElement):
     """
-    Reference to a heading within the same document.
+    Reference to a section's heading, given as a section with a title.
 
     TODO: support ref to arbitrary element w/id, e.g. paragraph
     """
 
-    __target: Heading
+    __target: Section
     __text: str | None
 
-    def __init__(self, target: Heading | Section, text: str | None = None):
-        assert isinstance(target, (Heading, Section))
+    def __init__(self, target: Section, text: str | None = None):
+        """
+        :param target: Section with a title
+        :param text: Link text, defaults to section title
+        """
+        assert isinstance(target, Section)
 
-        heading = target if isinstance(target, Heading) else target._heading
-        if heading is None:
-            raise ValidationError(f"Cannot reference section without heading: {target}")
+        if not target._has_title:
+            raise ValidationError(f"Cannot reference section without title: {target}")
 
-        self.__target = heading
+        self.__target = target
         self.__text = text
 
     def _render_inline(self, context: RenderContext) -> str:
 
-        text = self.__text or self.__target._text
+        title = self.__target._render_title(context)
+        text = self.__text or title
 
         if self.__target._html_id:
             # explicit heading id
             return f"[{text}](#{self.__target._html_id})"
         else:
             # implicit heading id with implicit_header_references
-            return f"[{text}][{self.__target._text}]"
+            return f"[{text}][{title}]"
 
     def _get_pandoc_extensions(self) -> set[str]:
         return (

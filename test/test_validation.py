@@ -9,6 +9,7 @@ from typing import Any
 from pytest import raises
 
 from mdforge import (
+    Attributes,
     BlockContainer,
     BlockImage,
     BulletList,
@@ -37,7 +38,7 @@ def test_text_elements():
     with raises(ValidationError):
         Paragraph("This paragraph has\n\na blank line")
 
-    # ref to a section without a heading
+    # ref to a section without a title
     with raises(ValidationError):
         Ref(Section())
 
@@ -167,6 +168,19 @@ def test_normalize():
 
     with raises(ValueError):
         norm_obj(123, str, CoerceSpec(bad_coercion, int))
+
+
+def test_ids():
+
+    # conflicting ids
+    with raises(ValidationError):
+        Section("Section", html_id="id-1", attributes=Attributes(html_id="id-2"))
+
+    # id and attributes require title
+    with raises(ValidationError):
+        Section(html_id="id-1")
+    with raises(ValidationError):
+        Section(attributes=Attributes(css_classes="class1"))
 
 
 def test_sections_disallowed():

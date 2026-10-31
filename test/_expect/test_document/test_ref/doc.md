@@ -1,17 +1,19 @@
-# Test heading 1 {#heading-1 .class1 .class2 style="color: blue;"}
+# Test section 1 {#section-1 .class1 .class2 style="color: blue;"}
 
-[Test heading 1](#heading-1)
+[Test section 1](#section-1)
 
-[Link to heading 1](#heading-1)
+[Link to section 1](#section-1)
 
-# Test heading 2
+# Test section 2
 
-[Test heading 2][Test heading 2]
+[Test section 2][Test section 2]
 
-[Link to heading 2][Test heading 2]
+[Link to section 2][Test section 2]
 
-# Test section 1
+# **Test** section 3
 
-[Test section 1][Test section 1]
+[**Test** section 3][**Test** section 3]
 
-[Link to section 1][Test section 1]
+# Test section 4 {#section-4}
+
+[Test section 4](#section-4)

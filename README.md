@@ -41,17 +41,17 @@ pip install mdforge
 Create your first Markdown document:
 
 ```python
-from mdforge import Document, Heading, Paragraph, Strong
+from mdforge import Document, Paragraph, Section, Strong
 from pathlib import Path
 
 # create a document
 doc = Document()
 
 # add elements
-doc += [
-    Heading("My first MDForge document"),
-    Paragraph("Hello, ", Strong("world"), "!"),
-]
+doc += Section(
+    "My first MDForge document",
+    elements=Paragraph("Hello, ", Strong("world"), "!"),
+)
 
 # render pandoc-flavored Markdown document to a file
 doc.render_file("doc.md", flavor="pandoc")
@@ -141,7 +141,8 @@ Elaboration on point 3.
 
 Note the following observations:
 
-- Sections can be nested in other sections, with optional headings
+- Headings are created from section titles; content belonging to a heading is placed in its section
+- Sections can be nested in other sections, with optional titles
 - Heading levels for sections are automatically set by their placement in the hierarchy
 - Strings added to a document or section via `+=` are treated as raw text
 - A comment is placed at the end of each list; this disambiguates the end of one list and the start of the next, in case there are no other elements in between
@@ -534,32 +535,32 @@ assert element.render(flavor="pandoc") == "This is a **test element**"
 
 ### HTML attributes
 
-For pandoc flavor, HTML attributes can be added to various elements:
+For pandoc flavor, HTML attributes can be added to various elements, including section headings:
 
 ```python
-from mdforge import Attributes, Document, Heading, Ref, Span
+from mdforge import Attributes, Document, Ref, Section, Span
 
 doc = Document()
 
-# heading with ID, classes, and custom attributes
-my_heading = Heading(
-    "Heading with attributes",
+# section with heading ID, classes, and custom attributes
+my_section = Section(
+    "Section with attributes",
     attributes=Attributes(
-        html_id="my-heading",
+        html_id="my-section",
         css_classes=["class1", "class2"],
         attrs={"style": "color: blue;"},
     ),
 )
-doc += my_heading
+doc += my_section
 
 # span with attributes
-doc += Span(
+my_section += Span(
     "Text with attributes",
     attributes=Attributes(html_id="my-span", css_classes="class1"),
 )
 
-# reference to heading by id
-doc += Ref(my_heading, "See previous heading")
+# reference to section
+my_section += Ref(my_section, "See this section")
 
 doc.render_file("doc.md", flavor="pandoc")
 ```
@@ -567,11 +568,11 @@ doc.render_file("doc.md", flavor="pandoc")
 This is rendered as:
 
 ```markdown
-# Heading with attributes {#my-heading .class1 .class2 style="color: blue;"}
+# Section with attributes {#my-section .class1 .class2 style="color: blue;"}
 
 [Text with attributes]{#my-span .class1}
 
-[See previous heading](#my-heading)
+[See this section](#my-section)
 
 ```
 
@@ -580,12 +581,12 @@ This is rendered as:
 As MDForge is designed with pandoc compatibility in mind, it automatically tracks required pandoc extensions:
 
 ```python
-from mdforge import Attributes, Document, Heading, Strikethrough
+from mdforge import Attributes, Document, Section, Strikethrough
 
 doc = Document()
 
 # requires "header_attributes"
-doc += Heading("Heading 1", attributes=Attributes(html_id="heading-1"))
+doc += Section("Section 1", attributes=Attributes(html_id="section-1"))
 
 # requires "strikeout"
 doc += Strikethrough("This text is struck through")

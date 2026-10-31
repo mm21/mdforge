@@ -4,7 +4,6 @@ from mdforge import (
     BulletList,
     Cell,
     Document,
-    Heading,
     Paragraph,
     RowType,
     Section,
@@ -31,9 +30,7 @@ def test_variants(doc: Document):
     Test inline and block variants.
     """
 
-    inline_section, block_section = Section(heading="Inline tables"), Section(
-        heading="Block tables"
-    )
+    inline_section, block_section = Section("Inline tables"), Section("Block tables")
 
     doc += [inline_section, block_section]
 
@@ -110,10 +107,12 @@ def test_widths(doc: Document):
     ]
 
     for block in [False, True]:
-        doc += [
-            Section(heading=f"Block: {block}"),
-            Table(rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block),
-        ]
+        doc += Section(
+            f"Block: {block}",
+            elements=Table(
+                rows, header=HEADER, align=ALIGN, widths=WIDTHS, block=block
+            ),
+        )
 
 
 @compare_doc
@@ -124,10 +123,12 @@ def test_widths_pct(doc: Document):
 
     # simple case: first cell width is exactly half of second cell width,
     # target 50/50 widths
-    doc += [
-        Heading("Simple case"),
-        Table([["Cell 0-0", "Cell 0-1 aaaaaaa"]], widths_pct=[50, 50], block=True),
-    ]
+    doc += Section(
+        "Simple case",
+        elements=Table(
+            [["Cell 0-0", "Cell 0-1 aaaaaaa"]], widths_pct=[50, 50], block=True
+        ),
+    )
 
     widths_pct = [10 * (i + 1) for i in range(len(WIDTHS) - 1)]
     widths_pct.append(100 - sum(widths_pct))
@@ -141,10 +142,9 @@ def test_widths_pct(doc: Document):
         for row in ROWS
     ]
 
-    doc += [
-        Heading("Complex case"),
-        Table(rows, widths_pct=widths_pct, block=True),
-    ]
+    doc += Section(
+        "Complex case", elements=Table(rows, widths_pct=widths_pct, block=True)
+    )
 
     assert doc.get_pandoc_extensions() == ["grid_tables"]
 

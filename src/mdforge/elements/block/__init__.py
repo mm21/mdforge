@@ -16,7 +16,6 @@ from .section import (
     Section,
 )
 from .basic import (
-    Heading,
     BlockImage,
 )
 from .text import (
@@ -41,7 +40,6 @@ from .table import (
 
 __all__ = [
     "Section",
-    "Heading",
     "BlockImage",
     "Paragraph",
     "BlockText",

@@ -32,7 +32,6 @@ from .container import (
 )
 from .elements import (
     Section,
-    Heading,
     BlockImage,
     Paragraph,
     BlockText,
@@ -74,7 +73,6 @@ __all__ = [
     "InlineContainer",
     "BlockContainer",
     "Section",
-    "Heading",
     "BlockImage",
     "Paragraph",
     "BlockText",

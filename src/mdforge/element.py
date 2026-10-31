@@ -228,11 +228,13 @@ class Attributes:
     def _copy(
         self,
         *,
+        html_id: str | None = None,
         css_classes: str | Sequence[str] | None = None,
         attrs: Mapping[str, str] | None = None,
     ) -> Attributes:
         """
-        Copy attributes object, updating CSS attributes.
+        Copy attributes object, updating id if given and merging CSS classes and other
+        attributes.
         """
 
         css_classes_norm = self._css_classes_norm
@@ -247,7 +249,7 @@ class Attributes:
             merged_attrs.update(**attrs)
 
         return Attributes(
-            html_id=self.html_id,
+            html_id=html_id or self.html_id,
             css_classes=merged_css_classes,
             attrs=merged_attrs,
         )
