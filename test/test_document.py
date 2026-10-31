@@ -303,6 +303,11 @@ def test_levels():
     with raises(RenderError):
         doc.render(flavor="pandoc")
 
+    # untitled section with explicit level not nested in containing level
+    doc = Document(elements=Section("Section 1", elements=Section(level=1)))
+    with raises(RenderError, match="must be at least 2"):
+        doc.render(flavor="pandoc")
+
     # explicit level skipping a level
     doc = Document(elements=Section("Section 1", elements=Section("1-1", level=3)))
     with warns(RenderWarning):

@@ -107,16 +107,6 @@ class BaseBlockContainer(BaseBlockElement):
             if isinstance(element, BaseBlockContainer):
                 yield from element._get_descendants()
 
-    def _get_level(self, context: RenderContext) -> int:
-        """
-        Get nesting level of this container by traversing its ancestors up to the
-        element being rendered; passed through from the parent container since a plain
-        block container doesn't affect nesting.
-        """
-        if self is context.root:
-            return ROOT_LEVEL
-        return self._container._get_level(context)
-
     def _get_child_level(self, context: RenderContext) -> int:
         """
         Get nesting level of level containers nested in this one.
