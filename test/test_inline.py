@@ -52,3 +52,12 @@ def test_span(doc: Document):
     doc += Span("Test span without attributes")
 
     assert doc.get_pandoc_extensions() == ["bracketed_spans"]
+
+
+def test_whitespace():
+    """
+    Test text which is only whitespace.
+    """
+
+    para = Paragraph(Strong("strong"), " ", Emph("emph"))
+    assert para.render(flavor="pandoc") == "**strong** _emph_"

@@ -38,8 +38,8 @@ def coerce_inline_text(obj: str, allow_multiline: bool = False) -> BaseInlineEle
     # get lines
     lines = obj.split("\n")
 
-    # check for blank lines
-    if any(line.strip() == "" for line in lines):
+    # check for blank lines, allowing single-line text to be only whitespace
+    if len(lines) > 1 and any(line.strip() == "" for line in lines):
         raise ValidationError(f"Input text cannot contain blank lines: {obj}")
 
     if len(lines) > 1 and allow_multiline:
