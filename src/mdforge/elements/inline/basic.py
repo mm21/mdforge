@@ -32,7 +32,7 @@ class Span(AttributesMixin, BaseTextContainer):
     def _render_inline(self, flavor: FlavorType) -> str:
         text = super()._render_inline(flavor)
         attrs = self._get_attrs_str(flavor)
-        return f"[{text}]{attrs}"
+        return f"[{text}]{attrs}" if attrs else text
 
     def _get_pandoc_extensions(self) -> set[str]:
         return (

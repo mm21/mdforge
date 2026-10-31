@@ -48,4 +48,7 @@ def test_span(doc: Document):
         attributes=Attributes(html_id="span1", css_classes="class1"),
     )
 
+    # span without attributes renders without brackets
+    doc += Span("Test span without attributes")
+
     assert doc.get_pandoc_extensions() == ["bracketed_spans"]
