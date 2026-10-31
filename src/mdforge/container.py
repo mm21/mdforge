@@ -8,7 +8,14 @@ from typing import Generator, Iterable, Self
 
 from ._norm import CoerceSpec, norm_list
 from ._utils import coerce_inline_text
-from .element import BaseBlockElement, BaseElement, BaseInlineElement, RenderContext
+from .element import (
+    BaseBlockElement,
+    BaseElement,
+    BaseInlineElement,
+    BaseNode,
+    RenderContext,
+)
+from .exceptions import ValidationError
 
 __all__ = [
     "InlineContainer",
@@ -37,6 +44,9 @@ class InlineContainerMixin(BaseElement):
             elements, BaseInlineElement, CoerceSpec(coerce, str)
         )
         self.__auto_space = auto_space
+
+        for element in self.__elements:
+            element._parent = self
 
         self._inline_post_init()
 
@@ -82,6 +92,15 @@ class BaseBlockContainer(BaseBlockElement):
         self._add_elements(self._norm_elements(elements))
         return self
 
+    def _get_descendants(self) -> Generator[BaseBlockElement, None, None]:
+        """
+        Get all nested block elements, recursing into nested block containers.
+        """
+        for element in self.__elements:
+            yield element
+            if isinstance(element, BaseBlockContainer):
+                yield from element._get_descendants()
+
     def _get_level(self) -> int:
         """
         Get nesting level of this container by traversing its ancestors; passed through
@@ -95,6 +114,19 @@ class BaseBlockContainer(BaseBlockElement):
         """
         return self._container._get_child_level()
 
+    def _validate_parent(self, parent: BaseNode):
+        """
+        Ensure this container neither is nor contains a section if placed in content
+        which can't contain sections.
+        """
+        location = parent._get_content_location()
+        if location is None:
+            return
+
+        elements = [self, *self._get_descendants()]
+        if any(isinstance(elem, BaseLevelBlockContainer) for elem in elements):
+            raise ValidationError(f"Sections cannot be placed in {location}: {self}")
+
     def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield "\n\n".join(
             ["\n".join(element._render_block(context)) for element in self.__elements]
@@ -105,11 +137,11 @@ class BaseBlockContainer(BaseBlockElement):
 
     def _add_elements(self, elements: list[BaseBlockElement]):
         """
-        Add elements to container and set this as their container.
+        Add elements to container and set this as their parent.
         """
         for element in elements:
             assert isinstance(element, BaseBlockElement)
-            element._container = self
+            element._parent = self
             self.__elements.append(element)
 
     def _norm_elements(

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Iterable
 
 from ...._norm import CoerceSpec, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
-from ....element import BaseElement, BaseInlineElement, RenderContext
+from ....element import BaseElement, BaseInlineElement, BaseNode, RenderContext
 from ....exceptions import RenderError
 from ..text import BlockText
 
@@ -22,11 +22,13 @@ type CellType = BaseElement | Cell | str
 type RowType = Iterable[CellType]
 
 
-class Cell:
+class Cell(BaseNode):
     """
     Represents a table cell which can span multiple rows/columns, if the flavor supports
     it upon render.
     """
+
+    _content_location = "table cells"
 
     __content: BaseElement
     """
@@ -45,6 +47,7 @@ class Cell:
 
     def __init__(self, content: BaseElement | str, rspan: int = 1, cspan: int = 1):
         self.__content = norm_obj(content, BaseElement, CoerceSpec(coerce_text, str))
+        self.__content._parent = self
         self.__rspan = rspan
         self.__cspan = cspan
 

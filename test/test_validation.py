@@ -9,12 +9,15 @@ from typing import Any
 from pytest import raises
 
 from mdforge import (
+    BlockContainer,
     BlockImage,
     BulletList,
     Cell,
     DefinitionItem,
     DefinitionList,
+    Document,
     InlineContainer,
+    ListItem,
     Paragraph,
     Ref,
     RenderError,
@@ -164,3 +167,49 @@ def test_normalize():
 
     with raises(ValueError):
         norm_obj(123, str, CoerceSpec(bad_coercion, int))
+
+
+def test_sections_disallowed():
+
+    section = Section("Section")
+    nested_section = BlockContainer(Paragraph("Text"), Section("Section"))
+
+    for element in [section, nested_section]:
+        with raises(ValidationError):
+            ListItem(element)
+        with raises(ValidationError):
+            BulletList([element])
+        with raises(ValidationError):
+            BulletList([ListItem("Item", [element])])
+        with raises(ValidationError):
+            DefinitionItem("Term", element)
+        with raises(ValidationError):
+            Cell(element)
+        with raises(ValidationError):
+            Table([[element]], block=True)
+
+    # section added to container after container is placed in a cell
+    container = BlockContainer(Paragraph("Text"))
+    Table([[container]], block=True)
+    with raises(ValidationError):
+        container += Section("Section")
+
+    # section added to container nested in a list item
+    container = BlockContainer(Paragraph("Text"))
+    BulletList([ListItem("Item", [BlockContainer(container)])])
+    with raises(ValidationError):
+        container += Section("Section")
+
+
+def test_placement():
+
+    # element can only be placed once
+    paragraph = Paragraph("Text")
+    Document(elements=paragraph)
+    with raises(ValidationError):
+        Document(elements=paragraph)
+
+    text = Text("Text")
+    Paragraph(text)
+    with raises(ValidationError):
+        Cell(text)

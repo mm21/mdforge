@@ -114,6 +114,11 @@ class Table(BaseBlockElement):
             col_count=col_count,
         )
 
+        # place cells in this table
+        for row in content_rows + (header_rows or []) + (footer_rows or []):
+            for cell in row:
+                cell._parent = self
+
         # ensure content is valid given params
         for row in self._params.effective_rows:
             for cell in row:

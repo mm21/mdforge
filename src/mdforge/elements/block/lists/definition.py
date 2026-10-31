@@ -7,7 +7,13 @@ from __future__ import annotations
 from typing import Generator, Iterable, Sequence
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
-from ....element import BaseBlockElement, BaseElement, BaseInlineElement, RenderContext
+from ....element import (
+    BaseBlockElement,
+    BaseElement,
+    BaseInlineElement,
+    BaseNode,
+    RenderContext,
+)
 from ....exceptions import ValidationError
 from ...inline.text import Text
 
@@ -19,11 +25,13 @@ __all__ = [
 INDENT = 4
 
 
-class DefinitionItem:
+class DefinitionItem(BaseNode):
     """
     A definition entry in a definition list, consisting of a term and one or more
     definitions.
     """
+
+    _content_location = "definition lists"
 
     __term: BaseInlineElement
     __definitions: list[BaseElement]
@@ -39,6 +47,9 @@ class DefinitionItem:
         """
         self.__term = norm_obj(term, BaseInlineElement, CoerceSpec(Text, str))
         self.__definitions = norm_list(definitions, BaseElement, CoerceSpec(Text, str))
+
+        for element in [self.__term, *self.__definitions]:
+            element._parent = self
 
     def _validate(self, compact: bool):
         if compact:
@@ -101,6 +112,7 @@ class DefinitionList(BaseBlockElement):
 
         for item in items_norm:
             item._validate(compact)
+            item._parent = self
 
         self.__items = items_norm
         self.__compact = compact

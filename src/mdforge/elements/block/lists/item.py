@@ -10,7 +10,7 @@ from typing import Generator, Sequence
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
-from ....element import BaseBlockElement, BaseElement, RenderContext
+from ....element import BaseBlockElement, BaseElement, BaseNode, RenderContext
 
 __all__ = [
     "ListItemType",
@@ -24,7 +24,9 @@ __all__ = [
 type ListItemType = BaseElement | ListItem | str
 
 
-class ListItem:
+class ListItem(BaseNode):
+
+    _content_location = "list items"
 
     __element: BaseElement
     __sub_items: list[ListItem] | BaseItemList | None
@@ -35,11 +37,19 @@ class ListItem:
         sub_items: Sequence[ListItemType] | BaseItemList | None = None,
     ):
         self.__element = norm_obj(content, BaseElement, CoerceSpec(coerce_text, str))
+        self.__element._parent = self
         self.__sub_items = (
             sub_items
             if sub_items is None or isinstance(sub_items, BaseItemList)
             else _norm_items(sub_items)
         )
+
+        # sub-items are placed in this item
+        if isinstance(self.__sub_items, BaseItemList):
+            self.__sub_items._parent = self
+        else:
+            for sub_item in self.__sub_items or []:
+                sub_item._parent = self
 
     def _is_block(self, context: RenderContext) -> bool:
         """
@@ -96,6 +106,9 @@ class BaseItemList(BaseBlockElement, ABC):
         """
         self.__items = _norm_items(items)
         self.__loose = loose
+
+        for item in self.__items:
+            item._parent = self
 
     @abstractmethod
     def _get_marker(self, context: RenderContext) -> str:

@@ -101,6 +101,7 @@ class BlockImage(BaseBlockElement, ImageMixin):
         self.__caption = norm_obj(
             caption or "", BaseInlineElement, CoerceSpec(Text, str)
         )
+        self.__caption._parent = self
 
     def _render_alt_text(self, context: RenderContext) -> str:
         # note: only pandoc supports inline elements as alt text, which becomes

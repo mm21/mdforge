@@ -94,6 +94,7 @@ class Link(BaseInlineElement):
 
     def __init__(self, text: BaseInlineElement | str, url: str):
         self.__text = norm_obj(text, BaseInlineElement, CoerceSpec(Text, str))
+        self.__text._parent = self
         self.__url = url
 
     def _render_inline(self, context: RenderContext) -> str:

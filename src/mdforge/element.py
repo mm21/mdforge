@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Generator, Mapping, Sequence
 
 from ._norm import norm_list
+from .exceptions import ValidationError
 from .types import FlavorType
 
 if TYPE_CHECKING:
@@ -21,6 +22,64 @@ __all__ = [
     "BaseBlockElement",
     "Attributes",
 ]
+
+
+class BaseNode:
+    """
+    Node in a document tree, either an element or an object which holds elements like a
+    list item or table cell.
+
+    Each node references its parent once placed, which happens when the parent is
+    constructed or when the node is added to a container.
+    """
+
+    _content_location: str | None = None
+    """
+    Description of the location of content held by this node if it can't contain
+    sections, e.g. "table cells".
+    """
+
+    __parent: BaseNode | None = None
+
+    @property
+    def _parent(self) -> BaseNode | None:
+        return self.__parent
+
+    @_parent.setter
+    def _parent(self, parent: BaseNode):
+        """
+        Place this node in the given parent, validating the placement.
+        """
+        if self.__parent is not None:
+            raise ValidationError(
+                f"Element has already been placed in {self.__parent}: {self}"
+            )
+        self._validate_parent(parent)
+        self.__parent = parent
+
+    def _validate_parent(self, parent: BaseNode):
+        """
+        Optionally overridden by subclass to validate placement in the given parent.
+        """
+
+    def _get_ancestors(self) -> Generator[BaseNode, None, None]:
+        """
+        Get this node's ancestors, starting with its parent.
+        """
+        node = self.__parent
+        while node is not None:
+            yield node
+            node = node._parent
+
+    def _get_content_location(self) -> str | None:
+        """
+        Get the location of this node if it's in content which can't contain sections,
+        e.g. "table cells".
+        """
+        for node in [self, *self._get_ancestors()]:
+            if node._content_location:
+                return node._content_location
+        return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,14 +94,9 @@ class RenderContext:
     """
 
 
-class BaseElement(ABC):
+class BaseElement(BaseNode, ABC):
     """
     Base renderable markdown element, which may be a container of other elements.
-    """
-
-    __container: BaseBlockContainer | None = None
-    """
-    Container to which this element belongs.
 
     Must be added to a container in order to be rendered in a document, but otherwise
     can still be rendered standalone.
@@ -94,13 +148,16 @@ class BaseElement(ABC):
 
     @property
     def _container(self) -> BaseBlockContainer:
-        assert self.__container, f"Element has not been placed in a container: {self}"
-        return self.__container
+        """
+        Get the block container in which this element was placed.
+        """
+        from .container import BaseBlockContainer
 
-    @_container.setter
-    def _container(self, container: BaseBlockContainer):
-        assert self.__container is None
-        self.__container = container
+        parent = self._parent
+        assert isinstance(
+            parent, BaseBlockContainer
+        ), f"Element has not been placed in a container: {self}"
+        return parent
 
 
 class BaseInlineElement(BaseElement):

@@ -237,17 +237,20 @@ def test_elements(doc: Document):
 @compare_doc
 def test_definition(doc: Document):
 
-    inline_items = [
-        DefinitionItem("Term A", "Definition A"),
-        DefinitionItem(Strong("Term B (strong)"), Strong("Definition B (strong)")),
-        DefinitionItem("Term C", ["Definition C1", Strong("Definition C2 (strong)")]),
-    ]
+    def inline_items() -> list[DefinitionItem]:
+        return [
+            DefinitionItem("Term A", "Definition A"),
+            DefinitionItem(Strong("Term B (strong)"), Strong("Definition B (strong)")),
+            DefinitionItem(
+                "Term C", ["Definition C1", Strong("Definition C2 (strong)")]
+            ),
+        ]
 
     # inline items (compact or non-compact)
     for compact in [False, True]:
         doc += [
             Heading(f"Definition list w/inline items, compact={compact}"),
-            DefinitionList(inline_items, compact=compact),
+            DefinitionList(inline_items(), compact=compact),
         ]
 
     block_items = [
