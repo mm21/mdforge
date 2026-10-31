@@ -32,6 +32,7 @@ class Table(BaseBlockElement):
     def __init__(
         self,
         rows: Iterable[RowType],
+        *,
         header: RowType | Iterable[RowType] | None = None,
         footer: RowType | Iterable[RowType] | None = None,
         align: AlignType | Iterable[AlignType] | None = None,
