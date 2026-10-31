@@ -5,6 +5,7 @@ Block elements.
 __submodules__ = [
     "section",
     "basic",
+    "container",
     "text",
     "lists",
     "table",
@@ -17,6 +18,11 @@ from .section import (
 )
 from .basic import (
     BlockImage,
+    HorizontalRule,
+)
+from .container import (
+    Quote,
+    AlignedBlock,
 )
 from .text import (
     Paragraph,
@@ -41,6 +47,9 @@ from .table import (
 __all__ = [
     "Section",
     "BlockImage",
+    "HorizontalRule",
+    "Quote",
+    "AlignedBlock",
     "Paragraph",
     "BlockText",
     "ListItemType",

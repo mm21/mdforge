@@ -4,6 +4,7 @@ from pytest import FixtureRequest, mark, raises, warns
 from pytest_powerpack import ComparisonFiles
 
 from mdforge import (
+    AlignedBlock,
     AlignType,
     Attributes,
     BaseElement,
@@ -11,9 +12,11 @@ from mdforge import (
     BlockImage,
     BulletList,
     Document,
+    HorizontalRule,
     InlineContainer,
     InlineImage,
     Paragraph,
+    Quote,
     Ref,
     RenderError,
     RenderWarning,
@@ -119,6 +122,66 @@ def test_ref(doc: Document):
 
 
 @compare_doc
+def test_section_in_container(doc: Document):
+    """
+    Test sections nested in plain block containers.
+    """
+
+    sec1 = Section("Section 1")
+    sec1 += BlockContainer(
+        Section("Section 1-1", elements="Hello, world!"),
+        Section("Section 1-2"),
+    )
+
+    # container added to section before section is added to document
+    container = BlockContainer(Section("Section 2-1-1"))
+    sec21 = Section("Section 2-1", elements=container)
+    sec2 = Section("Section 2", elements=BlockContainer(sec21))
+
+    doc += [sec1, sec2, BlockContainer(Section("Section 3"))]
+
+
+@compare_doc
+def test_quote(doc: Document):
+    """
+    Test block quotes.
+    """
+
+    doc += Quote("Single line quote")
+    doc += Quote(
+        Paragraph("Multiple", Strong("paragraph"), "quote", auto_space=True),
+        "Second paragraph\nwith multiple lines",
+        BulletList(["a", "b"]),
+        Quote("Nested quote"),
+    )
+
+
+@compare_doc
+def test_aligned_block(doc: Document):
+    """
+    Test aligned blocks.
+    """
+
+    doc += AlignedBlock(
+        Paragraph("Centered paragraph"),
+        Table([["Cell 1", "Cell 2"]], header=["Header 1", "Header 2"]),
+    )
+    doc += AlignedBlock("Left-aligned text", align="left")
+    doc += AlignedBlock("Right-aligned text", align="right")
+
+
+@compare_doc
+def test_horizontal_rule(doc: Document):
+    """
+    Test horizontal rules.
+    """
+
+    doc += HorizontalRule()
+    doc += Paragraph("Between rules")
+    doc += HorizontalRule()
+
+
+@compare_doc
 def test_images(doc: Document):
     """
     Test inline and block images.
@@ -155,26 +218,6 @@ def test_images(doc: Document):
                 ),
             ),
         ]
-
-
-@compare_doc
-def test_section_in_container(doc: Document):
-    """
-    Test sections nested in plain block containers.
-    """
-
-    sec1 = Section("Section 1")
-    sec1 += BlockContainer(
-        Section("Section 1-1", elements="Hello, world!"),
-        Section("Section 1-2"),
-    )
-
-    # container added to section before section is added to document
-    container = BlockContainer(Section("Section 2-1-1"))
-    sec21 = Section("Section 2-1", elements=container)
-    sec2 = Section("Section 2", elements=BlockContainer(sec21))
-
-    doc += [sec1, sec2, BlockContainer(Section("Section 3"))]
 
 
 @mark.powerpack_compare_file("doc.md")

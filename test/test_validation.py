@@ -9,6 +9,7 @@ from typing import Any
 from pytest import raises
 
 from mdforge import (
+    AlignedBlock,
     Attributes,
     BlockContainer,
     BlockImage,
@@ -264,3 +265,8 @@ def test_placement():
     Paragraph(text)
     with raises(ValidationError):
         Cell(text)
+
+
+def test_aligned_block():
+    with raises(ValidationError):
+        AlignedBlock("Text", align="default")

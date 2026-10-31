@@ -12,6 +12,9 @@ __submodules__ = [
 from .block import (
     Section,
     BlockImage,
+    HorizontalRule,
+    Quote,
+    AlignedBlock,
     Paragraph,
     BlockText,
     ListItemType,
@@ -42,6 +45,9 @@ from .inline import (
 __all__ = [
     "Section",
     "BlockImage",
+    "HorizontalRule",
+    "Quote",
+    "AlignedBlock",
     "Paragraph",
     "BlockText",
     "ListItemType",

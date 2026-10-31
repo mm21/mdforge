@@ -14,6 +14,7 @@ from .._image import ImageMixin
 
 __all__ = [
     "BlockImage",
+    "HorizontalRule",
 ]
 
 
@@ -61,3 +62,13 @@ class BlockImage(BaseBlockElement, ImageMixin):
 
     def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
         yield self._render_commonmark_image(context)
+
+
+class HorizontalRule(BaseBlockElement):
+    """
+    Horizontal rule (thematic break).
+    """
+
+    def _render_block(self, context: RenderContext) -> Generator[str, None, None]:
+        # use asterisks rather than "---", which can be mistaken for frontmatter
+        yield "***"
