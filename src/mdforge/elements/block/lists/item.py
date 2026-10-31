@@ -28,7 +28,7 @@ type ListItemType = BaseElement | ListItem | str
 class ListItem:
 
     __element: BaseElement
-    __sub_items: Sequence[ListItemType] | BaseItemList | None
+    __sub_items: list[ListItem] | BaseItemList | None
 
     def __init__(
         self,
@@ -36,7 +36,11 @@ class ListItem:
         sub_items: Sequence[ListItemType] | BaseItemList | None = None,
     ):
         self.__element = norm_obj(content, BaseElement, CoerceSpec(coerce_text, str))
-        self.__sub_items = sub_items
+        self.__sub_items = (
+            sub_items
+            if sub_items is None or isinstance(sub_items, BaseItemList)
+            else _norm_items(sub_items)
+        )
 
     def _is_block(self, flavor: FlavorType) -> bool:
         """
@@ -59,28 +63,15 @@ class ListItem:
         self, flavor: FlavorType, indent_spaces: int, parent_list: BaseItemList
     ) -> Generator[str, None, None]:
         """
-        Render sub-items, if any.
+        Render sub-items, if any. If given as a plain list, they're rendered in the same
+        style as the parent list.
         """
-        sub_list = self.__get_sub_list(type(parent_list))
-
-        if sub_list is None:
-            return None
-
-        yield from sub_list._render_items(flavor, indent_spaces)
-
-    def __get_sub_list(
-        self, parent_list_cls: type[BaseItemList]
-    ) -> BaseItemList | None:
-        """
-        Get sub list from sub items, creating a new list object if items are given as a
-        plain list.
-        """
-        if not self.__sub_items:
-            return None
-        elif isinstance(self.__sub_items, BaseItemList):
-            return self.__sub_items
-        else:
-            return parent_list_cls(self.__sub_items)
+        if isinstance(self.__sub_items, BaseItemList):
+            yield from self.__sub_items._render_list(flavor, indent_spaces)
+        elif self.__sub_items:
+            yield from parent_list._render_items(
+                flavor, indent_spaces, self.__sub_items, loose=False
+            )
 
 
 class BaseItemList(BaseBlockElement, ABC):
@@ -89,9 +80,9 @@ class BaseItemList(BaseBlockElement, ABC):
     (numbered).
     """
 
-    __items: Sequence[ListItemType]
+    __items: list[ListItem]
     """
-    List of items passed from user.
+    List of items passed from user, normalized to list items.
     """
 
     __loose: bool
@@ -104,7 +95,7 @@ class BaseItemList(BaseBlockElement, ABC):
         :param items: List items
         :param loose: If `True`, each item is formatted as a paragraph
         """
-        self.__items = items
+        self.__items = _norm_items(items)
         self.__loose = loose
 
     @abstractmethod
@@ -115,36 +106,43 @@ class BaseItemList(BaseBlockElement, ABC):
         ...
 
     def _render_block(self, flavor: FlavorType) -> Generator[str, None, None]:
-        yield from self._render_items(flavor, 0)
+        yield from self._render_list(flavor, 0)
+
+    def _render_list(
+        self, flavor: FlavorType, indent_spaces: int
+    ) -> Generator[str, None, None]:
+        """
+        Render this list's items at the given indentation.
+        """
+        yield from self._render_items(
+            flavor, indent_spaces, self.__items, loose=self.__loose
+        )
 
     def _render_items(
         self,
         flavor: FlavorType,
         indent_spaces: int,
-        items: Sequence[ListItemType] | None = None,
+        items: list[ListItem],
+        *,
+        loose: bool,
     ) -> Generator[str, None, None]:
         """
-        Render items at the given indentation.
+        Render the given items at the given indentation in the style of this list.
         """
 
-        items_norm = norm_list(
-            self.__items if items is None else items,
-            ListItem,
-            CoerceSpec(ListItem, (str, BaseElement)),
-        )
         marker = self._get_marker(flavor)
         indent_str = " " * indent_spaces
         next_indent_spaces = indent_spaces + len(marker) + 1
-        is_loose = self.__check_loose(flavor, items_norm)
+        is_loose = loose or any(item._is_block(flavor) for item in items)
 
         # if there is a single item without multiple paragraphs in a list
         # specified to be loose, there would be no way for parsers to
         # determine that it's loose. wrap the item in a paragraph to ensure a
         # consistent element hierarchy.
-        single_loose_item = len(items_norm) == 1 and is_loose
+        single_loose_item = len(items) == 1 and is_loose
 
         # traverse items
-        for item in items_norm:
+        for item in items:
 
             # get item text
             text: list[str] = item._render_text(flavor)
@@ -175,20 +173,6 @@ class BaseItemList(BaseBlockElement, ABC):
         # see: https://pandoc.org/MANUAL.html#ending-a-list
         yield f"{indent_str}<!-- end of list -->"
 
-    def __check_loose(self, flavor: FlavorType, items: list[ListItem]):
-        """
-        Check if this list should be considered loose, either explicitly or based on
-        whether there are any block items.
-        """
-
-        if self.__loose:
-            return True
-
-        if any(item._is_block(flavor) for item in items):
-            return True
-
-        return False
-
 
 class BulletList(BaseItemList):
     """
@@ -206,3 +190,10 @@ class NumberedList(BaseItemList):
 
     def _get_marker(self, flavor: FlavorType) -> str:
         return "1."
+
+
+def _norm_items(items: Sequence[ListItemType]) -> list[ListItem]:
+    """
+    Normalize items to list items.
+    """
+    return norm_list(items, ListItem, CoerceSpec(ListItem, (str, BaseElement)))
