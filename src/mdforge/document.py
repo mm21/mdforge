@@ -4,7 +4,7 @@ Interface for Markdown document generation.
 
 from __future__ import annotations
 
-from typing import Any, Generator, Iterable
+from typing import Any, Generator, Iterable, Mapping
 
 import yaml
 
@@ -31,12 +31,12 @@ class Document(BaseLevelBlockContainer):
     Treat all nested containers as top-level sections.
     """
 
-    __frontmatter: dict[str, Any] | None
+    __frontmatter: Mapping[str, Any] | None
 
     def __init__(
         self,
         *,
-        frontmatter: dict[str, Any] | None = None,
+        frontmatter: Mapping[str, Any] | None = None,
         elements: BaseElement | str | Iterable[BaseElement | str] | None = None,
     ):
         super().__init__()
@@ -56,6 +56,6 @@ class Document(BaseLevelBlockContainer):
             return None
 
         content = yaml.dump(
-            self.__frontmatter, default_flow_style=False, sort_keys=False
+            dict(self.__frontmatter), default_flow_style=False, sort_keys=False
         )
         yield from ["---", f"{content}---", ""]

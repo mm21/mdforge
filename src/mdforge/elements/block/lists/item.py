@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cache
-from typing import Generator
+from typing import Generator, Sequence
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
 from ...._utils import coerce_text, wrap_para_cond
@@ -28,12 +28,12 @@ type ListItemType = BaseElement | ListItem | str
 class ListItem:
 
     __element: BaseElement
-    __sub_items: list[ListItemType] | BaseItemList | None
+    __sub_items: Sequence[ListItemType] | BaseItemList | None
 
     def __init__(
         self,
         content: BaseElement | str,
-        sub_items: list[ListItemType] | BaseItemList | None = None,
+        sub_items: Sequence[ListItemType] | BaseItemList | None = None,
     ):
         self.__element = norm_obj(content, BaseElement, CoerceSpec(coerce_text, str))
         self.__sub_items = sub_items
@@ -89,7 +89,7 @@ class BaseItemList(BaseBlockElement, ABC):
     (numbered).
     """
 
-    __items: list[ListItemType]
+    __items: Sequence[ListItemType]
     """
     List of items passed from user.
     """
@@ -99,7 +99,7 @@ class BaseItemList(BaseBlockElement, ABC):
     Whether each item is wrapped in a paragraph as indicated by user.
     """
 
-    def __init__(self, items: list[ListItemType], loose: bool = False):
+    def __init__(self, items: Sequence[ListItemType], loose: bool = False):
         """
         :param items: List items
         :param loose: If `True`, each item is formatted as a paragraph
@@ -121,7 +121,7 @@ class BaseItemList(BaseBlockElement, ABC):
         self,
         flavor: FlavorType,
         indent_spaces: int,
-        items: list[ListItemType] | None = None,
+        items: Sequence[ListItemType] | None = None,
     ) -> Generator[str, None, None]:
         """
         Render items at the given indentation.

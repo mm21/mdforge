@@ -4,7 +4,7 @@ Definition list.
 
 from __future__ import annotations
 
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Sequence
 
 from ...._norm import CoerceSpec, norm_list, norm_obj
 from ....element import BaseBlockElement, BaseElement, BaseInlineElement
@@ -32,7 +32,7 @@ class DefinitionItem:
     def __init__(
         self,
         term: BaseInlineElement | str,
-        definitions: BaseElement | str | list[BaseElement | str],
+        definitions: BaseElement | str | Sequence[BaseElement | str],
     ):
         """
         :param term: Term as a string or inline element

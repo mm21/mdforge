@@ -7,7 +7,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Generator, Mapping, Sequence
 
 from ._norm import norm_list
 from .types import FlavorType
@@ -133,12 +133,12 @@ class Attributes:
     HTML id to associate with this element.
     """
 
-    css_classes: str | list[str] | None = None
+    css_classes: str | Sequence[str] | None = None
     """
     One or more CSS classes.
     """
 
-    attrs: dict[str, str] | None = None
+    attrs: Mapping[str, str] | None = None
     """
     Other attributes, either native HTML attributes or specific to pandoc.
     """
@@ -156,8 +156,8 @@ class Attributes:
     def _copy(
         self,
         *,
-        css_classes: str | list[str] | None = None,
-        attrs: dict[str, str] | None = None,
+        css_classes: str | Sequence[str] | None = None,
+        attrs: Mapping[str, str] | None = None,
     ) -> Attributes:
         """
         Copy attributes object, updating CSS attributes.
@@ -166,7 +166,7 @@ class Attributes:
         css_classes_norm = self._css_classes_norm
         merged_css_classes = css_classes_norm.copy() if css_classes_norm else []
 
-        merged_attrs = self.attrs.copy() if self.attrs else {}
+        merged_attrs = dict(self.attrs) if self.attrs else {}
 
         if css_classes:
             merged_css_classes += norm_list(css_classes, str)
